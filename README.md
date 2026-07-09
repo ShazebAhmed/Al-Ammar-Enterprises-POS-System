@@ -1,1 +1,0 @@
-# Al-Ammar-Enterprises-POS-System

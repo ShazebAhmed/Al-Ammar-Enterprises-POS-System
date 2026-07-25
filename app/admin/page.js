@@ -59,33 +59,39 @@ export default function AdminPage() {
   async function updateSettings(patch) {
     const next = { ...settings, ...patch };
     setSettings(next);
-    await supabase.from("store_settings").update(settingsToRow(patch)).eq("id", 1);
+    const { error } = await supabase.from("store_settings").update(settingsToRow(patch)).eq("id", 1);
+    if (error) { console.error(error); throw error; }
   }
   async function upsertProduct(p) {
     if (p.id) {
-      await supabase.from("products").update({
+      const { error } = await supabase.from("products").update({
         name: p.name, category: p.category, price: p.price, stock: p.stock,
         description: p.description, images: p.images, video_url: p.videoUrl,
       }).eq("id", p.id);
+      if (error) { console.error(error); throw error; }
       setProducts((list) => list.map((x) => (x.id === p.id ? p : x)));
     } else {
-      const { data } = await supabase.from("products").insert({
+      const { data, error } = await supabase.from("products").insert({
         name: p.name, category: p.category, price: p.price, stock: p.stock,
         description: p.description, images: p.images, video_url: p.videoUrl,
       }).select().single();
+      if (error) { console.error(error); throw error; }
       setProducts((list) => [productFromRow(data), ...list]);
     }
   }
   async function deleteProduct(id) {
-    await supabase.from("products").delete().eq("id", id);
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) { console.error(error); throw error; }
     setProducts((list) => list.filter((p) => p.id !== id));
   }
   async function updateOrderStatus(orderId, status) {
-    await supabase.from("orders").update({ status }).eq("id", orderId);
+    const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
+    if (error) { console.error(error); throw error; }
     setOrders((list) => list.map((o) => (o.id === orderId ? { ...o, status } : o)));
   }
   async function deleteReview(id) {
-    await supabase.from("reviews").delete().eq("id", id);
+    const { error } = await supabase.from("reviews").delete().eq("id", id);
+    if (error) { console.error(error); throw error; }
     setReviews((list) => list.filter((r) => r.id !== id));
   }
   async function uploadProductImage(blob) {
@@ -275,10 +281,19 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
   function removeImage(i) { setForm((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) })); }
 
   const canSave = form.name.trim() && form.price !== "" && form.stock !== "";
-  function save(e) {
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  async function save(e) {
     e.preventDefault();
     if (!canSave) return;
-    onSave({ ...form, price: Number(form.price), stock: Number(form.stock) });
+    setSaving(true); setSaveError("");
+    try {
+      await onSave({ ...form, price: Number(form.price), stock: Number(form.stock) });
+    } catch (err) {
+      console.error(err);
+      setSaveError("Couldn't save this product — check your connection and try again.");
+      setSaving(false);
+    }
   }
 
   return (
@@ -330,9 +345,10 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
           </div>
         </div>
 
+        {saveError && <div style={{ padding: "0 20px", color: "var(--danger)", fontSize: ".82rem" }}>{saveError}</div>}
         <div style={{ display: "flex", gap: 10, padding: 20, borderTop: "1px solid var(--line)" }}>
           <button type="button" onClick={onCancel} className="stx-btn stx-btn-outline" style={{ flex: 1, padding: "10px 0" }}>Cancel</button>
-          <button type="submit" disabled={!canSave} className="stx-btn stx-btn-primary" style={{ flex: 1, padding: "10px 0" }}>Save product</button>
+          <button type="submit" disabled={!canSave || saving} className="stx-btn stx-btn-primary" style={{ flex: 1, padding: "10px 0" }}>{saving ? "Saving…" : "Save product"}</button>
         </div>
       </form>
     </div>
@@ -446,14 +462,20 @@ function ReviewsTab({ reviews, products, onDelete }) {
 function SettingsTab({ settings, onSave }) {
   const [form, setForm] = useState({ ...settings });
   const [newCategory, setNewCategory] = useState("");
-  const [savedFlash, setSavedFlash] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null); // null | "saving" | "saved" | "error"
 
   function set(k, v) { setForm((f) => ({ ...f, [k]: v })); }
   async function saveGeneral(e) {
     e.preventDefault();
-    await onSave(form);
-    setSavedFlash(true);
-    setTimeout(() => setSavedFlash(false), 2000);
+    setSaveStatus("saving");
+    try {
+      await onSave(form);
+      setSaveStatus("saved");
+    } catch (err) {
+      console.error(err);
+      setSaveStatus("error");
+    }
+    setTimeout(() => setSaveStatus(null), 2500);
   }
   function addCategory() {
     const c = newCategory.trim();
@@ -467,7 +489,6 @@ function SettingsTab({ settings, onSave }) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
         <div className="stx-display" style={{ fontSize: "1.4rem", fontWeight: 700 }}>Settings</div>
-        {savedFlash && <span style={{ color: "var(--primary)", fontSize: ".85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><Icon name="check" size={16} /> Saved</span>}
       </div>
 
       <form onSubmit={saveGeneral} className="stx-card px-5 py-5" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -502,7 +523,13 @@ function SettingsTab({ settings, onSave }) {
           </div>
         </div>
 
-        <button type="submit" className="stx-btn stx-btn-primary px-5 py-2.5" style={{ width: "fit-content" }}>Save changes</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button type="submit" disabled={saveStatus === "saving"} className="stx-btn stx-btn-primary px-5 py-2.5" style={{ width: "fit-content" }}>
+            {saveStatus === "saving" ? "Saving…" : "Save changes"}
+          </button>
+          {saveStatus === "saved" && <span style={{ color: "var(--primary)", fontSize: ".85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}><Icon name="check" size={16} /> Saved</span>}
+          {saveStatus === "error" && <span style={{ color: "var(--danger)", fontSize: ".85rem", fontWeight: 600 }}>Couldn't save — check your connection and try again.</span>}
+        </div>
       </form>
 
       <div className="stx-card px-5 py-5" style={{ marginTop: 20 }}>

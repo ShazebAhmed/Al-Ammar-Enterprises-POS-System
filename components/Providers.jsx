@@ -18,7 +18,7 @@ function mergeCarts(a, b) {
 }
 
 export default function Providers({ children }) {
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [cart, setCart] = useState([]); // [{productId, qty}]

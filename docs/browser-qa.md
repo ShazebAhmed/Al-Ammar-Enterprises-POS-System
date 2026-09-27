@@ -20,3 +20,24 @@ Mobile browser emulation was unavailable through the current browser interface; 
 Preview: https://al-ammar-enterprises-pos-system-git-dd791a-al-ammar-enterprises.vercel.app
 
 Pull request: https://github.com/ShazebAhmed/Al-Ammar-Enterprises-POS-System/pull/1
+
+## Update: live data and mobile widths — 27 September 2026 (Claude)
+
+The "cannot retrieve catalogue/settings data" blocker above was the Supabase free project being paused; it was resumed and the live site now loads settings (Rs. 250 delivery, categories, WhatsApp number). The store has no products yet.
+
+Mobile review of the live site (`main` after #16) in the built-in browser with viewport emulation at **360×780** and **414×860**. For each page a script listed elements extending past the viewport that are not inside a scrolling or clipping container, and screenshots were checked.
+
+| Page                                         | 360px                                                                                              | 414px                                                     |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Home (hero, collection, empty state, footer) | Hero heading: "Extraordinary" and "little" ran together and "little" was cut off at the right edge | Words ran together ("Extraordinarylittle"), still fitting |
+| Basket (empty)                               | OK                                                                                                 | OK                                                        |
+| Checkout (empty basket)                      | OK                                                                                                 | OK                                                        |
+| Sign in / create account                     | OK                                                                                                 | OK                                                        |
+| Reset password                               | OK                                                                                                 | OK                                                        |
+| Product not found                            | OK                                                                                                 | OK                                                        |
+
+Cause: under 520px the CSS hides the heading's second `<br>`, and JSX left no whitespace between `</em>` and "little". Fixed by adding a space after `</em>`; applying the same change to the live page in the browser gave three lines ending at x=294 of 360.
+
+The category chips row intentionally scrolls sideways and is not an overflow.
+
+Not checked on mobile: a real product page and a filled basket (no products exist), and account/admin pages (they need a signed-in account; Claude does not sign in with the owner's password).

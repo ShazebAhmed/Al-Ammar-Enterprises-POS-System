@@ -52,7 +52,8 @@ export default async function HomePage({ searchParams }) {
             <h1>
               Everyday finds.
               <br />
-              <em>Extraordinary</em>
+              <em>Extraordinary</em>{" "}
+              {/* Hidden on narrow screens; the space above keeps the words apart. */}
               <br />
               little moments.
             </h1>

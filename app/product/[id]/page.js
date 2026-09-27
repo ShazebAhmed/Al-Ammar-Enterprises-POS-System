@@ -65,7 +65,7 @@ export default async function ProductPage({ params }) {
       </Link>
 
       <div className="pdp-grid">
-        <div>
+        <div className="pdp-main">
           <ImageGallery images={product.images} name={product.name} />
 
           {video && (

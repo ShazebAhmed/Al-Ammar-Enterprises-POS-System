@@ -6,13 +6,13 @@ A Next.js 15 / React 19 storefront with Supabase authentication, product catalog
 
 Use Node.js 22 or newer. Run `npm ci`, copy `.env.example` to `.env.local`, fill in your project values, then run `npm run dev`. Do not put a Supabase service-role key in a `NEXT_PUBLIC_*` variable. Without configuration the interface renders a store-unavailable state.
 
-Run `npm test`, `npm run format:check` and `npm run build` before deployment. The database tests use embedded PostgreSQL (PGlite) with a representative schema, not the production database.
+Run `npm test`, `npm run format:check` and `npm run build` before deployment. The database tests use embedded PostgreSQL (PGlite): they apply every file in `supabase/migrations/` in order, starting from the baseline copied from the live schema, on top of minimal stand-ins for the Supabase `auth` and `storage` schemas.
 
 ## Database requirement
 
 **The new checkout requires the included migration. Do not deploy this frontend alone to an existing live store.** Follow [the rollout guide](docs/rollout.md) on a staging database first.
 
-Existing public tables are expected: `profiles`, `products`, `store_settings`, `cart_items`, `orders` and `reviews`. This repository does not contain the original database creation migrations. The upgrade migration adds order request tokens, reservation tracking, validated checkout and row-level access guards; it does not create the original tables.
+Existing public tables are expected: `profiles`, `products`, `store_settings`, `cart_items`, `orders` and `reviews`. `202607010000_baseline_schema.sql` recreates the original tables, functions, triggers and policies as they existed on the live project; it is already applied there and is only for fresh projects. The upgrade migration adds order request tokens, reservation tracking, validated checkout and row-level access guards.
 
 Expected columns include:
 

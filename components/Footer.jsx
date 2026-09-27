@@ -1,10 +1,6 @@
 import Link from "next/link";
 import Icon from "./Icon";
-function whatsappPhone(value) {
-  let p = String(value).replace(/\D/g, "");
-  if (p.startsWith("0")) p = "92" + p.slice(1);
-  return p;
-}
+import { whatsappPhone } from "@/lib/whatsapp";
 export default function Footer({ settings }) {
   return (
     <footer className="site-footer" id="about">

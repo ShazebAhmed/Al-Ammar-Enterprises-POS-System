@@ -1,77 +1,158 @@
 "use client";
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useStore } from "@/components/Providers";
+import useCartProducts from "@/components/useCartProducts";
 import Icon from "@/components/Icon";
-import { formatMoney, settingsFromRow, DEFAULT_SETTINGS, productFromRow } from "@/lib/format";
-
+import { formatMoney } from "@/lib/format";
+import { cartTotals } from "@/lib/cart";
 export default function CartPage() {
-  const { supabase, cart, setCartQty, removeFromCart } = useStore();
-  const [products, setProducts] = useState([]);
-  const [settings, setSettings] = useState(null);
-
-  useEffect(() => {
-    (async () => {
-      const [{ data: p }, { data: s }] = await Promise.all([
-        supabase.from("products").select("*"),
-        supabase.from("store_settings").select("*").eq("id", 1).single(),
-      ]);
-      setProducts((p || []).map(productFromRow));
-      setSettings(s ? settingsFromRow(s) : DEFAULT_SETTINGS);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (!settings) {
-    return <main style={{ maxWidth: 820, margin: "0 auto" }} className="px-4 py-6"><p style={{ color: "var(--ink-soft)" }}>Loading…</p></main>;
-  }
-
-  const lines = cart
-    .map((line) => ({ ...line, product: products.find((p) => p.id === line.productId) }))
-    .filter((l) => l.product);
-  const subtotal = lines.reduce((sum, l) => sum + (Number(l.product.price) || 0) * l.qty, 0);
-  const shipping = lines.length ? Number(settings.shippingFee) || 0 : 0;
-
+  const { setCartQty, removeFromCart, syncError, retrySync } = useStore();
+  const { lines, settings, loading, error, invalid, retry } = useCartProducts();
+  const valid = lines.filter((l) => l.product);
+  const totals = cartTotals(valid, settings.shippingFee);
+  const money = (n) => formatMoney(n, settings.currencySymbol);
   return (
-    <main style={{ maxWidth: 820, margin: "0 auto" }} className="px-4 py-6">
-      <div className="stx-display" style={{ fontSize: "1.6rem", fontWeight: 700, marginBottom: 18 }}>Your basket</div>
-
-      {lines.length === 0 ? (
-        <div className="stx-card px-6 py-14 text-center">
-          <Icon name="shopping_cart" size={30} color="var(--ink-soft)" />
-          <div style={{ fontWeight: 700, marginTop: 10 }}>Your basket is empty</div>
-          <p style={{ color: "var(--ink-soft)", marginTop: 4, marginBottom: 14 }}>Add a few things and they'll show up here.</p>
-          <Link href="/" className="stx-btn stx-btn-primary px-5 py-2.5" style={{ display: "inline-block" }}>Browse products</Link>
+    <main className="page-wrap">
+      <Link className="back-link" href="/">
+        <Icon name="chevron_left" size={15} /> Continue exploring
+      </Link>
+      <div className="page-heading">
+        <span className="eyebrow">YOUR EVERYDAY FINDS</span>
+        <h1>
+          Your basket<span className="gold-dot">.</span>
+        </h1>
+        <p>A few good things, ready to come home.</p>
+      </div>
+      {syncError && (
+        <div className="inline-error" role="alert">
+          {syncError}{" "}
+          <button className="text-button" onClick={retrySync}>
+            Retry sync
+          </button>
+        </div>
+      )}
+      {loading ? (
+        <p role="status" className="muted">
+          Checking prices and availability…
+        </p>
+      ) : error ? (
+        <div className="empty-state" role="alert">
+          <p>{error}</p>
+          <button className="stx-btn stx-btn-outline" onClick={retry}>
+            Try again
+          </button>
+        </div>
+      ) : !lines.length ? (
+        <div className="empty-state">
+          <Icon name="shopping_cart" size={40} />
+          <h3>Your next favourite is waiting.</h3>
+          <p>Your basket is empty. Let’s find something you’ll love.</p>
+          <Link className="stx-btn stx-btn-primary" href="/#collection">
+            Shop the collection <Icon name="arrow_forward" />
+          </Link>
         </div>
       ) : (
-        <>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 22 }}>
+        <div className="checkout-grid">
+          <section aria-label="Basket items">
             {lines.map((l) => (
-              <div key={l.productId} className="stx-card px-4 py-3" style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <div style={{ width: 60, height: 60, borderRadius: 8, overflow: "hidden", background: "#EFEBDD", flexShrink: 0 }}>
-                  {l.product.images?.[0] && <img src={l.product.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+              <article key={l.productId} className="cart-item">
+                <div className="cart-thumb">
+                  {l.product?.images?.[0] ? (
+                    <img src={l.product.images[0]} alt={l.product.name} />
+                  ) : (
+                    <Icon name="inventory_2" size={22} />
+                  )}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: ".9rem" }}>{l.product.name}</div>
-                  <div className="stx-mono" style={{ fontSize: ".85rem", color: "var(--ink-soft)" }}>{formatMoney(l.product.price, settings.currencySymbol)} each</div>
+                <div>
+                  <small>{l.product?.category || "Unavailable product"}</small>
+                  <h3>
+                    {l.product ? (
+                      <Link href={`/product/${l.productId}`}>
+                        {l.product.name}
+                      </Link>
+                    ) : (
+                      "This product is no longer available"
+                    )}
+                  </h3>
+                  {l.product && (
+                    <>
+                      <small>{money(l.product.price)} each</small>
+                      <div
+                        style={{ marginTop: 10 }}
+                        className="quantity-control"
+                      >
+                        <button
+                          aria-label={`Decrease ${l.product.name}`}
+                          onClick={() =>
+                            setCartQty(l.productId, l.qty - 1, l.product.stock)
+                          }
+                        >
+                          <Icon name="remove" size={14} />
+                        </button>
+                        <output>{l.qty}</output>
+                        <button
+                          aria-label={`Increase ${l.product.name}`}
+                          disabled={l.qty >= Number(l.product.stock)}
+                          onClick={() =>
+                            setCartQty(l.productId, l.qty + 1, l.product.stock)
+                          }
+                        >
+                          <Icon name="add" size={14} />
+                        </button>
+                      </div>
+                    </>
+                  )}
+                  {(!l.product || l.qty > Number(l.product.stock)) && (
+                    <p className="cart-stock-warning">
+                      {l.product
+                        ? `Only ${l.product.stock} available. Update the quantity.`
+                        : "Remove this item to continue."}
+                    </p>
+                  )}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <button onClick={() => setCartQty(l.productId, l.qty - 1)} className="stx-btn stx-btn-outline" style={{ width: 26, height: 26, padding: 0 }}><Icon name="remove" size={13} /></button>
-                  <span className="stx-mono" style={{ minWidth: 16, textAlign: "center", fontSize: ".85rem" }}>{l.qty}</span>
-                  <button onClick={() => setCartQty(l.productId, l.qty + 1)} className="stx-btn stx-btn-outline" style={{ width: 26, height: 26, padding: 0 }}><Icon name="add" size={13} /></button>
+                <div className="cart-item-price">
+                  <strong>
+                    {l.product ? money(l.qty * l.product.price) : "—"}
+                  </strong>
+                  <button
+                    className="remove-button"
+                    aria-label={`Remove ${l.product?.name || "unavailable product"}`}
+                    onClick={() => removeFromCart(l.productId)}
+                  >
+                    <Icon name="delete" size={13} /> Remove
+                  </button>
                 </div>
-                <div className="stx-mono" style={{ fontWeight: 700, minWidth: 80, textAlign: "right" }}>{formatMoney(l.product.price * l.qty, settings.currencySymbol)}</div>
-                <button onClick={() => removeFromCart(l.productId)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer" }}><Icon name="delete" size={17} /></button>
-              </div>
+              </article>
             ))}
-          </div>
-          <div className="stx-card px-5 py-5">
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".9rem", marginBottom: 6 }}><span style={{ color: "var(--ink-soft)" }}>Subtotal</span><span className="stx-mono">{formatMoney(subtotal, settings.currencySymbol)}</span></div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".9rem", marginBottom: 10 }}><span style={{ color: "var(--ink-soft)" }}>Shipping</span><span className="stx-mono">{formatMoney(shipping, settings.currencySymbol)}</span></div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: "1.1rem", borderTop: "1px solid var(--line)", paddingTop: 10 }}><span>Total</span><span className="stx-mono">{formatMoney(subtotal + shipping, settings.currencySymbol)}</span></div>
-            <Link href="/checkout" className="stx-btn stx-btn-primary" style={{ width: "100%", padding: "12px 0", marginTop: 16, display: "block", textAlign: "center" }}>Proceed to checkout</Link>
-          </div>
-        </>
+          </section>
+          <aside className="stx-card order-summary">
+            <h2>A little summary</h2>
+            <div className="summary-row">
+              <span>Subtotal</span>
+              <span>{money(totals.subtotal)}</span>
+            </div>
+            <div className="summary-row">
+              <span>Delivery</span>
+              <span>{money(totals.shipping)}</span>
+            </div>
+            <div className="summary-row total">
+              <span>Total</span>
+              <span>{money(totals.total)}</span>
+            </div>
+            {invalid ? (
+              <div className="inline-error">
+                Please update unavailable items before checkout.
+              </div>
+            ) : (
+              <Link className="stx-btn stx-btn-primary" href="/checkout">
+                Continue to checkout <Icon name="arrow_forward" />
+              </Link>
+            )}
+            <p className="summary-note">
+              Cash on delivery · No payment required now
+            </p>
+          </aside>
+        </div>
       )}
     </main>
   );

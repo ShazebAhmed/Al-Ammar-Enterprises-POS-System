@@ -75,7 +75,7 @@ textarea:focus-visible {
   background: var(--bg);
   color: var(--ink);
   font-family: "DM Sans", system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   min-height: 100vh;
 }
 .stx-display,
@@ -94,7 +94,7 @@ h3 {
   margin-inline: auto;
 }
 .eyebrow {
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0.17em;
   font-weight: 700;
   line-height: 1.7;
@@ -103,7 +103,7 @@ h3 {
   color: var(--ink-soft);
 }
 .small {
-  font-size: 12px;
+  font-size: 15px;
 }
 .gold-dot {
   color: var(--accent);
@@ -125,7 +125,7 @@ h3 {
   border-radius: 8px;
   padding: 12px 20px;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 15px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -166,7 +166,7 @@ h3 {
   color: var(--ink);
   padding: 12px 14px;
   width: 100%;
-  font-size: 14px;
+  font-size: 16px;
   min-height: 44px;
 }
 .stx-input:focus {
@@ -175,7 +175,7 @@ h3 {
 }
 .stx-label {
   display: inline-block;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -189,7 +189,7 @@ h3 {
   border-radius: 5px;
   background: var(--soft);
   padding: 6px 10px;
-  font-size: 11px;
+  font-size: 14px;
   color: var(--primary);
 }
 .ticket {
@@ -202,7 +202,7 @@ h3 {
 .badge-sale {
   padding: 4px 8px;
   border-radius: 5px;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
   background: var(--soft);
   color: var(--ink-soft);
@@ -219,7 +219,7 @@ h3 {
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0.07em;
 }
 .announcement > span:first-child {
@@ -269,7 +269,7 @@ h3 {
 }
 .brand small {
   display: block;
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.19em;
   margin-top: 3px;
   color: var(--ink-soft);
@@ -278,7 +278,7 @@ h3 {
   display: flex;
   gap: 29px;
   margin: auto;
-  font-size: 12px;
+  font-size: 15px;
 }
 .desktop-nav a {
   padding: 10px 0;
@@ -292,7 +292,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 20px;
-  font-size: 12px;
+  font-size: 15px;
   flex-shrink: 0;
 }
 .account-link,
@@ -315,7 +315,7 @@ h3 {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  font-size: 9px;
+  font-size: 12px;
 }
 .icon-button {
   display: inline-flex;
@@ -365,7 +365,7 @@ h3 {
   letter-spacing: -0.04em;
 }
 .hero-copy > p {
-  font-size: 14px;
+  font-size: 16px;
   max-width: 385px;
   color: var(--ink-soft);
   margin-bottom: 28px;
@@ -378,7 +378,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 10px;
+  font-size: 13px;
   color: var(--ink-soft);
   margin-top: 27px;
 }
@@ -414,7 +414,7 @@ h3 {
   top: 30px;
   right: 25px;
   z-index: 2;
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.18em;
   color: #566454;
 }
@@ -441,17 +441,17 @@ h3 {
   padding: 17px 18px;
 }
 .hero-product small {
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.13em;
   color: var(--ink-soft);
 }
 .hero-product strong {
   display: block;
-  font-size: 14px;
+  font-size: 16px;
   margin: 6px 0;
 }
 .hero-product span {
-  font-size: 12px;
+  font-size: 15px;
 }
 .round-button {
   width: 38px;
@@ -475,7 +475,7 @@ h3 {
   border-radius: 50%;
   color: #435842;
   transform: rotate(12deg);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.08em;
   background: #edeedf;
 }
@@ -566,11 +566,11 @@ h3 {
   display: block;
 }
 .trust-inner strong {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
 }
 .trust-inner small {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--ink-soft);
   margin-top: 5px;
 }
@@ -594,7 +594,7 @@ h3 {
   font-weight: 600;
 }
 .collection-count {
-  font-size: 11px;
+  font-size: 14px;
   color: var(--ink-soft);
   padding-bottom: 4px;
 }
@@ -607,7 +607,7 @@ h3 {
 }
 .category-tabs a {
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 14px;
   padding: 10px 18px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -641,7 +641,7 @@ h3 {
   border: 0;
   background: transparent;
   padding: 12px 0;
-  font-size: 11px;
+  font-size: 14px;
   outline-offset: 0;
 }
 .stock-toggle {
@@ -649,7 +649,7 @@ h3 {
   align-items: center;
   gap: 6px;
   white-space: nowrap;
-  font-size: 10px;
+  font-size: 13px;
   color: var(--ink-soft);
 }
 input[type="checkbox"],
@@ -660,11 +660,11 @@ input[type="radio"] {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 10px;
+  font-size: 13px;
   color: var(--ink-soft);
 }
 .sort-field select {
-  font-size: 11px;
+  font-size: 14px;
   background: transparent;
   border: 0;
   max-width: 135px;
@@ -678,7 +678,7 @@ input[type="radio"] {
   background: white;
   padding: 10px;
   border-radius: 6px;
-  font-size: 10px;
+  font-size: 13px;
   cursor: pointer;
 }
 .product-grid {
@@ -716,7 +716,7 @@ input[type="radio"] {
   color: #738777;
 }
 .product-placeholder span {
-  font-size: 9px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.2em;
 }
@@ -743,19 +743,19 @@ input[type="radio"] {
   background: #fffef0ee;
   padding: 5px 9px;
   border-radius: 4px;
-  font-size: 9px;
+  font-size: 12px;
 }
 .product-body {
   padding: 15px 1px 0;
 }
 .product-category {
   color: var(--ink-soft);
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 .product-body h3 {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.5;
   margin: 5px 0 11px;
@@ -770,7 +770,7 @@ input[type="radio"] {
   margin-top: 9px;
 }
 .product-bottom > strong {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 .add-button {
@@ -781,7 +781,7 @@ input[type="radio"] {
   border: 1px solid var(--line);
   border-radius: 5px;
   padding: 7px 10px;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -794,7 +794,7 @@ input[type="radio"] {
   display: flex;
   gap: 5px;
   align-items: center;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--ink-soft);
 }
 .brand-note {
@@ -818,7 +818,7 @@ input[type="radio"] {
   display: inline-flex;
   gap: 12px;
   align-items: center;
-  font-size: 11px;
+  font-size: 14px;
   border-bottom: 1px solid var(--primary);
   padding-bottom: 7px;
 }
@@ -828,7 +828,7 @@ input[type="radio"] {
   align-items: center;
   gap: 25px;
   padding: 40px 0;
-  font-size: 12px;
+  font-size: 15px;
 }
 .pagination a {
   border: 1px solid var(--line);
@@ -849,7 +849,7 @@ input[type="radio"] {
 }
 .empty-state p {
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 15px;
 }
 .site-footer {
   background: #122e27;
@@ -863,7 +863,7 @@ input[type="radio"] {
   padding-bottom: 46px;
 }
 .footer-main .eyebrow {
-  font-size: 9px;
+  font-size: 12px;
   color: #adbdae;
   margin-bottom: 20px;
 }
@@ -875,12 +875,12 @@ input[type="radio"] {
   max-width: 350px;
 }
 .footer-main p {
-  font-size: 11px;
+  font-size: 14px;
   color: #b6c5bb;
 }
 .footer-main a {
   display: block;
-  font-size: 11px;
+  font-size: 14px;
   margin: 0 0 15px;
   color: #d7e2d8;
 }
@@ -890,7 +890,7 @@ input[type="radio"] {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  font-size: 9px;
+  font-size: 12px;
   color: #9bb2a4;
 }
 .toast {
@@ -907,7 +907,7 @@ input[type="radio"] {
   display: flex;
   align-items: center;
   gap: 18px;
-  font-size: 13px;
+  font-size: 15px;
   max-width: calc(100vw - 30px);
 }
 .toast.error {
@@ -926,14 +926,14 @@ input[type="radio"] {
   background: #fff2ee;
   border-radius: 8px;
   color: var(--danger);
-  font-size: 13px;
+  font-size: 15px;
   margin: 14px 0;
 }
 .info-banner {
   padding: 14px 18px;
   background: #eef2e8;
   border-radius: 9px;
-  font-size: 12px;
+  font-size: 15px;
   margin: 16px 0;
   color: var(--primary);
 }
@@ -952,13 +952,13 @@ input[type="radio"] {
 }
 .page-heading p {
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 15px;
 }
 .back-link {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 14px;
   color: var(--ink-soft);
   margin-bottom: 20px;
 }
@@ -981,7 +981,7 @@ input[type="radio"] {
   display: flex;
   justify-content: space-between;
   gap: 15px;
-  font-size: 12px;
+  font-size: 15px;
   margin: 14px 0;
 }
 .summary-row.total {
@@ -995,7 +995,7 @@ input[type="radio"] {
   margin-top: 15px;
 }
 .summary-note {
-  font-size: 10px;
+  font-size: 13px;
   text-align: center;
   color: var(--ink-soft);
   margin: 16px 0 0;
@@ -1022,11 +1022,11 @@ input[type="radio"] {
   place-items: center;
 }
 .cart-item h3 {
-  font-size: 14px;
+  font-size: 16px;
   margin: 6px 0;
 }
 .cart-item small {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--ink-soft);
 }
 .cart-item-price {
@@ -1035,7 +1035,7 @@ input[type="radio"] {
   align-items: flex-end;
   gap: 14px;
   flex-direction: column;
-  font-size: 13px;
+  font-size: 15px;
 }
 .quantity-control {
   display: inline-flex;
@@ -1056,20 +1056,20 @@ input[type="radio"] {
 .quantity-control output {
   min-width: 25px;
   text-align: center;
-  font-size: 12px;
+  font-size: 15px;
 }
 .remove-button {
   border: 0;
   background: transparent;
   color: var(--ink-soft);
-  font-size: 10px;
+  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 5px;
 }
 .cart-stock-warning {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--danger);
   margin: 4px 0;
 }
@@ -1096,7 +1096,7 @@ input[type="radio"] {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 14px;
   margin-top: 13px;
   color: var(--primary);
 }
@@ -1110,7 +1110,7 @@ input[type="radio"] {
   color: var(--danger);
 }
 .purchase-description {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--ink-soft);
   margin: 25px 0;
   line-height: 1.8;
@@ -1132,7 +1132,7 @@ input[type="radio"] {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 11px;
+  font-size: 14px;
   color: var(--ink-soft);
   margin-bottom: 12px;
 }
@@ -1163,7 +1163,7 @@ input[type="radio"] {
 }
 .form-field {
   display: block;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
 }
 .form-field .stx-input {
@@ -1173,7 +1173,7 @@ input[type="radio"] {
   display: flex;
   gap: 18px;
   align-items: center;
-  font-size: 11px;
+  font-size: 14px;
   margin-bottom: 28px;
   color: var(--ink-soft);
 }
@@ -1206,7 +1206,7 @@ input[type="radio"] {
   margin: 25px 0;
 }
 .auth-aside p {
-  font-size: 13px;
+  font-size: 15px;
   color: #bacabd;
 }
 .auth-form {
@@ -1229,7 +1229,7 @@ input[type="radio"] {
   background: transparent;
   border-radius: 5px;
   padding: 10px;
-  font-size: 12px;
+  font-size: 15px;
   cursor: pointer;
 }
 .auth-switch button.active {
@@ -1249,7 +1249,7 @@ input[type="radio"] {
   background: transparent;
   border: 0;
   padding: 0;
-  font-size: 12px;
+  font-size: 15px;
   color: var(--primary);
   cursor: pointer;
   text-align: right;
@@ -1309,7 +1309,7 @@ input[type="radio"] {
   color: #acbfb0;
 }
 .nav-label {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   color: #88a493;
   padding: 0 14px;
@@ -1330,7 +1330,7 @@ input[type="radio"] {
   color: #b8cbbf;
   padding: 13px 15px;
   border-radius: 7px;
-  font-size: 12px;
+  font-size: 15px;
   cursor: pointer;
 }
 .admin-sidebar nav button.active {
@@ -1343,13 +1343,13 @@ input[type="radio"] {
   color: #163329;
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 9px;
+  font-size: 12px;
 }
 .admin-sidebar-bottom {
   margin-top: auto;
   padding: 18px 12px 0;
   border-top: 1px solid #315045;
-  font-size: 11px;
+  font-size: 14px;
 }
 .admin-sidebar-bottom button {
   color: inherit;
@@ -1374,7 +1374,7 @@ input[type="radio"] {
   background: white;
 }
 .admin-topbar > .muted {
-  font-size: 11px;
+  font-size: 14px;
 }
 .admin-avatar {
   width: 33px;
@@ -1383,7 +1383,7 @@ input[type="radio"] {
   background: #eef1e9;
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 14px;
 }
 .admin-topbar .menu-toggle {
   display: none;
@@ -1406,7 +1406,7 @@ input[type="radio"] {
   font-weight: 600;
 }
 .admin-page-heading p {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--ink-soft);
   margin: 0;
 }
@@ -1426,7 +1426,7 @@ input[type="radio"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 13px;
   color: var(--ink-soft);
 }
 .stat-icon {
@@ -1445,7 +1445,7 @@ input[type="radio"] {
   font-variant-numeric: tabular-nums;
 }
 .stat-caption {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--ink-soft);
 }
 .stat-card.accent {
@@ -1474,14 +1474,14 @@ input[type="radio"] {
   border-bottom: 1px solid var(--line);
 }
 .panel-title h2 {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   margin: 0;
 }
 .panel-title button {
   background: transparent;
   border: 0;
-  font-size: 10px;
+  font-size: 13px;
   color: var(--primary);
   cursor: pointer;
 }
@@ -1513,12 +1513,12 @@ input[type="radio"] {
   background: var(--primary);
 }
 .chart-col small {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--ink-soft);
   padding-bottom: 10px;
 }
 .chart-note {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--ink-soft);
   padding: 12px 22px;
   margin: 0;
@@ -1535,15 +1535,15 @@ input[type="radio"] {
 }
 .stock-row strong {
   display: block;
-  font-size: 11px;
+  font-size: 14px;
 }
 .stock-row small {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--ink-soft);
 }
 .stock-row > span:last-child {
   margin-left: auto;
-  font-size: 10px;
+  font-size: 13px;
   color: var(--danger);
   white-space: nowrap;
   background: #faeee8;
@@ -1556,11 +1556,11 @@ input[type="radio"] {
 .admin-table {
   border-collapse: collapse;
   width: 100%;
-  font-size: 11px;
+  font-size: 14px;
   text-align: left;
 }
 .admin-table th {
-  font-size: 9px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--ink-soft);
@@ -1576,7 +1576,7 @@ input[type="radio"] {
   border-bottom: 0;
 }
 .status-pill {
-  font-size: 9px;
+  font-size: 12px;
   padding: 5px 8px;
   border-radius: 5px;
   background: #eef3e7;
@@ -1791,7 +1791,7 @@ input[type="radio"] {
 @media (max-width: 780px) {
   .announcement {
     padding: 0 20px;
-    font-size: 8px;
+    font-size: 12px;
   }
   .announcement > span:first-child {
     display: none;
@@ -1813,7 +1813,7 @@ input[type="radio"] {
     font-size: 27px;
   }
   .brand small {
-    font-size: 7px;
+    font-size: 11px;
   }
   .desktop-nav {
     display: none;
@@ -1831,26 +1831,26 @@ input[type="radio"] {
     font-size: 34px;
   }
   .hero-copy > p {
-    font-size: 12px;
+    font-size: 15px;
   }
   .hero-visual {
     min-height: 380px;
     border-radius: 75px 10px 10px 10px;
   }
   .hero-copy > .eyebrow {
-    font-size: 8px;
+    font-size: 12px;
   }
   .hero-cta {
-    font-size: 11px;
+    font-size: 14px;
     padding: 13px 16px;
   }
   .hero-note {
-    font-size: 9px;
+    font-size: 12px;
   }
   .hero-seal {
     width: 62px;
     height: 62px;
-    font-size: 5px;
+    font-size: 7px;
     top: 50px;
     right: 10px;
   }
@@ -1864,7 +1864,7 @@ input[type="radio"] {
     padding: 12px;
   }
   .hero-product strong {
-    font-size: 12px;
+    font-size: 15px;
   }
   .trust-inner {
     gap: 14px;
@@ -1874,10 +1874,10 @@ input[type="radio"] {
     gap: 9px;
   }
   .trust-inner strong {
-    font-size: 9px;
+    font-size: 12px;
   }
   .trust-inner small {
-    font-size: 8px;
+    font-size: 12px;
   }
   .trust-inner svg {
     width: 18px;
@@ -1895,6 +1895,11 @@ input[type="radio"] {
   .catalogue-search {
     flex-basis: 55%;
   }
+  /* 16px keeps iPhones from zooming in when the field is tapped. */
+  .catalogue-search input,
+  .stx-input {
+    font-size: 16px;
+  }
   .sort-field {
     margin-left: auto;
   }
@@ -1903,10 +1908,10 @@ input[type="radio"] {
     gap: 25px 15px;
   }
   .product-body h3 {
-    font-size: 12px;
+    font-size: 15px;
   }
   .product-bottom > strong {
-    font-size: 11px;
+    font-size: 14px;
   }
   .footer-main {
     grid-template-columns: 1fr 1fr;
@@ -2013,12 +2018,12 @@ input[type="radio"] {
     display: none;
   }
   .hero-copy > p {
-    font-size: 13px;
+    font-size: 15px;
     max-width: 100%;
     margin-bottom: 20px;
   }
   .hero-copy > .eyebrow {
-    font-size: 9px;
+    font-size: 12px;
   }
   .hero-note {
     margin-top: 16px;
@@ -2062,11 +2067,11 @@ input[type="radio"] {
     gap: 13px;
   }
   .trust-inner strong {
-    font-size: 10px;
+    font-size: 13px;
   }
   .trust-inner small {
     display: inline;
-    font-size: 9px;
+    font-size: 12px;
     margin-left: 8px;
   }
   .trust-inner span {
@@ -2082,7 +2087,7 @@ input[type="radio"] {
     font-size: 27px;
   }
   .collection-count {
-    font-size: 9px;
+    font-size: 12px;
     max-width: 80px;
     text-align: right;
     margin-top: 28px;
@@ -2091,7 +2096,7 @@ input[type="radio"] {
     padding-bottom: 10px;
   }
   .category-tabs a {
-    font-size: 10px;
+    font-size: 13px;
     padding: 9px 13px;
   }
   .catalogue-search {
@@ -2114,20 +2119,20 @@ input[type="radio"] {
     padding-top: 11px;
   }
   .product-body h3 {
-    font-size: 12px;
+    font-size: 15px;
     min-height: 36px;
     line-height: 1.5;
     margin-bottom: 7px;
   }
   .product-category {
-    font-size: 7px;
+    font-size: 12px;
   }
   .product-bottom > strong {
-    font-size: 11px;
+    font-size: 14px;
   }
   .add-button {
     padding: 6px 8px;
-    font-size: 9px;
+    font-size: 12px;
     gap: 2px;
   }
   .product-bottom {
@@ -2135,7 +2140,7 @@ input[type="radio"] {
     gap: 4px;
   }
   .product-badge {
-    font-size: 8px;
+    font-size: 12px;
     top: 8px;
     left: 8px;
   }
@@ -2169,10 +2174,10 @@ input[type="radio"] {
     height: 70px;
   }
   .cart-item h3 {
-    font-size: 12px;
+    font-size: 15px;
   }
   .cart-item-price {
-    font-size: 11px;
+    font-size: 14px;
     gap: 10px;
   }
   .quantity-control button {
@@ -2191,7 +2196,7 @@ input[type="radio"] {
     gap: 8px;
   }
   .purchase-actions .stx-btn {
-    font-size: 12px;
+    font-size: 15px;
     padding: 12px;
   }
   .admin-content {
@@ -2201,7 +2206,7 @@ input[type="radio"] {
     align-items: flex-start;
   }
   .admin-page-heading .stx-btn {
-    font-size: 10px;
+    font-size: 13px;
     padding: 10px;
   }
   .admin-stats {
@@ -2214,7 +2219,7 @@ input[type="radio"] {
     font-size: 21px;
   }
   .stat-caption {
-    font-size: 8px;
+    font-size: 12px;
   }
   .sales-chart {
     gap: 11px;
@@ -2230,12 +2235,12 @@ input[type="radio"] {
     padding: 13px;
   }
   .admin-page-heading p {
-    font-size: 11px;
+    font-size: 14px;
   }
   .toast {
     bottom: 15px;
     width: max-content;
-    font-size: 12px;
+    font-size: 15px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

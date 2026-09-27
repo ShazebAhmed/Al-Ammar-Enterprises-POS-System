@@ -283,6 +283,41 @@ test("guest orders are capped at twenty per ten minutes", async () => {
   assert.equal(rows[0].n, 20);
   assert.ok(placed > 0);
 });
+test("admin can cancel orders left pending too long and their stock returns", async () => {
+  const buyer = { ...customer, phone: "0345 1111111" };
+  const stock = async () =>
+    (await db.query(`select stock from products where id='${P1}'`)).rows[0]
+      .stock;
+  await role("authenticated", BUYER);
+  const old = await order(
+    "abababab-abab-4bab-8bab-000000000001",
+    [{ productId: P1, qty: 2 }],
+    buyer,
+  );
+  const recent = await order(
+    "abababab-abab-4bab-8bab-000000000002",
+    [{ productId: P1, qty: 1 }],
+    buyer,
+  );
+  await db.exec(`reset role;
+    alter table orders disable trigger store_order_validation;
+    update orders set created_at = now() - interval '5 days' where id = '${old.id}';
+    alter table orders enable trigger store_order_validation;`);
+  const before = await stock();
+  const cancel = (days) =>
+    db.query("select public.cancel_stale_orders($1) as n", [days]);
+  await role("authenticated", BUYER);
+  await assert.rejects(() => cancel(3), /Administrator/);
+  await role("authenticated", ADMIN);
+  await assert.rejects(() => cancel(0), /Invalid number of days/);
+  assert.equal((await cancel(3)).rows[0].n, 1);
+  const status = async (id) =>
+    (await db.query("select status from orders where id = $1", [id])).rows[0]
+      .status;
+  assert.equal(await status(old.id), "Cancelled");
+  assert.equal(await status(recent.id), "Pending");
+  assert.equal(await stock(), before + 2);
+});
 test.after(async () => {
   await db.close();
 });

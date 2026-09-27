@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useStore } from "./Providers";
 import Icon from "./Icon";
 import { formatMoney } from "@/lib/format";
+import { whatsappOrderLink } from "@/lib/whatsapp";
 export default function ProductPurchasePanel({ product, settings }) {
   const { cart, addToCart, cartReady } = useStore();
   const [qty, setQty] = useState(1);
@@ -10,6 +11,11 @@ export default function ProductPurchasePanel({ product, settings }) {
   const inBasket =
     cart.find((l) => l.productId === String(product.id))?.qty || 0;
   const available = Math.max(0, stock - inBasket);
+  const whatsappLink = stock
+    ? whatsappOrderLink(settings, [
+        { product, qty: Math.max(1, Math.min(qty, stock)) },
+      ])
+    : "";
   return (
     <div className="purchase-panel">
       <span className="eyebrow">{product.category || "THE COLLECTION"}</span>
@@ -59,6 +65,17 @@ export default function ProductPurchasePanel({ product, settings }) {
               {available ? "Add to basket" : "All available stock added"}
             </button>
           </div>
+          {whatsappLink && (
+            <a
+              className="stx-btn stx-btn-outline"
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ marginTop: 10 }}
+            >
+              <Icon name="chat" /> Order on WhatsApp
+            </a>
+          )}
         </>
       )}
       <div className="purchase-benefits">

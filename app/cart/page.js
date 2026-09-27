@@ -5,12 +5,14 @@ import useCartProducts from "@/components/useCartProducts";
 import Icon from "@/components/Icon";
 import { formatMoney } from "@/lib/format";
 import { cartTotals } from "@/lib/cart";
+import { whatsappOrderLink } from "@/lib/whatsapp";
 export default function CartPage() {
   const { setCartQty, removeFromCart, syncError, retrySync } = useStore();
   const { lines, settings, loading, error, invalid, retry } = useCartProducts();
   const valid = lines.filter((l) => l.product);
   const totals = cartTotals(valid, settings.shippingFee);
   const money = (n) => formatMoney(n, settings.currencySymbol);
+  const whatsappLink = invalid ? "" : whatsappOrderLink(settings, valid);
   return (
     <main className="page-wrap">
       <Link className="back-link" href="/">
@@ -147,6 +149,17 @@ export default function CartPage() {
               <Link className="stx-btn stx-btn-primary" href="/checkout">
                 Continue to checkout <Icon name="arrow_forward" />
               </Link>
+            )}
+            {whatsappLink && (
+              <a
+                className="stx-btn stx-btn-outline"
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ marginTop: 8 }}
+              >
+                <Icon name="chat" /> Order on WhatsApp
+              </a>
             )}
             <p className="summary-note">
               Cash on delivery · No payment required now

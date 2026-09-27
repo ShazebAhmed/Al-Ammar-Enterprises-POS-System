@@ -8,6 +8,10 @@ Use Node.js 22 or newer. Run `npm ci`, copy `.env.example` to `.env.local`, fill
 
 Run `npm test`, `npm run format:check` and `npm run build` before deployment. The database tests use embedded PostgreSQL (PGlite) with a representative schema, not the production database.
 
+## Keeping Supabase awake
+
+The free Supabase plan pauses a project after about a week without activity, and the site then shows no products. The `Supabase keep-alive` workflow loads the live home page every three days, which queries Supabase. If a run fails, the catalogue could not be loaded: open the Supabase dashboard and resume the project. GitHub disables scheduled workflows in repositories with no commits for 60 days; re-enable it from the Actions tab if that happens.
+
 ## Database requirement
 
 **The new checkout requires the included migration. Do not deploy this frontend alone to an existing live store.** Follow [the rollout guide](docs/rollout.md) on a staging database first.

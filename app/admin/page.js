@@ -235,6 +235,20 @@ export default function AdminPage() {
     return supabase.storage.from("product-images").getPublicUrl(path).data
       .publicUrl;
   }
+  // Best effort: removes photos no product refers to any more. A failure only
+  // leaves an unused file behind, so it is not shown to the admin.
+  async function deleteProductImages(urls) {
+    const marker = "/object/public/product-images/";
+    const paths = urls
+      .map((url) => String(url).split(marker)[1])
+      .filter(Boolean)
+      .map((path) => decodeURIComponent(path.split("?")[0]));
+    if (paths.length)
+      await supabase.storage
+        .from("product-images")
+        .remove(paths)
+        .catch(() => {});
+  }
   if (!authReady || !profileReady || loading)
     return (
       <main className="page-wrap">
@@ -592,6 +606,7 @@ export default function AdminPage() {
             if (!addAnother) setEditingProduct(null);
           }}
           onUploadImage={uploadProductImage}
+          onDiscardImages={deleteProductImages}
         />
       )}
     </div>
@@ -778,7 +793,14 @@ function ProductsTab({ products, settings, onAdd, onEdit, onDelete }) {
   );
 }
 
-function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
+function ProductForm({
+  product,
+  categories,
+  onCancel,
+  onSave,
+  onUploadImage,
+  onDiscardImages,
+}) {
   const isNew = !product.id;
   const [form, setForm] = useState({
     id: product.id || null,
@@ -802,11 +824,20 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
     dialogRef = useRef(null);
   const working = useRef(false),
     alive = useRef(true),
-    previews = useRef(new Set());
-  const cancelRef = useRef(onCancel);
-  cancelRef.current = () => {
-    if (!working.current) onCancel();
-  };
+    previews = useRef(new Set()),
+    // Photos uploaded in this editor that no saved product refers to yet.
+    unsaved = useRef(new Set()),
+    // Set by the submit buttons' clicks; SubmitEvent.submitter is missing in
+    // older Safari, and pressing Enter should save and close.
+    addAnotherClicked = useRef(false);
+  function cancel() {
+    if (working.current) return;
+    onDiscardImages([...unsaved.current]);
+    unsaved.current.clear();
+    onCancel();
+  }
+  const cancelRef = useRef(cancel);
+  cancelRef.current = cancel;
   function releasePreview(url) {
     if (url) {
       URL.revokeObjectURL(url);
@@ -873,6 +904,7 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
             throw new Error("Choose an image under 10 MB.");
           const blob = await compressImage(entry.file);
           const url = await onUploadImage(blob);
+          unsaved.current.add(url);
           if (!alive.current) break;
           // Keep each successful upload even when a later image fails.
           setForm((current) => ({
@@ -938,6 +970,10 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
   }
   function removeImage(index) {
     if (working.current) return;
+    // Photos already saved on the product are deleted only after the product
+    // is saved without them, so cancelling keeps them.
+    const url = form.images[index];
+    if (unsaved.current.delete(url)) onDiscardImages([url]);
     setForm((current) => ({
       ...current,
       images: current.images.filter((_, i) => i !== index),
@@ -946,6 +982,7 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
   }
   const canSave =
     form.name.trim() &&
+    form.category &&
     form.price !== "" &&
     Number.isFinite(Number(form.price)) &&
     Number(form.price) >= 0 &&
@@ -957,8 +994,8 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
   async function save(event) {
     event.preventDefault();
     if (!canSave || working.current) return;
-    const addAnother =
-      isNew && event.nativeEvent?.submitter?.value === "another";
+    const addAnother = isNew && addAnotherClicked.current;
+    addAnotherClicked.current = false;
     const submitted = {
       ...form,
       name: form.name.trim(),
@@ -971,6 +1008,11 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
     setSavedNotice("");
     try {
       await onSave(submitted, { addAnother });
+      unsaved.current.clear();
+      const dropped = (product.images || []).filter(
+        (url) => !submitted.images.includes(url),
+      );
+      if (form.id && dropped.length) onDiscardImages(dropped);
       if (addAnother && alive.current) {
         setForm({
           id: null,
@@ -1039,7 +1081,7 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
             type="button"
             aria-label="Close product editor"
             disabled={saving || uploading}
-            onClick={onCancel}
+            onClick={cancel}
             className="icon-button"
           >
             <Icon name="close" size={22} />
@@ -1135,8 +1177,16 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
               ))}
             </select>
           </label>
-          <small style={{ color: "var(--ink-soft)" }}>
-            Add new categories in Settings → Categories.
+          <small
+            style={{
+              color: form.category ? "var(--ink-soft)" : "var(--danger)",
+            }}
+          >
+            {categories.length
+              ? form.category
+                ? "Add new categories in Settings → Categories."
+                : "Choose a category to save this product."
+              : "Add a category in Settings → Categories before adding products."}
           </small>
           <label className="stx-label" htmlFor="product-description">
             Description
@@ -1340,7 +1390,7 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
           <button
             type="button"
             disabled={saving || uploading}
-            onClick={onCancel}
+            onClick={cancel}
             className="stx-btn stx-btn-outline"
           >
             Cancel
@@ -1350,6 +1400,7 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
             value="close"
             disabled={!canSave || saving}
             className="stx-btn stx-btn-primary"
+            onClick={() => (addAnotherClicked.current = false)}
           >
             {saving ? "Saving…" : "Save product"}
           </button>
@@ -1359,6 +1410,7 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
               value="another"
               disabled={!canSave || saving}
               className="stx-btn stx-btn-outline"
+              onClick={() => (addAnotherClicked.current = true)}
             >
               Save &amp; add another
             </button>

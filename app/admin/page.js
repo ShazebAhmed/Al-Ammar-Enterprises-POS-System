@@ -26,6 +26,9 @@ const ADMIN_TABS = [
   { key: "reviews", label: "Reviews", icon: "chat" },
   { key: "settings", label: "Settings", icon: "settings" },
 ];
+const DAY_MS = 24 * 60 * 60 * 1000;
+// Pending cash-on-delivery orders older than this are flagged so their stock can be released.
+const STALE_ORDER_DAYS = 3;
 export default function AdminPage() {
   const {
     supabase,
@@ -187,12 +190,41 @@ export default function AdminPage() {
       setRevision((r) => r + 1);
     }, "Order status updated");
   }
+  async function cancelStaleOrders(days) {
+    await mutation(async () => {
+      const { error } = await supabase.rpc("cancel_stale_orders", {
+        p_days: days,
+      });
+      if (error) throw error;
+      const cutoff = Date.now() - days * DAY_MS;
+      setOrders((list) =>
+        list.map((o) =>
+          o.status === "Pending" && new Date(o.createdAt).getTime() < cutoff
+            ? { ...o, status: "Cancelled" }
+            : o,
+        ),
+      );
+      setRevision((r) => r + 1);
+    }, "Old pending orders cancelled");
+  }
   async function deleteReview(id) {
     await mutation(async () => {
       const { error } = await supabase.from("reviews").delete().eq("id", id);
       if (error) throw error;
       setReviews((list) => list.filter((r) => r.id !== id));
     }, "Review deleted");
+  }
+  async function approveReview(id) {
+    await mutation(async () => {
+      const { error } = await supabase
+        .from("reviews")
+        .update({ approved: true })
+        .eq("id", id);
+      if (error) throw error;
+      setReviews((list) =>
+        list.map((r) => (r.id === id ? { ...r, approved: true } : r)),
+      );
+    }, "Review approved");
   }
   async function uploadProductImage(blob) {
     const path = `products/${uid("img_")}.jpg`;
@@ -527,6 +559,9 @@ export default function AdminPage() {
                   onUpdateStatus={(id, status) =>
                     updateOrderStatus(id, status).catch(() => {})
                   }
+                  onCancelStale={(days) =>
+                    cancelStaleOrders(days).catch(() => {})
+                  }
                 />
               )}
               {tab === "customers" && (
@@ -537,6 +572,7 @@ export default function AdminPage() {
                   reviews={reviews}
                   products={products}
                   onDelete={(id) => deleteReview(id).catch(() => {})}
+                  onApprove={(id) => approveReview(id).catch(() => {})}
                 />
               )}
               {tab === "settings" && (
@@ -1336,8 +1372,13 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
 /* ---------------------------------------------------------------------
    ORDERS TAB
 --------------------------------------------------------------------- */
-function OrdersTab({ orders, settings, onUpdateStatus }) {
+function OrdersTab({ orders, settings, onUpdateStatus, onCancelStale }) {
   const [expanded, setExpanded] = useState(null);
+  const pendingDays = (o) =>
+    Math.floor((Date.now() - new Date(o.createdAt).getTime()) / DAY_MS);
+  const stale = orders.filter(
+    (o) => o.status === "Pending" && pendingDays(o) >= STALE_ORDER_DAYS,
+  ).length;
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const visible = orders.filter(
@@ -1355,6 +1396,40 @@ function OrdersTab({ orders, settings, onUpdateStatus }) {
       >
         Orders
       </div>
+      {stale > 0 && (
+        <div
+          className="stx-card px-4 py-3"
+          role="status"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+            marginBottom: 14,
+          }}
+        >
+          <span style={{ flex: 1, fontSize: ".86rem" }}>
+            {stale} pending {stale === 1 ? "order has" : "orders have"} waited
+            {` ${STALE_ORDER_DAYS}`} days or more. Their stock is still
+            reserved.
+          </span>
+          <button
+            type="button"
+            className="stx-btn px-3 py-1"
+            style={{ fontSize: ".8rem" }}
+            onClick={() => {
+              if (
+                window.confirm(
+                  `Cancel ${stale} pending ${stale === 1 ? "order" : "orders"} older than ${STALE_ORDER_DAYS} days? Their stock will return to the shop.`,
+                )
+              )
+                onCancelStale(STALE_ORDER_DAYS);
+            }}
+          >
+            Cancel old pending orders
+          </button>
+        </div>
+      )}
       <div className="admin-tools">
         <input
           className="stx-input"
@@ -1414,6 +1489,19 @@ function OrdersTab({ orders, settings, onUpdateStatus }) {
                 </span>
                 <span style={{ fontSize: ".78rem", color: "var(--ink-soft)" }}>
                   {new Date(o.createdAt).toLocaleDateString()}
+                  {o.status === "Pending" && pendingDays(o) >= 1 && (
+                    <span
+                      style={{
+                        marginLeft: 6,
+                        color:
+                          pendingDays(o) >= STALE_ORDER_DAYS
+                            ? "var(--danger)"
+                            : "inherit",
+                      }}
+                    >
+                      · pending {pendingDays(o)}d
+                    </span>
+                  )}
                 </span>
                 <span
                   className="stx-mono"
@@ -1612,7 +1700,11 @@ function CustomersTab({ customers }) {
 /* ---------------------------------------------------------------------
    REVIEWS TAB
 --------------------------------------------------------------------- */
-function ReviewsTab({ reviews, products, onDelete }) {
+function ReviewsTab({ reviews, products, onDelete, onApprove }) {
+  const pending = reviews.filter((r) => !r.approved).length;
+  const ordered = [...reviews].sort(
+    (a, b) => Number(a.approved) - Number(b.approved),
+  );
   return (
     <div>
       <div
@@ -1621,6 +1713,12 @@ function ReviewsTab({ reviews, products, onDelete }) {
       >
         Reviews
       </div>
+      {pending > 0 && (
+        <p style={{ color: "var(--ink-soft)", marginBottom: 12 }}>
+          {pending} {pending === 1 ? "review is" : "reviews are"} waiting for
+          approval. Customers only see approved reviews.
+        </p>
+      )}
       {reviews.length === 0 ? (
         <div className="stx-card px-6 py-12 text-center">
           <Icon name="chat" size={28} color="var(--ink-soft)" />
@@ -1630,7 +1728,7 @@ function ReviewsTab({ reviews, products, onDelete }) {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {reviews.map((r) => {
+          {ordered.map((r) => {
             const product = products.find((p) => p.id === r.productId);
             return (
               <div
@@ -1646,6 +1744,17 @@ function ReviewsTab({ reviews, products, onDelete }) {
                       {r.name}
                     </span>
                     <StarRow value={r.rating} size={12} />
+                    {!r.approved && (
+                      <span
+                        style={{
+                          fontSize: ".72rem",
+                          fontWeight: 600,
+                          color: "var(--danger)",
+                        }}
+                      >
+                        Awaiting approval
+                      </span>
+                    )}
                   </div>
                   <div
                     style={{
@@ -1660,6 +1769,16 @@ function ReviewsTab({ reviews, products, onDelete }) {
                     {r.comment}
                   </p>
                 </div>
+                {!r.approved && (
+                  <button
+                    type="button"
+                    className="stx-btn stx-btn-primary px-3 py-1"
+                    style={{ fontSize: ".8rem" }}
+                    onClick={() => onApprove(r.id)}
+                  >
+                    Approve
+                  </button>
+                )}
                 <button
                   aria-label="Delete review"
                   onClick={() => {

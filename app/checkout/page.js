@@ -76,6 +76,14 @@ export default function CheckoutPage() {
           throw new Error(
             "Checkout is temporarily unavailable. Please contact the store or try again later.",
           );
+        if (/too many guest orders/i.test(error.message))
+          throw new Error(
+            "Checkout is very busy right now. Please try again in a few minutes, or sign in to order.",
+          );
+        if (/too many/i.test(error.message))
+          throw new Error(
+            "We have received several orders from this number already. Please wait for the store to contact you, or call us to place another order.",
+          );
         if (/stock|unavailable|quantity/i.test(error.message))
           throw new Error(
             "Availability has changed. Please return to your basket and check the quantities.",

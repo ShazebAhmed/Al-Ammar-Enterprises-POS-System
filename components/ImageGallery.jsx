@@ -1,48 +1,88 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Icon from "./Icon";
 
+// Product page photos: swipe the large photo on phones, arrows on hover with a
+// mouse, and thumbnails that follow along. Uses the same scroll-snap track as
+// the product cards (.card-slides in globals.css).
 export default function ImageGallery({ images, name }) {
   const [activeImg, setActiveImg] = useState(0);
+  const track = useRef(null);
+  const photos = images || [];
+
+  function onScroll() {
+    const el = track.current;
+    if (el?.clientWidth)
+      setActiveImg(Math.round(el.scrollLeft / el.clientWidth));
+  }
+  function show(i) {
+    const el = track.current;
+    if (!el) return;
+    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+    setActiveImg(i);
+  }
+
   return (
     <div>
-      <div
-        style={{
-          aspectRatio: "1/1",
-          background: "#EFEBDD",
-          borderRadius: 12,
-          overflow: "hidden",
-          marginBottom: 10,
-        }}
-      >
-        {images?.[activeImg] ? (
-          <img
-            src={images[activeImg]}
-            alt={name}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        ) : (
+      <div className="gallery-main">
+        {photos.length ? (
           <div
-            style={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="card-slides"
+            ref={track}
+            onScroll={onScroll}
+            aria-label={`${name}: ${photos.length} photos`}
           >
+            {photos.map((src, i) => (
+              <div className="card-slide" key={src}>
+                <img
+                  src={src}
+                  alt={photos.length > 1 ? `${name}, photo ${i + 1}` : name}
+                  loading={i === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                  draggable={false}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="gallery-empty">
             <Icon name="inventory_2" size={48} color="var(--ink-soft)" />
           </div>
         )}
+        {activeImg > 0 && (
+          <button
+            type="button"
+            className="card-nav prev"
+            aria-label="Previous photo"
+            onClick={() => show(activeImg - 1)}
+          >
+            <Icon name="chevron_left" size={18} />
+          </button>
+        )}
+        {activeImg < photos.length - 1 && (
+          <button
+            type="button"
+            className="card-nav next"
+            aria-label="Next photo"
+            onClick={() => show(activeImg + 1)}
+          >
+            <Icon name="chevron_right" size={18} />
+          </button>
+        )}
+        {photos.length > 1 && (
+          <span className="gallery-count" aria-hidden="true">
+            {activeImg + 1} / {photos.length}
+          </span>
+        )}
       </div>
-      {images?.length > 1 && (
+      {photos.length > 1 && (
         <div className="gallery-thumbnails">
-          {images.map((img, i) => (
+          {photos.map((img, i) => (
             <button
               aria-label={`View image ${i + 1}`}
               aria-pressed={i === activeImg}
-              key={i}
-              onClick={() => setActiveImg(i)}
+              key={img}
+              onClick={() => show(i)}
               style={{
                 width: 58,
                 height: 58,

@@ -22,6 +22,8 @@ export default function Footer({ settings }) {
             <Link href="/">Shop the collection</Link>
             <Link href="/cart">Your basket</Link>
             <Link href="/account">Track your orders</Link>
+            <Link href="/policies/shipping">Shipping &amp; delivery</Link>
+            <Link href="/policies/returns">Returns &amp; refunds</Link>
           </div>
           <div>
             <div className="eyebrow">LET’S TALK</div>

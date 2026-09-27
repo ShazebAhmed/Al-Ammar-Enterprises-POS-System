@@ -194,6 +194,18 @@ export default function AdminPage() {
       setReviews((list) => list.filter((r) => r.id !== id));
     }, "Review deleted");
   }
+  async function approveReview(id) {
+    await mutation(async () => {
+      const { error } = await supabase
+        .from("reviews")
+        .update({ approved: true })
+        .eq("id", id);
+      if (error) throw error;
+      setReviews((list) =>
+        list.map((r) => (r.id === id ? { ...r, approved: true } : r)),
+      );
+    }, "Review approved");
+  }
   async function uploadProductImage(blob) {
     const path = `products/${uid("img_")}.jpg`;
     const { error } = await supabase.storage
@@ -537,6 +549,7 @@ export default function AdminPage() {
                   reviews={reviews}
                   products={products}
                   onDelete={(id) => deleteReview(id).catch(() => {})}
+                  onApprove={(id) => approveReview(id).catch(() => {})}
                 />
               )}
               {tab === "settings" && (
@@ -1434,7 +1447,11 @@ function CustomersTab({ customers }) {
 /* ---------------------------------------------------------------------
    REVIEWS TAB
 --------------------------------------------------------------------- */
-function ReviewsTab({ reviews, products, onDelete }) {
+function ReviewsTab({ reviews, products, onDelete, onApprove }) {
+  const pending = reviews.filter((r) => !r.approved).length;
+  const ordered = [...reviews].sort(
+    (a, b) => Number(a.approved) - Number(b.approved),
+  );
   return (
     <div>
       <div
@@ -1443,6 +1460,12 @@ function ReviewsTab({ reviews, products, onDelete }) {
       >
         Reviews
       </div>
+      {pending > 0 && (
+        <p style={{ color: "var(--ink-soft)", marginBottom: 12 }}>
+          {pending} {pending === 1 ? "review is" : "reviews are"} waiting for
+          approval. Customers only see approved reviews.
+        </p>
+      )}
       {reviews.length === 0 ? (
         <div className="stx-card px-6 py-12 text-center">
           <Icon name="chat" size={28} color="var(--ink-soft)" />
@@ -1452,7 +1475,7 @@ function ReviewsTab({ reviews, products, onDelete }) {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {reviews.map((r) => {
+          {ordered.map((r) => {
             const product = products.find((p) => p.id === r.productId);
             return (
               <div
@@ -1468,6 +1491,17 @@ function ReviewsTab({ reviews, products, onDelete }) {
                       {r.name}
                     </span>
                     <StarRow value={r.rating} size={12} />
+                    {!r.approved && (
+                      <span
+                        style={{
+                          fontSize: ".72rem",
+                          fontWeight: 600,
+                          color: "var(--danger)",
+                        }}
+                      >
+                        Awaiting approval
+                      </span>
+                    )}
                   </div>
                   <div
                     style={{
@@ -1482,6 +1516,16 @@ function ReviewsTab({ reviews, products, onDelete }) {
                     {r.comment}
                   </p>
                 </div>
+                {!r.approved && (
+                  <button
+                    type="button"
+                    className="stx-btn stx-btn-primary px-3 py-1"
+                    style={{ fontSize: ".8rem" }}
+                    onClick={() => onApprove(r.id)}
+                  >
+                    Approve
+                  </button>
+                )}
                 <button
                   aria-label="Delete review"
                   onClick={() => {

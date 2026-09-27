@@ -45,11 +45,11 @@ async function role(name = "anon", id = "") {
     `reset role;select set_config('request.jwt.claim.role','${name}',false);select set_config('request.jwt.claim.sub','${id}',false);set role ${name};`,
   );
 }
-async function order(key, items) {
+async function order(key, items, who = customer) {
   return (
     await db.query(
       "select public.place_store_order($1::uuid,$2::jsonb,$3::jsonb) as result",
-      [key, JSON.stringify(items), JSON.stringify(customer)],
+      [key, JSON.stringify(items), JSON.stringify(who)],
     )
   ).rows[0].result;
 }
@@ -211,6 +211,68 @@ test("only admins can upload product images", async () => {
   );
   await role("authenticated", ADMIN);
   await upload("products/admin.jpg");
+});
+test("new reviews stay hidden until an admin approves them", async () => {
+  const review = (approved) =>
+    db.query(
+      "insert into reviews(product_id,customer_name,rating,comment,approved) values($1,'Guest',5,'Great',$2)",
+      [P1, approved],
+    );
+  await role();
+  await assert.rejects(() => review(true), /row-level security/);
+  await review(false);
+  assert.equal((await db.query("select * from reviews")).rows.length, 0);
+  await role("authenticated", ADMIN);
+  await db.exec("update reviews set approved = true");
+  await role();
+  assert.equal((await db.query("select * from reviews")).rows.length, 1);
+});
+test("one phone number is limited to three open and five hourly orders", async () => {
+  const buyer = { ...customer, phone: "0321 7654321" };
+  const place = (n) =>
+    order(
+      `eeeeeeee-eeee-4eee-8eee-00000000000${n}`,
+      [{ productId: P1, qty: 1 }],
+      buyer,
+    );
+  await role();
+  for (const n of [1, 2, 3]) await place(n);
+  await assert.rejects(() => place(4), /Too many open orders/);
+  await role("authenticated", ADMIN);
+  await db.exec(
+    "update orders set status = 'Cancelled' where customer_phone = '0321 7654321'",
+  );
+  await role();
+  await place(5);
+  await place(6);
+  await assert.rejects(() => place(7), /Too many orders for this phone/);
+});
+test("guest orders are capped at twenty per ten minutes", async () => {
+  await db.exec(
+    `reset role; update products set stock = 1000 where id = '${P1}'`,
+  );
+  await role();
+  let placed = 0;
+  let error;
+  for (let n = 10; n < 40 && !error; n++) {
+    try {
+      await order(
+        `ffffffff-ffff-4fff-8fff-0000000000${n}`,
+        [{ productId: P1, qty: 1 }],
+        { ...customer, phone: `03330000${n}` },
+      );
+      placed++;
+    } catch (e) {
+      error = e;
+    }
+  }
+  assert.match(error?.message ?? "", /Too many guest orders/);
+  await db.exec("reset role");
+  const { rows } = await db.query(
+    "select count(*)::int as n from orders where customer_id is null",
+  );
+  assert.equal(rows[0].n, 20);
+  assert.ok(placed > 0);
 });
 test.after(async () => {
   await db.close();

@@ -2,20 +2,13 @@
 import { useState } from "react";
 import StarRow from "./StarRow";
 import ReviewForm from "./ReviewForm";
-import { uid } from "@/lib/format";
 
 export default function ReviewsSection({ productId, initialReviews }) {
-  const [reviews, setReviews] = useState(initialReviews);
+  const reviews = initialReviews;
+  const [submitted, setSubmitted] = useState(false);
   const avg = reviews.length
     ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
     : 0;
-
-  function handlePosted(newReview) {
-    setReviews((list) => [
-      { ...newReview, id: uid("rv_"), productId },
-      ...list,
-    ]);
-  }
 
   return (
     <div style={{ marginTop: 32 }}>
@@ -76,7 +69,17 @@ export default function ReviewsSection({ productId, initialReviews }) {
         ))}
       </div>
 
-      <ReviewForm productId={productId} onPosted={handlePosted} />
+      {submitted && (
+        <div
+          className="stx-card px-4 py-3"
+          role="status"
+          style={{ marginBottom: 14 }}
+        >
+          Thank you! Your review will appear here once the store has approved
+          it.
+        </div>
+      )}
+      <ReviewForm productId={productId} onPosted={() => setSubmitted(true)} />
     </div>
   );
 }

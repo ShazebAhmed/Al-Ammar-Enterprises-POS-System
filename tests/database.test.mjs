@@ -319,6 +319,50 @@ test("admin can cancel orders left pending too long and their stock returns", as
   assert.equal(await status(recent.id), "Pending");
   assert.equal(await stock(), before + 2);
 });
+test("customers can delete their own account; orders stay without the link", async () => {
+  const LEAVER = "33333333-3333-4333-8333-333333333333";
+  await db.exec(
+    `reset role; insert into auth.users values ('${LEAVER}','{"name":"Leaver"}')`,
+  );
+  await role("authenticated", LEAVER);
+  const placed = await order(
+    "cdcdcdcd-cdcd-4cdc-8cdc-000000000001",
+    [{ productId: P1, qty: 1 }],
+    { ...customer, phone: "0355 5555555" },
+  );
+  await db.query(
+    "insert into cart_items(customer_id,product_id,qty) values($1,$2,1)",
+    [LEAVER, P1],
+  );
+  const remove = () => db.query("select public.delete_my_account()");
+  await role();
+  await assert.rejects(remove, /permission denied/);
+  await role("authenticated", ADMIN);
+  await assert.rejects(remove, /admin account/);
+  await role("authenticated", LEAVER);
+  await remove();
+  await db.exec("reset role");
+  const count = async (sql) => (await db.query(sql, [LEAVER])).rows[0].n;
+  assert.equal(
+    await count("select count(*)::int n from auth.users where id=$1"),
+    0,
+  );
+  assert.equal(
+    await count("select count(*)::int n from profiles where id=$1"),
+    0,
+  );
+  assert.equal(
+    await count("select count(*)::int n from cart_items where customer_id=$1"),
+    0,
+  );
+  const kept = (
+    await db.query(
+      "select customer_id, customer_name from orders where id=$1",
+      [placed.id],
+    )
+  ).rows[0];
+  assert.deepEqual(kept, { customer_id: null, customer_name: "Test buyer" });
+});
 test.after(async () => {
   await db.close();
 });

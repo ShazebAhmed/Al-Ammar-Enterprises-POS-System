@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Store app only: links to the shop (for example a product shared on
+             WhatsApp) open in the app. The admin app does not claim links. -->
+        <activity android:name="com.google.androidbrowserhelper.trusted.LauncherActivity">
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="@string/siteHost" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

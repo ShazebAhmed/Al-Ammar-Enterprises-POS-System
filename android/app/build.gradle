@@ -1,8 +1,9 @@
-// Two Android apps from one project. Both open the live website in a WebView, so
-// every website update reaches the apps at once; the APKs only need rebuilding to
-// change a name, icon or start page.
-//   store: the customer shop          -> AlAmmarStore.apk
-//   admin: straight to the admin panel -> AlAmmarAdmin.apk
+// Two Android apps from one project, both Trusted Web Activities: Chrome shows the live
+// website full screen without an address bar (verified by the site's
+// /.well-known/assetlinks.json). Website updates reach the apps at once; the apps only
+// need rebuilding to change a name, icon, address or target Android version.
+//   store: the customer shop, for Google Play      -> AlAmmarStore.aab / .apk
+//   admin: opens the admin panel, shared privately  -> AlAmmarAdmin.apk
 
 plugins {
     id 'com.android.application'
@@ -11,20 +12,26 @@ plugins {
 def HOST = 'alammarstore.vercel.app'
 def SITE = "https://${HOST}"
 
+// Release signing details live in android/keystore.properties (never committed).
+def keystoreProps = new Properties()
+def keystoreFile = rootProject.file('keystore.properties')
+if (keystoreFile.exists()) {
+    keystoreFile.withInputStream { keystoreProps.load(it) }
+}
+
 android {
     namespace 'com.alammar.app'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         minSdk 24
-        targetSdk 35
-        versionCode 1
-        versionName '1.0.0'
-        buildConfigField 'String', 'SITE_HOST', "\"${HOST}\""
-    }
-
-    buildFeatures {
-        buildConfig true
+        targetSdk 36
+        versionCode 2
+        versionName '1.1.0'
+        resValue 'string', 'siteHost', HOST
+        resValue 'string', 'webManifestUrl', "${SITE}/manifest.webmanifest"
+        resValue 'string', 'assetStatements',
+                "[{\"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": {\"namespace\": \"web\", \"site\": \"${SITE}\"}}]"
     }
 
     flavorDimensions += 'role'
@@ -33,13 +40,31 @@ android {
             dimension 'role'
             applicationId 'com.alammar.store'
             resValue 'string', 'app_name', 'Al Ammar Store'
-            buildConfigField 'String', 'START_URL', "\"${SITE}/\""
+            resValue 'string', 'launchUrl', "${SITE}/"
         }
         admin {
             dimension 'role'
             applicationId 'com.alammar.admin'
             resValue 'string', 'app_name', 'Al Ammar Admin'
-            buildConfigField 'String', 'START_URL', "\"${SITE}/admin\""
+            resValue 'string', 'launchUrl', "${SITE}/admin"
+        }
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreProps['storeFile']) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
         }
     }
 
@@ -47,4 +72,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
 }

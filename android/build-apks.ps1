@@ -1,12 +1,15 @@
-# build-apks.ps1 - builds the two Android apps into android\dist:
-#   AlAmmarStore.apk  (customer shop)
-#   AlAmmarAdmin.apk  (opens the admin panel)
+# build-apks.ps1 - builds the release apps into android\dist:
+#   AlAmmarStore.aab  (upload this to Google Play)
+#   AlAmmarStore.apk  (customer shop, for installing directly)
+#   AlAmmarAdmin.apk  (opens the admin panel; share privately, not on Play)
 #
 #   powershell -NoProfile -ExecutionPolicy Bypass -File android\build-apks.ps1
 #
-# Uses JDK 17 and Gradle 8.9 from %USERPROFILE%\AndroidBuild (downloaded once if
-# missing) and the Android SDK that Android Studio installs. The APKs are signed with
-# the standard Android debug key: fine for installing and trying on your own phones.
+# Needs: the Android SDK with platform 36 (Android Studio's, in %LOCALAPPDATA%\Android\Sdk),
+# JDK 17 and Gradle 8.11.1 in %USERPROFILE%\AndroidBuild (downloaded once if missing), and
+# the signing key: android\signing\alammar-release.keystore + android\keystore.properties.
+# Both are private, kept out of Git, and backed up to the owner's Google Drive. Without
+# them Play will not accept updates, so never delete or regenerate them.
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
@@ -19,10 +22,11 @@ $Dist    = Join-Path $Android 'dist'
 
 function Step($msg) { Write-Host ""; Write-Host "==> $msg" -ForegroundColor Yellow }
 
-if (-not (Test-Path (Join-Path $Sdk 'platforms'))) { throw "Android SDK not found at $Sdk (install Android Studio first)." }
+if (-not (Test-Path (Join-Path $Sdk 'platforms\android-36'))) { throw "Android SDK platform 36 not found in $Sdk. Install it with Android Studio's SDK Manager." }
+if (-not (Test-Path (Join-Path $Android 'keystore.properties'))) { throw "android\keystore.properties is missing. Restore the signing key from the Google Drive backup; do not create a new one." }
 New-Item -ItemType Directory -Force $Tools, $Dist | Out-Null
 
-# ---- JDK 17 + Gradle 8.9 ----------------------------------------------------------------
+# ---- JDK 17 + Gradle 8.11.1 -------------------------------------------------------------
 function Ensure-Tool($url, $zipName, $folderFilter) {
     $found = Get-ChildItem $Tools -Directory -Filter $folderFilter -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($found) { return $found.FullName }
@@ -33,7 +37,7 @@ function Ensure-Tool($url, $zipName, $folderFilter) {
 }
 Step 'JDK 17 and Gradle'
 $JdkHome    = Ensure-Tool 'https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jdk/hotspot/normal/eclipse' 'jdk17.zip' 'jdk-17*'
-$GradleHome = Ensure-Tool 'https://services.gradle.org/distributions/gradle-8.9-bin.zip' 'gradle-8.9-bin.zip' 'gradle-8.9'
+$GradleHome = Ensure-Tool 'https://services.gradle.org/distributions/gradle-8.11.1-bin.zip' 'gradle-8.11.1-bin.zip' 'gradle-8.11.1'
 $env:JAVA_HOME = $JdkHome
 Set-Content -Path (Join-Path $Android 'local.properties') -Value ("sdk.dir=" + ($Sdk -replace '\\', '\\\\')) -Encoding ascii
 
@@ -67,14 +71,16 @@ foreach ($flavor in $looks.Keys) {
 }
 
 # ---- build ------------------------------------------------------------------------------
-Step 'Building both apps (the first build downloads Android libraries and takes a few minutes)'
+Step 'Building release apps (the first build downloads Android libraries and takes a few minutes)'
 Push-Location $Android
 try {
-    & (Join-Path $GradleHome 'bin\gradle.bat') --no-daemon -q assembleStoreDebug assembleAdminDebug
+    & (Join-Path $GradleHome 'bin\gradle.bat') --no-daemon -q bundleStoreRelease assembleStoreRelease assembleAdminRelease
     if ($LASTEXITCODE -ne 0) { throw "Gradle build failed ($LASTEXITCODE)" }
 } finally { Pop-Location }
 
-Copy-Item (Join-Path $Android 'app\build\outputs\apk\store\debug\app-store-debug.apk') (Join-Path $Dist 'AlAmmarStore.apk') -Force
-Copy-Item (Join-Path $Android 'app\build\outputs\apk\admin\debug\app-admin-debug.apk') (Join-Path $Dist 'AlAmmarAdmin.apk') -Force
+$out = Join-Path $Android 'app\build\outputs'
+Copy-Item (Join-Path $out 'bundle\storeRelease\app-store-release.aab') (Join-Path $Dist 'AlAmmarStore.aab') -Force
+Copy-Item (Join-Path $out 'apk\store\release\app-store-release.apk') (Join-Path $Dist 'AlAmmarStore.apk') -Force
+Copy-Item (Join-Path $out 'apk\admin\release\app-admin-release.apk') (Join-Path $Dist 'AlAmmarAdmin.apk') -Force
 Step 'Done'
-Get-ChildItem $Dist -Filter *.apk | ForEach-Object { "{0}  {1:N0} KB" -f $_.FullName, ($_.Length / 1KB) }
+Get-ChildItem $Dist -File | ForEach-Object { "{0}  {1:N0} KB" -f $_.FullName, ($_.Length / 1KB) }

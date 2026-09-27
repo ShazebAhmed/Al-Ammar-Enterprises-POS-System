@@ -81,6 +81,30 @@ export default function AccountPage() {
     } catch {}
   }
 
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  async function handleDeleteAccount() {
+    if (
+      !window.confirm(
+        "Delete your account? Your sign-in, profile and saved basket are removed and cannot be recovered. Past orders stay in the store's records.",
+      )
+    )
+      return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const { error } = await supabase.rpc("delete_my_account");
+      if (error) throw error;
+      await logOut().catch(() => {});
+      router.push("/");
+    } catch {
+      setDeleteError(
+        "Your account could not be deleted. Please try again, or message us and we will delete it for you.",
+      );
+      setDeleting(false);
+    }
+  }
+
   if (loadError || !supabase)
     return (
       <main className="page-wrap">
@@ -240,6 +264,42 @@ export default function AccountPage() {
             </div>
           ))}
         </div>
+      )}
+      {!profile.isAdmin && (
+        <section
+          className="stx-card px-5 py-5 no-print"
+          style={{ marginTop: 32, borderColor: "var(--line)" }}
+        >
+          <div className="stx-label" style={{ marginBottom: 6 }}>
+            Delete account
+          </div>
+          <p
+            style={{
+              color: "var(--ink-soft)",
+              fontSize: ".9rem",
+              margin: "0 0 12px",
+            }}
+          >
+            Removes your sign-in, profile and saved basket. Past orders stay in
+            our records for accounting.{" "}
+            <Link href="/policies/delete-account">Learn more</Link>
+          </p>
+          {deleteError && (
+            <div className="inline-error" role="alert">
+              {deleteError}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            disabled={deleting}
+            className="stx-btn stx-btn-outline px-4 py-2"
+            style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
+          >
+            <Icon name="delete" size={16} />{" "}
+            {deleting ? "Deleting…" : "Delete my account"}
+          </button>
+        </section>
       )}
       {billOrder && settings && (
         <div className="receipt-print-only">

@@ -1,0 +1,22 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.alammar.store",
+      "sha256_cert_fingerprints": [
+        "9A:C9:92:DC:42:2D:B5:F5:D8:64:76:BB:8F:27:4C:4A:60:3D:2F:63:C1:B7:A9:C2:94:58:C7:3A:03:28:0F:49"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.alammar.admin",
+      "sha256_cert_fingerprints": [
+        "9A:C9:92:DC:42:2D:B5:F5:D8:64:76:BB:8F:27:4C:4A:60:3D:2F:63:C1:B7:A9:C2:94:58:C7:3A:03:28:0F:49"
+      ]
+    }
+  }
+]

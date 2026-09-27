@@ -7,6 +7,7 @@ import Icon from "@/components/Icon";
 import StarRow from "@/components/StarRow";
 import {
   formatMoney,
+  formatOrderTime,
   compressImage,
   uid,
   settingsFromRow,
@@ -521,16 +522,7 @@ export default function AdminPage() {
                             <tr key={o.id}>
                               <td>{o.id}</td>
                               <td>{o.customer.name}</td>
-                              <td>
-                                {new Date(o.createdAt).toLocaleDateString(
-                                  "en-GB",
-                                  {
-                                    timeZone: "Asia/Karachi",
-                                    day: "numeric",
-                                    month: "short",
-                                  },
-                                )}
-                              </td>
+                              <td>{formatOrderTime(o.createdAt)}</td>
                               <td>
                                 {formatMoney(o.total, settings.currencySymbol)}
                               </td>
@@ -1540,7 +1532,7 @@ function OrdersTab({ orders, settings, onUpdateStatus, onCancelStale }) {
                   {o.customer.name}
                 </span>
                 <span style={{ fontSize: ".78rem", color: "var(--ink-soft)" }}>
-                  {new Date(o.createdAt).toLocaleDateString()}
+                  {formatOrderTime(o.createdAt)}
                   {o.status === "Pending" && pendingDays(o) >= 1 && (
                     <span
                       style={{

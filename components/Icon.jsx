@@ -28,6 +28,7 @@ const paths = {
   edit: "m16 3 5 5-12 12-6 1 1-6zM14 5l5 5",
   delete: "M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7",
   upload: "M12 16V3m-5 5 5-5 5 5M3 15v6h18v-6",
+  download: "M12 3v13m-5-5 5 5 5-5M3 15v6h18v-6",
   location_on:
     "M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0M12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6",
   logout: "M9 3H3v18h6M9 12h12m-5-5 5 5-5 5",

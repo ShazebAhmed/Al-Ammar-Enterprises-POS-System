@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/components/Providers";
 import Icon from "@/components/Icon";
+import OrderReceipt from "@/components/OrderReceipt";
 import {
   formatMoney,
+  formatOrderTime,
   orderFromRow,
   settingsFromRow,
   DEFAULT_SETTINGS,
@@ -20,6 +22,19 @@ export default function AccountPage() {
   const [settings, setSettings] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [billOrder, setBillOrder] = useState(null);
+
+  // Render the chosen bill (hidden on screen), print it, then remove it.
+  useEffect(() => {
+    if (!billOrder) return;
+    const done = () => setBillOrder(null);
+    window.addEventListener("afterprint", done, { once: true });
+    const frame = requestAnimationFrame(() => window.print());
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("afterprint", done);
+    };
+  }, [billOrder]);
 
   useEffect(() => {
     if (authReady && !currentUser) router.push("/auth");
@@ -208,14 +223,27 @@ export default function AccountPage() {
                 }}
               >
                 <span style={{ fontSize: ".85rem" }}>
-                  {new Date(o.createdAt).toLocaleDateString()}
+                  {formatOrderTime(o.createdAt)}
                 </span>
                 <span className="stx-mono">
                   {formatMoney(o.total, settings.currencySymbol)}
                 </span>
               </div>
+              <button
+                type="button"
+                className="stx-btn stx-btn-outline no-print"
+                style={{ marginTop: 10, fontSize: ".8rem" }}
+                onClick={() => setBillOrder(o)}
+              >
+                <Icon name="download" size={15} /> Download bill
+              </button>
             </div>
           ))}
+        </div>
+      )}
+      {billOrder && settings && (
+        <div className="receipt-print-only">
+          <OrderReceipt order={billOrder} settings={settings} />
         </div>
       )}
     </main>

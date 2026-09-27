@@ -61,6 +61,7 @@ test("database calculates price, shipping and stock without trusting submitted p
     { productId: P1, qty: 2, price: 0.01, name: "tampered" },
   ]);
   assert.equal(saved.total, 350.5);
+  assert.match(saved.id, /^AA-\d{5,}$/);
   assert.equal(saved.items[0].price, 100.25);
   assert.equal(saved.items[0].name, "Test item");
   assert.equal(

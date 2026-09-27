@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useStore } from "@/components/Providers";
 import useCartProducts from "@/components/useCartProducts";
 import Icon from "@/components/Icon";
+import OrderReceipt from "@/components/OrderReceipt";
 import { formatMoney, orderFromRow } from "@/lib/format";
 import { cartTotals, validateCustomer } from "@/lib/cart";
 export default function CheckoutPage() {
@@ -109,7 +110,7 @@ export default function CheckoutPage() {
   }
   if (order)
     return (
-      <main className="page-wrap" style={{ maxWidth: 640 }}>
+      <main className="page-wrap" style={{ maxWidth: 780 }}>
         <div className="empty-state" style={{ border: 0, paddingBottom: 10 }}>
           <span className="brand-mark" style={{ margin: "0 auto 20px" }}>
             <Icon name="check" size={28} />
@@ -118,36 +119,13 @@ export default function CheckoutPage() {
           <h1>Your order is in.</h1>
           <p>We’ll call {order.customer.phone} to confirm your delivery.</p>
         </div>
-        <div className="ticket px-6 py-6">
-          <div className="summary-row">
-            <span>Order reference</span>
-            <strong style={{ overflowWrap: "anywhere", textAlign: "right" }}>
-              {order.id}
-            </strong>
-          </div>
-          {order.items.map((it) => (
-            <div className="summary-row" key={it.productId}>
-              <span>
-                {it.name} × {it.qty}
-              </span>
-              <span>{money(it.price * it.qty)}</span>
-            </div>
-          ))}
-          <div className="summary-row">
-            <span>Delivery</span>
-            <span>{money(order.shippingFee)}</span>
-          </div>
-          <div className="summary-row total">
-            <span>Due on delivery</span>
-            <span>{money(order.total)}</span>
-          </div>
-        </div>
-        <div className="flex gap-3 mt-6 no-print">
+        <OrderReceipt order={order} settings={settings} />
+        <div className="flex gap-3 mt-6 no-print" style={{ flexWrap: "wrap" }}>
           <button
             className="stx-btn stx-btn-outline"
             onClick={() => window.print()}
           >
-            Print receipt
+            <Icon name="download" size={17} /> Download bill (PDF)
           </button>
           <Link className="stx-btn stx-btn-primary" href="/">
             Continue shopping

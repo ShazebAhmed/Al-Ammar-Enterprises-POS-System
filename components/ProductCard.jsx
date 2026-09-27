@@ -2,34 +2,34 @@ import Link from "next/link";
 import Icon from "./Icon";
 import StarRow from "./StarRow";
 import AddToCartButton from "./AddToCartButton";
+import CardGallery from "./CardGallery";
 import { formatMoney } from "@/lib/format";
 export default function ProductCard({ product, settings, rating }) {
   const soldOut = Number(product.stock) <= 0;
   return (
     <article className="product-card">
-      <Link className="product-image" href={`/product/${product.id}`}>
+      <div className="product-image">
         {product.images?.[0] ? (
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            loading="lazy"
-            decoding="async"
+          <CardGallery
+            images={product.images}
+            name={product.name}
+            href={`/product/${product.id}`}
           />
         ) : (
-          <div className="product-placeholder">
+          <Link
+            className="card-slide product-placeholder"
+            href={`/product/${product.id}`}
+          >
             <Icon name="inventory_2" size={52} />
             <span>{product.category || "The collection"}</span>
-          </div>
+          </Link>
         )}
         {soldOut ? (
           <span className="product-badge">Sold out</span>
         ) : Number(product.stock) <= 5 ? (
           <span className="product-badge">Only {product.stock} left</span>
         ) : null}
-        <span className="image-arrow">
-          <Icon name="arrow_forward" size={18} />
-        </span>
-      </Link>
+      </div>
       <div className="product-body">
         <span className="product-category">
           {product.category || "Essentials"}

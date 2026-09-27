@@ -4,6 +4,7 @@ const paths = {
   search: "m21 21-5-5M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14",
   inventory_2: "m3 7 9 5 9-5M12 12v10M3 7v10l9 5 9-5V7l-9-5-9 5m5-3 9 5",
   chevron_left: "m15 18-6-6 6-6",
+  chevron_right: "m9 18 6-6-6-6",
   arrow_forward: "M4 12h16m-6-6 6 6-6 6",
   add: "M12 5v14M5 12h14",
   add_circle: "M12 8v8M8 12h8M22 12a10 10 0 1 0-20 0 10 10 0 0 0 20 0",

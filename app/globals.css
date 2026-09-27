@@ -703,6 +703,79 @@ input[type="radio"] {
   object-fit: cover;
   transition: transform 0.4s;
 }
+.card-slide {
+  display: block;
+  height: 100%;
+}
+.card-slides {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.card-slides::-webkit-scrollbar {
+  display: none;
+}
+.card-slides .card-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.card-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  pointer-events: none;
+}
+.card-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: #ffffffa8;
+  box-shadow: 0 0 3px #0005;
+  transition: width 0.2s;
+}
+.card-dots span.on {
+  width: 16px;
+  background: #fff;
+}
+.card-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffffe6;
+  color: var(--ink);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.card-nav.prev {
+  left: 8px;
+}
+.card-nav.next {
+  right: 8px;
+}
+.product-image:hover .card-nav,
+.card-nav:focus-visible {
+  opacity: 1;
+}
+/* Touch screens swipe instead. */
+@media (hover: none) {
+  .card-nav {
+    display: none;
+  }
+}
 .product-image:hover img {
   transform: scale(1.04);
 }

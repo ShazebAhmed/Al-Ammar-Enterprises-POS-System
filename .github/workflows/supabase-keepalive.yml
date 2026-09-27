@@ -1,0 +1,27 @@
+name: Supabase keep-alive
+# The free Supabase project pauses after about a week without activity. The home page
+# queries Supabase on every request, so loading it counts as activity. A failed run means
+# the catalogue did not load (for example the project is already paused): resume it in
+# the Supabase dashboard.
+on:
+  schedule:
+    - cron: "17 6 */3 * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Load the live catalogue
+        env:
+          SITE_URL: https://al-ammar-enterprises-pos-system.vercel.app
+        run: |
+          body=$(curl -fsSL --retry 3 --retry-delay 20 "$SITE_URL/?keepalive=$(date +%s)")
+          # The collection count is only rendered when the products query succeeds.
+          if grep -q 'class="collection-count"' <<<"$body"; then
+            echo "Catalogue loaded from Supabase."
+          else
+            echo "::error::The live site could not load the catalogue from Supabase. Check whether the project is paused."
+            exit 1
+          fi

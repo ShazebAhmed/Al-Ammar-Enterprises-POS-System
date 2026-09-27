@@ -52,7 +52,8 @@ export default function AdminPage() {
     [editingProduct, setEditingProduct] = useState(null),
     [mobileNavOpen, setMobileNavOpen] = useState(false);
   useEffect(() => {
-    if (authReady && !currentUser && supabase) router.replace("/auth");
+    if (authReady && !currentUser && supabase)
+      router.replace("/auth?next=/admin");
   }, [authReady, currentUser, supabase, router]);
   useEffect(() => {
     if (!authReady || !profileReady) return;

@@ -2,6 +2,12 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/components/Providers";
+// Where to go after signing in: ?next=/admin (same-site paths only), else the account page.
+function afterSignIn() {
+  const next = new URLSearchParams(window.location.search).get("next") || "";
+  return next.startsWith("/") && !next.startsWith("//") ? next : "/account";
+}
+
 export default function AuthPage() {
   const { supabase } = useStore();
   const router = useRouter();
@@ -54,14 +60,14 @@ export default function AuthPage() {
         if (error) throw error;
         if (!data.session)
           setInfo("Check your email to confirm your account, then sign in.");
-        else router.push("/account");
+        else router.push(afterSignIn());
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: form.email.trim(),
           password: form.password,
         });
         if (error) throw error;
-        router.push("/account");
+        router.push(afterSignIn());
       }
     } catch (e) {
       setError(e.message || "Could not connect. Please try again.");

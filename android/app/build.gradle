@@ -1,0 +1,49 @@
+// Two Android apps from one project. Both open the live website in a WebView, so
+// every website update reaches the apps at once; the APKs only need rebuilding to
+// change a name, icon or start page.
+//   store: the customer shop          -> AlAmmarStore.apk
+//   admin: straight to the admin panel -> AlAmmarAdmin.apk
+
+plugins {
+    id 'com.android.application'
+}
+
+def SITE = 'https://al-ammar-enterprises-pos-system.vercel.app'
+
+android {
+    namespace 'com.alammar.app'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+        buildConfigField 'String', 'SITE_HOST', '"al-ammar-enterprises-pos-system.vercel.app"'
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    flavorDimensions += 'role'
+    productFlavors {
+        store {
+            dimension 'role'
+            applicationId 'com.alammar.store'
+            resValue 'string', 'app_name', 'Al Ammar Store'
+            buildConfigField 'String', 'START_URL', "\"${SITE}/\""
+        }
+        admin {
+            dimension 'role'
+            applicationId 'com.alammar.admin'
+            resValue 'string', 'app_name', 'Al Ammar Admin'
+            buildConfigField 'String', 'START_URL', "\"${SITE}/admin\""
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}

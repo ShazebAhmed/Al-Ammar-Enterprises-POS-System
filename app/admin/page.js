@@ -551,9 +551,9 @@ export default function AdminPage() {
           product={editingProduct}
           categories={settings.categories || []}
           onCancel={() => setEditingProduct(null)}
-          onSave={async (p) => {
+          onSave={async (p, { addAnother } = {}) => {
             await upsertProduct(p);
-            setEditingProduct(null);
+            if (!addAnother) setEditingProduct(null);
           }}
           onUploadImage={uploadProductImage}
         />
@@ -754,13 +754,31 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
     images: product.images || [],
     videoUrl: product.videoUrl || "",
   });
+  const [keepDetails, setKeepDetails] = useState(true);
+  const [uploads, setUploads] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
-  const fileRef = useRef(null);
-  const dialogRef = useRef(null);
+  const [uploadNotice, setUploadNotice] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [savedNotice, setSavedNotice] = useState("");
+  const fileRef = useRef(null),
+    nameRef = useRef(null),
+    dialogRef = useRef(null);
+  const working = useRef(false),
+    alive = useRef(true),
+    previews = useRef(new Set());
   const cancelRef = useRef(onCancel);
-  cancelRef.current = onCancel;
+  cancelRef.current = () => {
+    if (!working.current) onCancel();
+  };
+  function releasePreview(url) {
+    if (url) {
+      URL.revokeObjectURL(url);
+      previews.current.delete(url);
+    }
+  }
   useEffect(() => {
+    alive.current = true;
     const previous = document.activeElement;
     const node = dialogRef.current;
     const focusable = () =>
@@ -769,7 +787,7 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
           'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]',
         ),
       ).filter((el) => el.offsetParent !== null);
-    focusable()[0]?.focus();
+    nameRef.current?.focus();
     function keydown(event) {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -789,40 +807,107 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
     }
     node.addEventListener("keydown", keydown);
     return () => {
+      alive.current = false;
       node.removeEventListener("keydown", keydown);
+      previews.current.forEach((url) => URL.revokeObjectURL(url));
+      previews.current.clear();
       previous?.focus();
     };
   }, []);
 
-  async function handleFiles(e) {
-    const files = Array.from(e.target.files || []).slice(
-      0,
-      5 - form.images.length,
+  async function uploadBatch(entries) {
+    if (working.current) return;
+    working.current = true;
+    setUploading(true);
+    setSavedNotice("");
+    try {
+      for (const entry of entries) {
+        if (!alive.current) break;
+        setUploads((list) =>
+          list.map((item) =>
+            item.id === entry.id
+              ? { ...item, status: "uploading", error: "" }
+              : item,
+          ),
+        );
+        try {
+          if (!entry.file.type.startsWith("image/"))
+            throw new Error("Choose an image file.");
+          if (entry.file.size > 10 * 1024 * 1024)
+            throw new Error("Choose an image under 10 MB.");
+          const blob = await compressImage(entry.file);
+          const url = await onUploadImage(blob);
+          if (!alive.current) break;
+          // Keep each successful upload even when a later image fails.
+          setForm((current) => ({
+            ...current,
+            images: [...current.images, url],
+          }));
+          setUploads((list) => list.filter((item) => item.id !== entry.id));
+          releasePreview(entry.preview);
+        } catch (error) {
+          if (!alive.current) break;
+          const status = Number(error?.statusCode || error?.status);
+          const message = error?.message || "";
+          const reason = message.startsWith("Choose an image")
+            ? message
+            : status === 403 ||
+                /row.level security|unauthoriz|permission/i.test(message)
+              ? "Upload permission denied. Check your admin access, then retry."
+              : /bucket.*not found/i.test(message)
+                ? "Image storage is unavailable. Check the store's storage setup."
+                : "Could not upload this image. Check your connection or try a different image.";
+          setUploads((list) =>
+            list.map((item) =>
+              item.id === entry.id
+                ? { ...item, status: "failed", error: reason }
+                : item,
+            ),
+          );
+        }
+      }
+    } finally {
+      working.current = false;
+      if (alive.current) setUploading(false);
+    }
+  }
+  async function handleFiles(event) {
+    const selected = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (working.current || !selected.length) return;
+    const slots = Math.max(0, 5 - form.images.length - uploads.length);
+    const files = selected.slice(0, slots);
+    setUploadNotice(
+      selected.length > slots
+        ? `Only ${slots} more ${slots === 1 ? "photo can" : "photos can"} be added. The extra files were not uploaded.`
+        : "",
     );
     if (!files.length) return;
-    setUploading(true);
-    setUploadError("");
-    try {
-      const urls = [];
-      for (const file of files) {
-        const blob = await compressImage(file);
-        const url = await onUploadImage(blob);
-        urls.push(url);
-      }
-      setForm((f) => ({ ...f, images: [...f.images, ...urls] }));
-    } catch (err) {
-      console.error(err);
-      setUploadError(
-        "Upload failed — check that the 'product-images' storage bucket exists and is public.",
-      );
-    }
-    setUploading(false);
-    if (fileRef.current) fileRef.current.value = "";
+    const entries = files.map((file) => {
+      const preview =
+        file.type.startsWith("image/") && file.size <= 10 * 1024 * 1024
+          ? URL.createObjectURL(file)
+          : "";
+      if (preview) previews.current.add(preview);
+      return { id: uid("upload_"), file, preview, status: "queued", error: "" };
+    });
+    setUploads((list) => [...list, ...entries]);
+    await uploadBatch(entries);
   }
-  function removeImage(i) {
-    setForm((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }));
+  function removePending(entry) {
+    if (working.current) return;
+    releasePreview(entry.preview);
+    setUploads((list) => list.filter((item) => item.id !== entry.id));
+    setUploadNotice("");
   }
-
+  function removeImage(index) {
+    if (working.current) return;
+    setForm((current) => ({
+      ...current,
+      images: current.images.filter((_, i) => i !== index),
+    }));
+    setUploadNotice("");
+  }
   const canSave =
     form.name.trim() &&
     form.price !== "" &&
@@ -831,29 +916,54 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
     form.stock !== "" &&
     Number.isSafeInteger(Number(form.stock)) &&
     Number(form.stock) >= 0 &&
-    !uploading;
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
-  async function save(e) {
-    e.preventDefault();
-    if (!canSave || saving) return;
+    !uploading &&
+    uploads.length === 0;
+  async function save(event) {
+    event.preventDefault();
+    if (!canSave || working.current) return;
+    const addAnother =
+      isNew && event.nativeEvent?.submitter?.value === "another";
+    const submitted = {
+      ...form,
+      name: form.name.trim(),
+      price: Number(form.price),
+      stock: Number(form.stock),
+    };
+    working.current = true;
     setSaving(true);
     setSaveError("");
+    setSavedNotice("");
     try {
-      await onSave({
-        ...form,
-        price: Number(form.price),
-        stock: Number(form.stock),
-      });
-    } catch (err) {
-      console.error(err);
-      setSaveError(
-        "Couldn't save this product — check your connection and try again.",
-      );
-      setSaving(false);
+      await onSave(submitted, { addAnother });
+      if (addAnother && alive.current) {
+        setForm({
+          id: null,
+          name: "",
+          category: keepDetails ? submitted.category : categories[0] || "",
+          price: keepDetails ? submitted.price : "",
+          stock: keepDetails ? submitted.stock : "",
+          description: keepDetails ? submitted.description : "",
+          images: [],
+          videoUrl: "",
+        });
+        setUploadNotice("");
+        setSavedNotice(
+          `Saved “${submitted.name}”. Ready for the next product.`,
+        );
+      }
+    } catch {
+      if (alive.current)
+        setSaveError(
+          "Couldn't save this product. Your details and uploaded photos are kept here; check your connection and try again.",
+        );
+    } finally {
+      working.current = false;
+      if (alive.current) setSaving(false);
     }
   }
-
+  useEffect(() => {
+    if (savedNotice && !saving) nameRef.current?.focus();
+  }, [savedNotice, saving]);
   return (
     <div
       ref={dialogRef}
@@ -868,14 +978,14 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
         alignItems: "flex-start",
         justifyContent: "center",
         overflowY: "auto",
-        padding: "40px 16px",
+        padding: "24px 12px",
         zIndex: 200,
       }}
     >
       <form
         onSubmit={save}
         className="stx-card"
-        style={{ width: "min(560px,100%)", padding: 0 }}
+        style={{ width: "min(600px,100%)", padding: 0 }}
       >
         <div
           style={{
@@ -886,46 +996,59 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
             borderBottom: "1px solid var(--line)",
           }}
         >
-          <div
-            className="stx-display"
-            style={{ fontWeight: 700, fontSize: "1.1rem" }}
-          >
+          <h2 style={{ fontSize: "1.1rem", margin: 0 }}>
             {isNew ? "Add product" : "Edit product"}
-          </div>
+          </h2>
           <button
             type="button"
             aria-label="Close product editor"
+            disabled={saving || uploading}
             onClick={onCancel}
-            style={{ background: "none", border: "none", cursor: "pointer" }}
+            className="icon-button"
           >
             <Icon name="close" size={22} />
           </button>
         </div>
-
-        <div
+        <fieldset
+          disabled={saving}
           style={{
+            border: 0,
+            margin: 0,
             padding: 20,
             display: "flex",
             flexDirection: "column",
             gap: 14,
-            maxHeight: "70vh",
+            maxHeight: "68vh",
             overflowY: "auto",
+            minWidth: 0,
           }}
         >
-          <div>
-            <label className="stx-label">Product name</label>
+          {savedNotice && (
+            <p role="status" style={{ color: "var(--primary)", margin: 0 }}>
+              {savedNotice}
+            </p>
+          )}
+          <label className="stx-label" htmlFor="product-name">
+            Product name
             <input
+              ref={nameRef}
+              id="product-name"
               className="stx-input"
               style={{ marginTop: 4 }}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
             />
-          </div>
-          <div style={{ display: "flex", gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <label className="stx-label">Price</label>
+          </label>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <label
+              className="stx-label"
+              style={{ flex: "1 1 160px" }}
+              htmlFor="product-price"
+            >
+              Price
               <input
+                id="product-price"
                 type="number"
                 min="0"
                 step="0.01"
@@ -935,187 +1058,231 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
                 required
               />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label className="stx-label">Stock quantity</label>
+            </label>
+            <label
+              className="stx-label"
+              style={{ flex: "1 1 160px" }}
+              htmlFor="product-stock"
+            >
+              Stock quantity
               <input
+                id="product-stock"
                 type="number"
                 min="0"
+                step="1"
                 className="stx-input"
                 style={{ marginTop: 4 }}
                 value={form.stock}
                 onChange={(e) => setForm({ ...form, stock: e.target.value })}
                 required
               />
-            </div>
+            </label>
           </div>
-          <div>
-            <label className="stx-label">Category</label>
+          <label className="stx-label" htmlFor="product-category">
+            Category
             <select
+              id="product-category"
               className="stx-input"
               style={{ marginTop: 4 }}
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
             >
-              {categories.length === 0 && (
-                <option value="">No categories yet</option>
+              {!categories.includes(form.category) && (
+                <option value={form.category}>
+                  {form.category || "Choose a category"}
+                </option>
               )}
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
                 </option>
               ))}
             </select>
-            <div
-              style={{
-                fontSize: ".72rem",
-                color: "var(--ink-soft)",
-                marginTop: 4,
-              }}
-            >
-              Need a new category? Add it first from Settings → Categories.
-            </div>
-          </div>
-          <div>
-            <label className="stx-label">Description</label>
+          </label>
+          <small style={{ color: "var(--ink-soft)" }}>
+            Add new categories in Settings → Categories.
+          </small>
+          <label className="stx-label" htmlFor="product-description">
+            Description
             <textarea
+              id="product-description"
               className="stx-input"
-              rows={4}
+              rows={3}
               style={{ marginTop: 4 }}
               value={form.description}
               onChange={(e) =>
                 setForm({ ...form, description: e.target.value })
               }
             />
-          </div>
-          <div>
-            <label className="stx-label">Photos (up to 5)</label>
-            <div
+          </label>
+          <section aria-label="Product photos">
+            <div className="stx-label">
+              Photos ({form.images.length + uploads.length}/5)
+            </div>
+            <p
               style={{
-                display: "flex",
-                gap: 8,
-                flexWrap: "wrap",
-                marginTop: 6,
+                fontSize: ".8rem",
+                color: "var(--ink-soft)",
+                margin: "6px 0 10px",
               }}
             >
-              {form.images.map((img, i) => (
-                <div
-                  key={i}
-                  style={{
-                    position: "relative",
-                    width: 64,
-                    height: 64,
-                    borderRadius: 8,
-                    overflow: "hidden",
-                  }}
-                >
+              Select several photos together. Up to 10 MB each. The first
+              uploaded photo is the cover.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {form.images.map((url, index) => (
+                <div key={url} style={{ width: 100 }}>
                   <img
-                    src={img}
-                    alt=""
+                    src={url}
+                    alt={`Product photo ${index + 1}`}
                     style={{
-                      width: "100%",
-                      height: "100%",
+                      width: 100,
+                      height: 90,
+                      borderRadius: 8,
                       objectFit: "cover",
                     }}
                   />
                   <button
                     type="button"
-                    onClick={() => removeImage(i)}
-                    style={{
-                      position: "absolute",
-                      top: 2,
-                      right: 2,
-                      background: "rgba(0,0,0,.6)",
-                      border: "none",
-                      borderRadius: "50%",
-                      width: 18,
-                      height: 18,
-                      color: "#fff",
-                      cursor: "pointer",
-                      fontSize: 10,
-                    }}
+                    className="text-button"
+                    disabled={uploading}
+                    aria-label={`Remove photo ${index + 1}`}
+                    onClick={() => removeImage(index)}
                   >
-                    ✕
+                    Remove {index === 0 ? "cover" : "photo"}
                   </button>
                 </div>
               ))}
-              {form.images.length < 5 && (
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploading}
+              {uploads.map((entry) => (
+                <div
+                  key={entry.id}
                   style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 8,
-                    border: "1.5px dashed var(--line)",
-                    background: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    color: "var(--ink-soft)",
+                    width: 140,
+                    overflowWrap: "anywhere",
+                    fontSize: ".78rem",
                   }}
                 >
-                  <Icon name="upload" size={19} />
-                </button>
-              )}
+                  {entry.preview && (
+                    <img
+                      src={entry.preview}
+                      alt={`Preview of ${entry.file.name}`}
+                      style={{
+                        width: 100,
+                        height: 90,
+                        borderRadius: 8,
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
+                  <div>{entry.file.name}</div>
+                  {entry.error ? (
+                    <p
+                      role="alert"
+                      style={{ color: "var(--danger)", margin: "6px 0" }}
+                    >
+                      {entry.error}
+                    </p>
+                  ) : (
+                    <p role="status">
+                      {entry.status === "uploading" ? "Uploading…" : "Waiting…"}
+                    </p>
+                  )}
+                  <div style={{ display: "flex", gap: 10 }}>
+                    {entry.status === "failed" && (
+                      <button
+                        type="button"
+                        disabled={uploading}
+                        className="text-button"
+                        onClick={() => uploadBatch([entry])}
+                      >
+                        Retry
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      disabled={uploading}
+                      className="text-button"
+                      aria-label={`Remove ${entry.file.name}`}
+                      onClick={() => removePending(entry)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
             <input
               ref={fileRef}
+              aria-label="Choose product photos"
               type="file"
               accept="image/*"
               multiple
+              disabled={uploading}
               onChange={handleFiles}
               style={{ display: "none" }}
             />
-            {uploading && (
-              <div
-                style={{
-                  fontSize: ".75rem",
-                  color: "var(--ink-soft)",
-                  marginTop: 4,
-                }}
-              >
-                Uploading…
-              </div>
+            <button
+              type="button"
+              className="stx-btn stx-btn-outline"
+              style={{ marginTop: 10 }}
+              disabled={uploading || form.images.length + uploads.length >= 5}
+              onClick={() => fileRef.current?.click()}
+            >
+              <Icon name="upload" size={17} />{" "}
+              {uploading ? "Uploading photos…" : "Choose photos"}
+            </button>
+            {uploadNotice && (
+              <p role="status" style={{ fontSize: ".8rem", marginTop: 8 }}>
+                {uploadNotice}
+              </p>
             )}
-            {uploadError && (
-              <div
+            {!uploading && uploads.length > 0 && (
+              <p
                 style={{
-                  fontSize: ".75rem",
+                  fontSize: ".8rem",
                   color: "var(--danger)",
-                  marginTop: 4,
+                  marginTop: 8,
                 }}
               >
-                {uploadError}
-              </div>
+                Retry or remove failed photos before saving.
+              </p>
             )}
-          </div>
-          <div>
-            <label className="stx-label">Video link (optional)</label>
+          </section>
+          <label className="stx-label" htmlFor="product-video">
+            Video link (optional)
             <input
+              id="product-video"
               className="stx-input"
               style={{ marginTop: 4 }}
               placeholder="YouTube link, or a direct .mp4 URL"
               value={form.videoUrl}
               onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
             />
-            <div
+          </label>
+          {isNew && (
+            <label
               style={{
-                fontSize: ".72rem",
-                color: "var(--ink-soft)",
-                marginTop: 4,
+                fontSize: ".82rem",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 8,
               }}
             >
-              Upload your video to YouTube (unlisted is fine), then paste the
-              link here.
-            </div>
-          </div>
-        </div>
-
+              <input
+                type="checkbox"
+                checked={keepDetails}
+                onChange={(e) => setKeepDetails(e.target.checked)}
+              />
+              <span>
+                Keep category, price, stock and description when adding another
+                product. Name, photos and video are cleared.
+              </span>
+            </label>
+          )}
+        </fieldset>
         {saveError && (
-          <div
+          <p
+            role="alert"
             style={{
               padding: "0 20px",
               color: "var(--danger)",
@@ -1123,11 +1290,12 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
             }}
           >
             {saveError}
-          </div>
+          </p>
         )}
         <div
           style={{
             display: "flex",
+            flexWrap: "wrap",
             gap: 10,
             padding: 20,
             borderTop: "1px solid var(--line)",
@@ -1135,20 +1303,30 @@ function ProductForm({ product, categories, onCancel, onSave, onUploadImage }) {
         >
           <button
             type="button"
+            disabled={saving || uploading}
             onClick={onCancel}
             className="stx-btn stx-btn-outline"
-            style={{ flex: 1, padding: "10px 0" }}
           >
             Cancel
           </button>
           <button
             type="submit"
+            value="close"
             disabled={!canSave || saving}
             className="stx-btn stx-btn-primary"
-            style={{ flex: 1, padding: "10px 0" }}
           >
             {saving ? "Saving…" : "Save product"}
           </button>
+          {isNew && (
+            <button
+              type="submit"
+              value="another"
+              disabled={!canSave || saving}
+              className="stx-btn stx-btn-outline"
+            >
+              Save &amp; add another
+            </button>
+          )}
         </div>
       </form>
     </div>

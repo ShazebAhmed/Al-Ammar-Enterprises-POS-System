@@ -1,0 +1,84 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useStore } from "./Providers";
+import {
+  DEFAULT_SETTINGS,
+  settingsFromRow,
+  productFromRow,
+} from "@/lib/format";
+export default function useCartProducts() {
+  const { supabase, cart, cartReady, cartLoadError, retryCartLoad } =
+    useStore();
+  const [data, setData] = useState({
+    products: [],
+    settings: DEFAULT_SETTINGS,
+    loading: true,
+    error: "",
+  });
+  const [revision, setRevision] = useState(0);
+  const ids = cart
+    .map((l) => l.productId)
+    .sort()
+    .join(",");
+  useEffect(() => {
+    if (!cartReady) return;
+    let cancelled = false;
+    if (!supabase) {
+      setData((d) => ({
+        ...d,
+        loading: false,
+        error:
+          "The store is temporarily unavailable. Please try again shortly.",
+      }));
+      return;
+    }
+    setData((d) => ({ ...d, loading: true, error: "" }));
+    (async () => {
+      try {
+        const [p, s] = await Promise.all([
+          ids
+            ? supabase.from("products").select("*").in("id", ids.split(","))
+            : Promise.resolve({ data: [] }),
+          supabase.from("store_settings").select("*").eq("id", 1).maybeSingle(),
+        ]);
+        if (p.error || s.error) throw p.error || s.error;
+        if (!cancelled)
+          setData({
+            products: (p.data || []).map(productFromRow),
+            settings: s.data ? settingsFromRow(s.data) : DEFAULT_SETTINGS,
+            loading: false,
+            error: "",
+          });
+      } catch {
+        if (!cancelled)
+          setData((d) => ({
+            ...d,
+            loading: false,
+            error:
+              "Could not load current prices and availability. Please try again.",
+          }));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ids, cartReady, supabase, revision]);
+  const lines = cart.map((l) => ({
+    ...l,
+    product: data.products.find((p) => String(p.id) === l.productId),
+  }));
+  const invalid = lines.some(
+    (l) =>
+      !l.product ||
+      l.qty > Number(l.product.stock) ||
+      Number(l.product.stock) <= 0,
+  );
+  return {
+    ...data,
+    loading: !cartLoadError && (data.loading || !cartReady),
+    error: cartLoadError || data.error,
+    lines,
+    invalid,
+    retry: () => (cartLoadError ? retryCartLoad() : setRevision((r) => r + 1)),
+  };
+}

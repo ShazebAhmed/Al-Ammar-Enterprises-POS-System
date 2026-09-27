@@ -8,7 +8,13 @@ export default function StarRow({ value, size = 14 }) {
   return (
     <div style={{ display: "inline-flex", gap: 1 }}>
       {[1, 2, 3, 4, 5].map((n) => (
-        <Icon key={n} name="star" size={size} fill={n <= full} color={n <= full ? ACCENT : LINE} />
+        <Icon
+          key={n}
+          name="star"
+          size={size}
+          fill={n <= full}
+          color={n <= full ? ACCENT : LINE}
+        />
       ))}
     </div>
   );

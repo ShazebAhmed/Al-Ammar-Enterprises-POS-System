@@ -1,25 +1,62 @@
+import Link from "next/link";
 import Icon from "./Icon";
-
+function whatsappPhone(value) {
+  let p = String(value).replace(/\D/g, "");
+  if (p.startsWith("0")) p = "92" + p.slice(1);
+  return p;
+}
 export default function Footer({ settings }) {
   return (
-    <footer style={{ borderTop: "1px solid var(--line)", marginTop: 48, background: "var(--cream)" }}>
-      <div style={{ maxWidth: 1120, margin: "0 auto" }} className="px-4 py-6 grid gap-6">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 24 }}>
-          <div>
-            <div className="stx-display" style={{ fontWeight: 700, fontSize: "1.05rem", marginBottom: 6 }}>{settings.storeName || "Your Store"}</div>
-            <p style={{ fontSize: ".85rem", color: "var(--ink-soft)", lineHeight: 1.5 }}>{settings.aboutText || "Everything you need, in one general store."}</p>
+    <footer className="site-footer" id="about">
+      <div className="container">
+        <div className="footer-main">
+          <div className="footer-story">
+            <div className="eyebrow">A LITTLE ABOUT US</div>
+            <h2>
+              {settings.storeName || "Al-Ammar"}
+              <span className="gold-dot">.</span>
+            </h2>
+            <p>
+              {settings.aboutText ||
+                "A considered collection for your everyday. Discover what you need, order with ease, and make yourself at home."}
+            </p>
           </div>
           <div>
-            <div className="stx-label" style={{ marginBottom: 8 }}>Contact</div>
-            {settings.contactPhone && <div style={{ fontSize: ".85rem", display: "flex", gap: 6, alignItems: "center", marginBottom: 4 }}><Icon name="call" size={14} />{settings.contactPhone}</div>}
-            {settings.whatsapp && <div style={{ fontSize: ".85rem", color: "var(--ink-soft)" }}>WhatsApp: {settings.whatsapp}</div>}
+            <div className="eyebrow">EXPLORE</div>
+            <Link href="/">Shop the collection</Link>
+            <Link href="/cart">Your basket</Link>
+            <Link href="/account">Track your orders</Link>
           </div>
           <div>
-            <div className="stx-label" style={{ marginBottom: 8 }}>How you pay</div>
-            <p style={{ fontSize: ".85rem", color: "var(--ink-soft)", lineHeight: 1.5 }}>Cash on delivery, or we'll call to confirm your phone order. Online card payment is coming soon.</p>
+            <div className="eyebrow">LET’S TALK</div>
+            {settings.contactPhone ? (
+              <a href={`tel:${settings.contactPhone.replace(/[^+\d]/g, "")}`}>
+                {settings.contactPhone}
+              </a>
+            ) : (
+              <p>
+                We confirm delivery details by phone after you place an order.
+              </p>
+            )}
+            {settings.whatsapp && (
+              <a
+                href={`https://wa.me/${whatsappPhone(settings.whatsapp)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Chat on WhatsApp <Icon name="arrow_forward" size={14} />
+              </a>
+            )}
+            <p>Pay on delivery.</p>
           </div>
         </div>
-        <div style={{ borderTop: "1px solid var(--line)", paddingTop: 14, fontSize: ".75rem", color: "var(--ink-soft)" }}>© {new Date().getFullYear()} {settings.storeName || "Your Store"}</div>
+        <div className="footer-bottom">
+          <span>
+            © {new Date().getFullYear()}{" "}
+            {settings.storeName || "Al-Ammar Enterprises"}
+          </span>
+          <span>Everyday essentials. Thoughtfully brought together.</span>
+        </div>
       </div>
     </footer>
   );

@@ -19,7 +19,7 @@ Source reviewed against main commit `60ddb4f88c2454ec7455036e414cd4c1fbf6db8c`. 
 
 ## Verification and limits
 
-Automated tests cover cart normalization/merging/quantities/customer validation, authoritative order totals, stock rollback, duplicate requests, access isolation, profile privilege escalation and cancellation. Database tests run against a representative PGlite schema. A successful build verifies compilation, not a live Supabase integration.
+Automated tests cover cart normalization/merging/quantities/customer validation, authoritative order totals, stock rollback, duplicate requests, access isolation, profile privilege escalation and cancellation. Database tests apply all migrations, starting from the live-schema baseline, in PGlite. A successful build verifies compilation, not a live Supabase integration.
 
 The deployed homepage, basket error state and sign-in layout have now been inspected in the desktop browser after Vercel authentication. See [browser QA](browser-qa.md) for evidence and the database connection blocker. Required before release: real-schema migration trial, mobile browser review, data-backed product and admin review, login and password recovery, product upload, guest/authenticated checkout, order-history isolation and admin status transitions.
 

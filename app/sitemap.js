@@ -23,5 +23,14 @@ export default async function sitemap() {
       );
       if (data.length < 500) break;
     }
-  return [{ url: base, changeFrequency: "daily", priority: 1 }, ...entries];
+  const policies = ["/policies/shipping", "/policies/returns"].map((path) => ({
+    url: base + path,
+    changeFrequency: "monthly",
+    priority: 0.3,
+  }));
+  return [
+    { url: base, changeFrequency: "daily", priority: 1 },
+    ...policies,
+    ...entries,
+  ];
 }

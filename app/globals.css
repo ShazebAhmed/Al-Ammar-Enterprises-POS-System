@@ -2250,6 +2250,63 @@ input[type="radio"] {
   }
 }
 /* ---------------------------------------------------------------------
+   POLICY PAGES
+--------------------------------------------------------------------- */
+.policy-page {
+  max-width: 860px;
+}
+.policy-sections {
+  display: grid;
+  gap: 14px;
+  margin-top: 26px;
+}
+.policy-section {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 14px;
+  padding: 22px 24px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.policy-number {
+  color: var(--accent-dark);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 26px;
+  font-style: italic;
+  line-height: 1;
+}
+.policy-section h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+.policy-section ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+.policy-section li::marker {
+  color: var(--accent);
+}
+.policy-other {
+  margin-top: 22px;
+  color: var(--ink-soft);
+}
+.policy-other a {
+  color: var(--primary);
+  font-weight: 600;
+}
+@media (max-width: 560px) {
+  .policy-section {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 18px;
+  }
+}
+/* ---------------------------------------------------------------------
    CUSTOMER BILL
 --------------------------------------------------------------------- */
 .receipt {
@@ -2462,6 +2519,15 @@ input[type="radio"] {
   color: var(--ink-soft);
   font-size: 12px;
 }
+.receipt .receipt-policy {
+  margin: 0 30px 18px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--soft);
+  color: var(--ink-soft);
+  font-size: 10.5px;
+  line-height: 1.55;
+}
 .receipt-totals {
   margin: 0;
 }
@@ -2516,6 +2582,10 @@ input[type="radio"] {
   .receipt-foot {
     padding-left: 18px;
     padding-right: 18px;
+  }
+  .receipt .receipt-policy {
+    margin-left: 18px;
+    margin-right: 18px;
   }
   .receipt-title {
     text-align: left;

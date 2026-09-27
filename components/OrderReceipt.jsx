@@ -1,4 +1,5 @@
 import { formatMoney, formatOrderTime } from "@/lib/format";
+import { billPolicySummary } from "@/lib/policies";
 
 const STATUS_LABEL = {
   Pending: "Awaiting confirmation",
@@ -18,6 +19,8 @@ export default function OrderReceipt({ order, settings }) {
     .filter(Boolean)
     .filter((v, i, all) => all.indexOf(v) === i);
   const customer = order.customer || {};
+  // The bill is only rendered in the browser (after checkout or on request).
+  const host = typeof window === "undefined" ? "" : window.location.host;
   return (
     <article className="receipt" aria-label={`Bill for order ${order.id}`}>
       <header className="receipt-head">
@@ -132,6 +135,9 @@ export default function OrderReceipt({ order, settings }) {
         </div>
       </div>
 
+      <p className="receipt-policy">
+        {billPolicySummary()} Full policy: {host}/policies/returns
+      </p>
       <footer className="receipt-foot">
         <p className="receipt-thanks">Thank you</p>
         <p>

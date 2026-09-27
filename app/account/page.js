@@ -9,6 +9,7 @@ import {
   formatMoney,
   formatOrderTime,
   orderFromRow,
+  printBill,
   settingsFromRow,
   DEFAULT_SETTINGS,
   STATUS_COLOR,
@@ -29,7 +30,7 @@ export default function AccountPage() {
     if (!billOrder) return;
     const done = () => setBillOrder(null);
     window.addEventListener("afterprint", done, { once: true });
-    const frame = requestAnimationFrame(() => window.print());
+    const frame = requestAnimationFrame(() => printBill(billOrder.id));
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("afterprint", done);

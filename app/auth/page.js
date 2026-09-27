@@ -1,10 +1,16 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/components/Providers";
 // Where to go after signing in: ?next=/admin (same-site paths only), else the account page.
+// The target is also kept for this tab, so tapping "Sign in" in the header
+// (which reloads /auth without ?next) still returns the admin app to /admin.
 function afterSignIn() {
-  const next = new URLSearchParams(window.location.search).get("next") || "";
+  let next = new URLSearchParams(window.location.search).get("next") || "";
+  try {
+    next = next || sessionStorage.getItem("authNext") || "";
+    sessionStorage.removeItem("authNext");
+  } catch {}
   return next.startsWith("/") && !next.startsWith("//") ? next : "/account";
 }
 
@@ -23,6 +29,12 @@ export default function AuthPage() {
     [info, setInfo] = useState(""),
     [submitting, setSubmitting] = useState(false);
   const busy = useRef(false);
+  useEffect(() => {
+    const next = new URLSearchParams(window.location.search).get("next");
+    try {
+      if (next) sessionStorage.setItem("authNext", next);
+    } catch {}
+  }, []);
   function changeMode(next) {
     setMode(next);
     setError("");

@@ -5,7 +5,7 @@ import { useStore } from "@/components/Providers";
 import useCartProducts from "@/components/useCartProducts";
 import Icon from "@/components/Icon";
 import OrderReceipt from "@/components/OrderReceipt";
-import { formatMoney, orderFromRow } from "@/lib/format";
+import { formatMoney, orderFromRow, printBill } from "@/lib/format";
 import { cartTotals, validateCustomer } from "@/lib/cart";
 export default function CheckoutPage() {
   const { supabase, currentUser, profile, authReady, clearCart } = useStore();
@@ -123,7 +123,7 @@ export default function CheckoutPage() {
         <div className="flex gap-3 mt-6 no-print" style={{ flexWrap: "wrap" }}>
           <button
             className="stx-btn stx-btn-outline"
-            onClick={() => window.print()}
+            onClick={() => printBill(order.id)}
           >
             <Icon name="download" size={17} /> Download bill (PDF)
           </button>

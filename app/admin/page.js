@@ -267,7 +267,7 @@ export default function AdminPage() {
             ? "The store connection is unavailable."
             : "Sign in with an authorised administrator account to continue."}
         </p>
-        <Link className="stx-btn stx-btn-primary" href="/auth">
+        <Link className="stx-btn stx-btn-primary" href="/auth?next=/admin">
           Go to sign in
         </Link>
       </main>

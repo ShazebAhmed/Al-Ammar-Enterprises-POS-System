@@ -2,7 +2,9 @@ import "./globals.css";
 import { getSettings } from "@/lib/catalogue";
 import Providers from "@/components/Providers";
 import AppShell from "@/components/AppShell";
+import ServiceWorker from "@/components/ServiceWorker";
 export const revalidate = 60;
+export const viewport = { themeColor: "#174f42" };
 export async function generateMetadata() {
   const settings = await getSettings();
   const name = settings.storeName || "Al-Ammar";
@@ -25,6 +27,7 @@ export default async function RootLayout({ children }) {
         <Providers>
           <AppShell settings={settings}>{children}</AppShell>
         </Providers>
+        <ServiceWorker />
       </body>
     </html>
   );

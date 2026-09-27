@@ -23,7 +23,12 @@ export default async function sitemap() {
       );
       if (data.length < 500) break;
     }
-  const policies = ["/policies/shipping", "/policies/returns"].map((path) => ({
+  const policies = [
+    "/policies/shipping",
+    "/policies/returns",
+    "/policies/privacy",
+    "/policies/delete-account",
+  ].map((path) => ({
     url: base + path,
     changeFrequency: "monthly",
     priority: 0.3,

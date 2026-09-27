@@ -1,5 +1,6 @@
-// Plugin versions only. Gradle 8.9 + Android Gradle Plugin 8.7.3 + JDK 17 is the
-// combination already used successfully on this machine.
+// Plugin versions only. Android Gradle Plugin 8.9 is needed for API 36 (Android 16),
+// which Google Play requires for new apps from 31 August 2026. It runs on Gradle 8.11.1
+// and JDK 17 (see build-apks.ps1).
 plugins {
-    id 'com.android.application' version '8.7.3' apply false
+    id 'com.android.application' version '8.9.1' apply false
 }

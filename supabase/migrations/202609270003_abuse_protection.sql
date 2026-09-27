@@ -1,8 +1,22 @@
 -- Limits guest checkout abuse and hides reviews until an admin approves them.
 begin;
 
+-- One key per Pakistani phone number however it is typed: 0321 7654321, +92 321 7654321,
+-- 0092-321-7654321 and 3217654321 all become 03217654321.
+create or replace function public.store_phone_key(p text) returns text
+language sql immutable set search_path = '' as $$
+  select case
+    when d like '0092%' then '0' || substr(d, 5)
+    when d like '92%' and length(d) = 12 then '0' || substr(d, 3)
+    when d like '3%' and length(d) = 10 then '0' || d
+    else d
+  end
+  from (select regexp_replace(coalesce(p, ''), '[^0-9]', '', 'g') as d) s;
+$$;
+create index if not exists orders_phone_key_idx on public.orders(public.store_phone_key(customer_phone));
+
 -- Checkout limits. Each pending order reserves stock, so a flood of fake orders can empty the
--- shop. Limits apply per phone number (digits only) and to guest orders overall.
+-- shop. Limits apply per phone number and to guest orders overall.
 create or replace function public.place_store_order(p_request_id uuid, p_items jsonb, p_customer jsonb)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare saved public.orders%rowtype; phone text;
@@ -14,15 +28,15 @@ begin
     if saved.customer_id is distinct from auth.uid() then raise exception 'Order access denied'; end if;
     return to_jsonb(saved) - 'checkout_token';
   end if;
-  phone := regexp_replace(coalesce(p_customer->>'phone',''), '[^0-9]', '', 'g');
+  phone := public.store_phone_key(p_customer->>'phone');
   if not public.is_store_admin() then
     perform pg_advisory_xact_lock(hashtextextended('store-checkout-limits',0));
     if (select count(*) from public.orders where status = 'Pending'
-        and regexp_replace(customer_phone, '[^0-9]', '', 'g') = phone) >= 3 then
+        and public.store_phone_key(customer_phone) = phone) >= 3 then
       raise exception 'Too many open orders for this phone number';
     end if;
     if (select count(*) from public.orders where created_at > now() - interval '1 hour'
-        and regexp_replace(customer_phone, '[^0-9]', '', 'g') = phone) >= 5 then
+        and public.store_phone_key(customer_phone) = phone) >= 5 then
       raise exception 'Too many orders for this phone number';
     end if;
     if auth.uid() is null and (select count(*) from public.orders where customer_id is null
@@ -50,7 +64,10 @@ create policy store_reviews_self_approve_guard on public.reviews as restrictive 
 create or replace function public.limit_pending_reviews() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
-  if not public.is_store_admin() and (select count(*) from public.reviews where not approved) >= 200 then
+  if public.is_store_admin() then return new; end if;
+  -- Serialize concurrent submissions so parallel inserts cannot all see 199 and pass.
+  perform pg_advisory_xact_lock(hashtextextended('store-review-queue',0));
+  if (select count(*) from public.reviews where not approved) >= 200 then
     raise exception 'Too many reviews are awaiting approval';
   end if;
   return new;

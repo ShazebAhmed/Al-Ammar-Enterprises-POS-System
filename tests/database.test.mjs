@@ -228,19 +228,28 @@ test("new reviews stay hidden until an admin approves them", async () => {
   assert.equal((await db.query("select * from reviews")).rows.length, 1);
 });
 test("one phone number is limited to three open and five hourly orders", async () => {
-  const buyer = { ...customer, phone: "0321 7654321" };
+  // The same number typed in every accepted format must count as one customer.
+  const formats = [
+    "0321 7654321",
+    "+92 321 7654321",
+    "0092-321-7654321",
+    "3217654321",
+    "+923217654321",
+    "03217654321",
+    "0321-7654321",
+  ];
   const place = (n) =>
     order(
       `eeeeeeee-eeee-4eee-8eee-00000000000${n}`,
       [{ productId: P1, qty: 1 }],
-      buyer,
+      { ...customer, phone: formats[n - 1] },
     );
   await role();
   for (const n of [1, 2, 3]) await place(n);
   await assert.rejects(() => place(4), /Too many open orders/);
   await role("authenticated", ADMIN);
   await db.exec(
-    "update orders set status = 'Cancelled' where customer_phone = '0321 7654321'",
+    "update orders set status = 'Cancelled' where public.store_phone_key(customer_phone) = '03217654321'",
   );
   await role();
   await place(5);

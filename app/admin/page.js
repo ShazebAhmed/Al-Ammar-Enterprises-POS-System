@@ -39,6 +39,7 @@ export default function AdminPage() {
     authReady,
     profileReady,
     notify,
+    inStoreApp,
   } = useStore();
   const router = useRouter();
   const [loading, setLoading] = useState(true),
@@ -251,6 +252,20 @@ export default function AdminPage() {
         .remove(paths)
         .catch(() => {});
   }
+  if (inStoreApp)
+    return (
+      <main className="page-wrap empty-state">
+        <Icon name="lock" size={36} />
+        <h1>Store management</h1>
+        <p>
+          This app is the shop your customers use. Open the Al Ammar Admin app
+          to manage the store.
+        </p>
+        <Link className="stx-btn stx-btn-primary" href="/">
+          Back to the store
+        </Link>
+      </main>
+    );
   if (!authReady || !profileReady || loading)
     return (
       <main className="page-wrap">

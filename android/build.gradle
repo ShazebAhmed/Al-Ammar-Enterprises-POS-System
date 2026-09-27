@@ -1,0 +1,5 @@
+// Plugin versions only. Gradle 8.9 + Android Gradle Plugin 8.7.3 + JDK 17 is the
+// combination already used successfully on this machine.
+plugins {
+    id 'com.android.application' version '8.7.3' apply false
+}

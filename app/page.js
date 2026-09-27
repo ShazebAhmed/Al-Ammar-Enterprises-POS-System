@@ -161,9 +161,11 @@ export default async function HomePage({ searchParams }) {
               <span className="gold-dot">.</span>
             </h2>
           </div>
-          <span className="collection-count">
-            {count} {count === 1 ? "find" : "finds"} to explore
-          </span>
+          {!unavailable && (
+            <span className="collection-count">
+              {count} {count === 1 ? "find" : "finds"} to explore
+            </span>
+          )}
         </div>
         <div
           className="category-tabs"

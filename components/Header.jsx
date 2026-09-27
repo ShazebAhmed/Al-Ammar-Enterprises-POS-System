@@ -48,6 +48,7 @@ export default function Header({ settings }) {
             <Link
               className="account-link"
               href={currentUser ? "/account" : "/auth"}
+              aria-label={currentUser ? "My account" : "Sign in"}
             >
               <Icon name="person" size={21} />
               <span className="hide-narrow">

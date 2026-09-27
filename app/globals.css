@@ -1769,9 +1769,6 @@ input[type="radio"] {
   .hero h1 {
     font-size: 46px;
   }
-  .stock-toggle {
-    display: none;
-  }
   .footer-main {
     gap: 40px;
   }

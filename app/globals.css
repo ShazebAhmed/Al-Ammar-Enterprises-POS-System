@@ -1934,6 +1934,23 @@ input[type="radio"] {
     position: static;
     padding-top: 0;
   }
+  /* On phones show price and Add to basket right after the photos,
+     before the description and reviews. */
+  .pdp-grid {
+    gap: 26px;
+  }
+  .pdp-main {
+    display: contents;
+  }
+  .pdp-main > * {
+    order: 3;
+  }
+  .pdp-main > :first-child {
+    order: 1;
+  }
+  .pdp-grid > aside {
+    order: 2;
+  }
   .purchase-panel h1 {
     font-size: 29px;
   }
@@ -2088,7 +2105,7 @@ input[type="radio"] {
   }
   .collection-count {
     font-size: 12px;
-    max-width: 80px;
+    max-width: 130px;
     text-align: right;
     margin-top: 28px;
   }

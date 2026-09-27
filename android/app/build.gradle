@@ -8,7 +8,8 @@ plugins {
     id 'com.android.application'
 }
 
-def SITE = 'https://al-ammar-enterprises-pos-system.vercel.app'
+def HOST = 'alammarstore.vercel.app'
+def SITE = "https://${HOST}"
 
 android {
     namespace 'com.alammar.app'
@@ -19,7 +20,7 @@ android {
         targetSdk 35
         versionCode 1
         versionName '1.0.0'
-        buildConfigField 'String', 'SITE_HOST', '"al-ammar-enterprises-pos-system.vercel.app"'
+        buildConfigField 'String', 'SITE_HOST', "\"${HOST}\""
     }
 
     buildFeatures {

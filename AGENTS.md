@@ -6,7 +6,7 @@ Two AI agents work on this repository: **ChatGPT (Codex)** and **Claude (Claude 
 
 Al-Ammar Store: a Next.js 15 / React 19 storefront on Vercel, backed by Supabase (auth, Postgres, storage). See [README.md](README.md) for setup and [docs/rollout.md](docs/rollout.md) for database releases.
 
-- Live site: https://al-ammar-enterprises-pos-system.vercel.app (deploys automatically from `main`)
+- Live site: https://alammarstore.vercel.app (deploys automatically from `main`; the old al-ammar-enterprises-pos-system.vercel.app address redirects here)
 - Every branch and PR gets its own Vercel preview.
 - Supabase is on the free plan and pauses after about a week without activity. If the site shows no data, check that first.
 

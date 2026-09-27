@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Load the live catalogue
         env:
-          SITE_URL: https://al-ammar-enterprises-pos-system.vercel.app
+          SITE_URL: https://alammarstore.vercel.app
         run: |
           body=$(curl -fsSL --retry 3 --retry-delay 20 "$SITE_URL/?keepalive=$(date +%s)")
           # The collection count is only rendered when the products query succeeds.

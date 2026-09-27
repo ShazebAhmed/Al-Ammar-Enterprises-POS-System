@@ -19,6 +19,20 @@ function writeCache(owner, lines, dirty) {
     /* Storage can be unavailable in private browsing. */
   }
 }
+// Which Android app the site is open in: "store", "admin", or "" in a browser.
+// The apps open with document.referrer = android-app://com.alammar.<app>/;
+// it is kept for the tab so later pages still know.
+function readAppRole() {
+  try {
+    const app = document.referrer.match(
+      /^android-app:\/\/com\.alammar\.(store|admin)\//,
+    );
+    if (app) sessionStorage.setItem("alammarApp", app[1]);
+    return sessionStorage.getItem("alammarApp") || "";
+  } catch {
+    return "";
+  }
+}
 export default function Providers({ children }) {
   const [supabase] = useState(createClient);
   const [session, setSession] = useState(null);
@@ -31,6 +45,7 @@ export default function Providers({ children }) {
   const [syncError, setSyncError] = useState("");
   const [cartLoadError, setCartLoadError] = useState("");
   const [loadRevision, setLoadRevision] = useState(0);
+  const [appRole, setAppRole] = useState("");
   const cartRef = useRef([]),
     ownerRef = useRef(null),
     queue = useRef(Promise.resolve()),
@@ -42,6 +57,7 @@ export default function Providers({ children }) {
     toastTimer.current = setTimeout(() => setNotice(null), 4500);
   }
   useEffect(() => () => clearTimeout(toastTimer.current), []);
+  useEffect(() => setAppRole(readAppRole()), []);
   useEffect(() => {
     if (!supabase) {
       setAuthReady(true);
@@ -253,6 +269,8 @@ export default function Providers({ children }) {
         profile,
         currentUser,
         isAdmin: !!profile?.isAdmin,
+        // The customer app never shows store management.
+        inStoreApp: appRole === "store",
         authReady,
         profileReady,
         cartReady,

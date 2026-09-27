@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useStore } from "./Providers";
 import Icon from "./Icon";
 export default function Header({ settings }) {
-  const { cartCount, currentUser, isAdmin } = useStore();
+  const { cartCount, currentUser, isAdmin, inStoreApp } = useStore();
   const path = usePathname();
   return (
     <>
@@ -36,7 +36,7 @@ export default function Header({ settings }) {
             <Link href="/#about">Our story</Link>
           </nav>
           <div className="header-actions">
-            {isAdmin && (
+            {isAdmin && !inStoreApp && (
               <Link
                 className="icon-button"
                 href="/admin"

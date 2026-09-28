@@ -22,6 +22,7 @@ import {
   reviewFromRow,
   ORDER_STATUSES,
   STATUS_COLOR,
+  ordersCsv,
 } from "@/lib/format";
 const ADMIN_TABS = [
   { key: "overview", label: "Overview", icon: "dashboard" },
@@ -1696,6 +1697,17 @@ function ProductForm({
 /* ---------------------------------------------------------------------
    ORDERS TAB
 --------------------------------------------------------------------- */
+// Saves the orders shown (after search and filter) as a spreadsheet file.
+function downloadCsv(orders) {
+  const blob = new Blob([ordersCsv(orders)], {
+    type: "text/csv;charset=utf-8",
+  });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `AlAmmar-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
 function OrdersTab({
   orders,
   settings,
@@ -1778,6 +1790,14 @@ function OrdersTab({
             <option key={s}>{s}</option>
           ))}
         </select>
+        <button
+          type="button"
+          className="stx-btn stx-btn-outline"
+          disabled={!visible.length}
+          onClick={() => downloadCsv(visible)}
+        >
+          <Icon name="download" size={16} /> Export CSV
+        </button>
       </div>
       {visible.length === 0 ? (
         <div className="stx-card px-6 py-12 text-center">

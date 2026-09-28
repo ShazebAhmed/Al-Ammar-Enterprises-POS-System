@@ -127,6 +127,12 @@ export default function CheckoutPage() {
           >
             <Icon name="download" size={17} /> Download bill (PDF)
           </button>
+          <Link
+            className="stx-btn stx-btn-outline"
+            href={`/track?order=${encodeURIComponent(order.id)}`}
+          >
+            <Icon name="local_shipping" size={17} /> Track this order
+          </Link>
           <Link className="stx-btn stx-btn-primary" href="/">
             Continue shopping
           </Link>

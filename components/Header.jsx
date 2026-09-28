@@ -47,6 +47,15 @@ export default function Header({ settings }) {
             )}
             <Link
               className="account-link"
+              href="/track"
+              aria-label="Track your order"
+              aria-current={path === "/track" ? "page" : undefined}
+            >
+              <Icon name="local_shipping" size={21} />
+              <span className="hide-narrow">Track order</span>
+            </Link>
+            <Link
+              className="account-link"
               href={currentUser ? "/account" : "/auth"}
               aria-label={currentUser ? "My account" : "Sign in"}
             >

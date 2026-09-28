@@ -5,6 +5,8 @@ import { useStore } from "@/components/Providers";
 import useCartProducts from "@/components/useCartProducts";
 import Icon from "@/components/Icon";
 import OrderReceipt from "@/components/OrderReceipt";
+import NotifyButton from "@/components/NotifyButton";
+import { watchOrder } from "@/lib/push";
 import { formatMoney, itemName, orderFromRow, printBill } from "@/lib/format";
 import { cartTotals, validateCustomer } from "@/lib/cart";
 export default function CheckoutPage() {
@@ -169,10 +171,22 @@ export default function CheckoutPage() {
           >
             <Icon name="download" size={17} /> Download bill (PDF)
           </button>
+          <Link
+            className="stx-btn stx-btn-outline"
+            href={`/track?order=${encodeURIComponent(order.id)}`}
+          >
+            <Icon name="local_shipping" size={17} /> Track this order
+          </Link>
           <Link className="stx-btn stx-btn-primary" href="/">
             Continue shopping
           </Link>
         </div>
+        <NotifyButton
+          className="mt-6 no-print"
+          label="Notify me about this order"
+          done="Done. This phone will be notified when your order is confirmed, sent and delivered."
+          enable={() => watchOrder(supabase, order.id, order.customer.phone)}
+        />
       </main>
     );
   return (

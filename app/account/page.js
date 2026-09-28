@@ -12,7 +12,7 @@ import {
   formatOrderTime,
   itemName,
   orderFromRow,
-  printBill,
+  downloadBill,
   settingsFromRow,
   DEFAULT_SETTINGS,
   STATUS_COLOR,
@@ -28,16 +28,13 @@ export default function AccountPage() {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [billOrder, setBillOrder] = useState(null);
 
-  // Render the chosen bill (hidden on screen), print it, then remove it.
+  // Render the chosen bill (hidden on screen), download it as a PDF, then remove it.
   useEffect(() => {
     if (!billOrder) return;
-    const done = () => setBillOrder(null);
-    window.addEventListener("afterprint", done, { once: true });
-    const frame = requestAnimationFrame(() => printBill(billOrder.id));
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("afterprint", done);
-    };
+    const frame = requestAnimationFrame(() =>
+      downloadBill(billOrder.id).finally(() => setBillOrder(null)),
+    );
+    return () => cancelAnimationFrame(frame);
   }, [billOrder]);
 
   useEffect(() => {

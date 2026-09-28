@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useStore } from "@/components/Providers";
 import Icon from "@/components/Icon";
-import { formatMoney, formatOrderTime } from "@/lib/format";
+import NotifyButton from "@/components/NotifyButton";
+import { formatMoney, formatOrderTime, itemName } from "@/lib/format";
+import { watchOrder } from "@/lib/push";
 
 const STEPS = [
   { status: "Pending", label: "Order placed" },
@@ -42,7 +44,8 @@ export default function TrackOrderPage() {
         setError(
           "We couldn’t find an order with that number and phone number. Please check both and try again.",
         );
-      else setResult(data);
+      // Keep the phone it was found with, for "Notify me" below.
+      else setResult({ ...data, phone: form.phone });
     } catch {
       setError("Could not connect. Please check your internet and try again.");
     } finally {
@@ -151,11 +154,19 @@ export default function TrackOrderPage() {
           {result.items.map((it, i) => (
             <div key={i} className="track-line">
               <span>
-                {it.name} × {it.qty}
+                {itemName(it.name, it.variant)} × {it.qty}
               </span>
               <span className="stx-mono">{formatMoney(it.price * it.qty)}</span>
             </div>
           ))}
+          {result.discount > 0 && (
+            <div className="track-line">
+              <span>
+                Discount{result.couponCode ? ` (${result.couponCode})` : ""}
+              </span>
+              <span className="stx-mono">− {formatMoney(result.discount)}</span>
+            </div>
+          )}
           <div className="track-line">
             <span>Delivery</span>
             <span className="stx-mono">{formatMoney(result.shippingFee)}</span>
@@ -164,6 +175,15 @@ export default function TrackOrderPage() {
             <span>Total (cash on delivery)</span>
             <span className="stx-mono">{formatMoney(result.total)}</span>
           </div>
+          {result.status !== "Cancelled" && result.status !== "Delivered" && (
+            <NotifyButton
+              key={result.id}
+              className="mt-6"
+              label="Notify me about this order"
+              done="Done. This phone will be notified when your order is confirmed, sent and delivered."
+              enable={() => watchOrder(supabase, result.id, result.phone)}
+            />
+          )}
         </section>
       )}
 

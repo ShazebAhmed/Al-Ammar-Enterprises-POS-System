@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/components/Providers";
 import Icon from "@/components/Icon";
+import NotifyButton from "@/components/NotifyButton";
+import { watchNewOrders } from "@/lib/push";
 import StarRow from "@/components/StarRow";
 import {
   formatMoney,
@@ -424,6 +426,20 @@ export default function AdminPage() {
                       <Icon name="add" size={16} /> Add product
                     </button>
                   </div>
+                  <section className="stx-card px-5 py-4 admin-alerts">
+                    <div>
+                      <strong>New order alerts</strong>
+                      <p className="muted small" style={{ margin: 0 }}>
+                        Get a notification on this phone for every new order.
+                        Turn it on once on each phone you use.
+                      </p>
+                    </div>
+                    <NotifyButton
+                      label="Turn on alerts"
+                      done="Alerts are on for this phone."
+                      enable={() => watchNewOrders(supabase)}
+                    />
+                  </section>
                   <div className="admin-stats">
                     <StatCard
                       icon="account_balance_wallet"

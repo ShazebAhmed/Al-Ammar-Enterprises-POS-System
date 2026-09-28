@@ -396,6 +396,15 @@ test("discount codes are applied by the database and limited to their uses", asy
   assert.equal(placed.coupon_code, "SAVE10");
   assert.equal(Number(placed.discount), 200);
   assert.equal(Number(placed.total), 2000 - 200 + 150);
+  // Order tracking shows the discount and its code.
+  const tracked = (
+    await db.query("select public.track_order($1,$2) as r", [
+      placed.id,
+      buyer.phone,
+    ])
+  ).rows[0].r;
+  assert.equal(Number(tracked.discount), 200);
+  assert.equal(tracked.couponCode, "SAVE10");
   // Its only use is taken.
   await assert.rejects(
     () =>
@@ -440,6 +449,7 @@ test("guests can track an order only with its phone number", async () => {
     "name",
     "price",
     "qty",
+    "variant",
   ]);
   assert.equal(found.address, undefined);
   assert.equal(
@@ -659,6 +669,22 @@ test("product options keep their own stock through orders and cancellations", as
     ],
   );
   assert.equal(Number(placed.total), 800 * 3 + 150);
+  // Order tracking shows the chosen option of each line.
+  const tracked = (
+    await db.query("select public.track_order($1,$2) as r", [
+      placed.id,
+      buyer.phone,
+    ])
+  ).rows[0].r;
+  assert.deepEqual(
+    tracked.items.map((i) => [i.variant, i.qty]),
+    [
+      ["L", 1],
+      ["M", 2],
+    ],
+  );
+  assert.equal(Number(tracked.discount), 0);
+  assert.equal(tracked.couponCode, null);
   let now = await stockOf();
   assert.equal(now.stock, 4);
   assert.deepEqual(now.variants, [

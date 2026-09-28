@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getSettings, getProduct } from "@/lib/catalogue";
+import { getSettings, getProduct, getRelated } from "@/lib/catalogue";
 import { getVideoEmbed, descriptionSummary } from "@/lib/format";
 import Icon from "@/components/Icon";
 import ImageGallery from "@/components/ImageGallery";
 import ProductPurchasePanel from "@/components/ProductPurchasePanel";
 import ReviewsSection from "@/components/ReviewsSection";
+import ProductCard from "@/components/ProductCard";
+import ShareButton from "@/components/ShareButton";
 import { productData, jsonLd } from "@/lib/seo";
 
 export const revalidate = 60;
@@ -49,6 +51,7 @@ export default async function ProductPage({ params }) {
   if (!product) return notFound();
 
   const video = getVideoEmbed(product.videoUrl);
+  const related = await getRelated(product);
   return (
     <main className="page-wrap">
       <script
@@ -143,8 +146,22 @@ export default async function ProductPage({ params }) {
 
         <aside>
           <ProductPurchasePanel product={product} settings={settings} />
+          <ShareButton title={product.name} />
         </aside>
       </div>
+
+      {related.length > 0 && (
+        <section className="related-products" aria-labelledby="related-title">
+          <h2 id="related-title" className="stx-display">
+            You may also like
+          </h2>
+          <div className="product-grid">
+            {related.map((p) => (
+              <ProductCard key={p.id} product={p} settings={settings} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

@@ -11,3 +11,17 @@ test("order times are shown in Pakistan time with date and time", () => {
   );
   assert.equal(formatOrderTime("not a date"), "");
 });
+
+test("search matches name, category or description, with symbols taken literally", async () => {
+  const { searchFilter } = await import("../lib/format.js");
+  assert.equal(
+    searchFilter("wallet"),
+    'name.ilike."%wallet%",category.ilike."%wallet%",description.ilike."%wallet%"',
+  );
+  // %, _ and \ are escaped for ILIKE; " and \ again for the quoted value.
+  assert.ok(
+    searchFilter('50% "off", a_b').startsWith(
+      String.raw`name.ilike."%50\\% \"off\", a\\_b%"`,
+    ),
+  );
+});

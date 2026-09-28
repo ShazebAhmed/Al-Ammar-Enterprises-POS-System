@@ -2462,6 +2462,27 @@ input[type="radio"] {
     padding: 18px;
   }
 }
+.share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+  padding: 8px 0;
+  background: transparent;
+  border: 0;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+.related-products {
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+.related-products h2 {
+  margin: 0 0 22px;
+  font-size: 1.5rem;
+}
 .faq-list {
   display: grid;
   gap: 10px;

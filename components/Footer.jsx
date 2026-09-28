@@ -25,6 +25,8 @@ export default function Footer({ settings }) {
             <Link href="/policies/shipping">Shipping &amp; delivery</Link>
             <Link href="/policies/returns">Returns &amp; refunds</Link>
             <Link href="/policies/privacy">Privacy policy</Link>
+            <Link href="/policies/terms">Terms &amp; conditions</Link>
+            <Link href="/faq">Questions &amp; answers</Link>
           </div>
           <div>
             <div className="eyebrow">LET’S TALK</div>

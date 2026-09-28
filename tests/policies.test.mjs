@@ -67,3 +67,15 @@ test("product data for Google has price, delivery, returns and breadcrumbs", asy
   );
   assert.ok(!jsonLd(product).includes("</script>"));
 });
+
+test("terms and FAQ use the store's own fee, contact and policy terms", async () => {
+  const { termsPolicy, faq } = await import("../lib/policies.js");
+  const terms = text(termsPolicy(settings));
+  assert.match(terms, /laws of Pakistan/);
+  assert.match(terms, /WhatsApp at 03333386641/);
+  const answers = faq(settings)
+    .map((i) => i.q + i.a)
+    .join("\n");
+  assert.match(answers, /Rs\. 250 per order/);
+  assert.match(answers, new RegExp(`within ${POLICY.returnDays} days`));
+});

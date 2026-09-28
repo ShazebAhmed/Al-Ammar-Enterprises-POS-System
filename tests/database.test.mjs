@@ -838,3 +838,31 @@ test("product options keep their own stock through orders and cancellations", as
 test.after(async () => {
   await db.close();
 });
+
+test("visitors cannot call trigger functions directly", async () => {
+  await role();
+  await assert.rejects(
+    () => db.query("select public.compute_order_total()"),
+    /permission denied/,
+  );
+  await role("authenticated", BUYER);
+  await assert.rejects(
+    () => db.query("select public.guard_profile_role()"),
+    /permission denied/,
+  );
+});
+
+test("reviews still need a valid rating, name and comment", async () => {
+  await role();
+  await assert.rejects(
+    () =>
+      db.query(
+        `insert into reviews(product_id,customer_name,rating,comment) values('${P1}','x',9,'bad')`,
+      ),
+    /row-level security/,
+  );
+  await db.query(
+    `insert into reviews(product_id,customer_name,rating,comment) values('${P1}','Ali',5,'Good')`,
+  );
+  await role();
+});

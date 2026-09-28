@@ -2730,29 +2730,38 @@ input[type="radio"] {
 .receipt-print-only {
   display: none;
 }
+/* Narrow screens; the PDF copy (.receipt-export) keeps the full layout. */
 @media (max-width: 560px) {
-  .receipt-head,
-  .receipt-body,
-  .receipt-foot {
+  .receipt:not(.receipt-export)
+    :is(.receipt-head, .receipt-body, .receipt-foot) {
     padding-left: 18px;
     padding-right: 18px;
   }
-  .receipt .receipt-policy {
+  .receipt:not(.receipt-export) .receipt-policy {
     margin-left: 18px;
     margin-right: 18px;
   }
-  .receipt-title {
+  .receipt:not(.receipt-export) .receipt-title {
     text-align: left;
   }
-  .receipt-meta,
-  .receipt-parties,
-  .receipt-summary {
+  .receipt:not(.receipt-export)
+    :is(.receipt-meta, .receipt-parties, .receipt-summary) {
     grid-template-columns: 1fr;
   }
-  .receipt-items th:nth-child(4),
-  .receipt-items td:nth-child(4) {
+  .receipt:not(.receipt-export)
+    .receipt-items
+    :is(th:nth-child(4), td:nth-child(4)) {
     display: none;
   }
+}
+/* The copy drawn into the PDF: edge to edge, no card frame. */
+.receipt.receipt-export {
+  width: 560px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 @media print {
   @page {

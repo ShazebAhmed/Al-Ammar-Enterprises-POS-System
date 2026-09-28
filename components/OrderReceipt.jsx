@@ -22,7 +22,11 @@ export default function OrderReceipt({ order, settings }) {
   // The bill is only rendered in the browser (after checkout or on request).
   const host = typeof window === "undefined" ? "" : window.location.host;
   return (
-    <article className="receipt" aria-label={`Bill for order ${order.id}`}>
+    <article
+      className="receipt"
+      data-order={order.id}
+      aria-label={`Bill for order ${order.id}`}
+    >
       <header className="receipt-head">
         <div className="receipt-brand">
           <span className="receipt-mono" aria-hidden="true">

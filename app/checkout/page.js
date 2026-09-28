@@ -7,7 +7,12 @@ import Icon from "@/components/Icon";
 import OrderReceipt from "@/components/OrderReceipt";
 import NotifyButton from "@/components/NotifyButton";
 import { followMyOrders, watchOrder } from "@/lib/push";
-import { formatMoney, itemName, orderFromRow, printBill } from "@/lib/format";
+import {
+  downloadBill,
+  formatMoney,
+  itemName,
+  orderFromRow,
+} from "@/lib/format";
 import {
   cartTotals,
   clearBuyNow,
@@ -182,7 +187,7 @@ export default function CheckoutPage() {
         <div className="flex gap-3 mt-6 no-print" style={{ flexWrap: "wrap" }}>
           <button
             className="stx-btn stx-btn-outline"
-            onClick={() => printBill(order.id)}
+            onClick={() => downloadBill(order.id)}
           >
             <Icon name="download" size={17} /> Download bill (PDF)
           </button>

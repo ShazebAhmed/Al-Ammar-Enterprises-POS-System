@@ -34,7 +34,9 @@ self.addEventListener("fetch", (event) => {
 });
 
 // Order notifications (see lib/push.js). The message is JSON:
-// { title, body, url, tag }.
+// { title, body, url, tag }. The admin panel's address shows the Admin app's icon.
+const ADMIN = self.location.hostname.startsWith("alammar-admin.");
+const ICON = ADMIN ? "/icons/admin-192.png" : "/icons/icon-192.png";
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -43,14 +45,17 @@ self.addEventListener("push", (event) => {
     data = { body: event.data ? event.data.text() : "" };
   }
   event.waitUntil(
-    self.registration.showNotification(data.title || "Al Ammar Store", {
-      body: data.body || "",
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
-      tag: data.tag,
-      renotify: Boolean(data.tag),
-      data: { url: data.url || "/" },
-    }),
+    self.registration.showNotification(
+      data.title || (ADMIN ? "Al Ammar Admin" : "Al Ammar Store"),
+      {
+        body: data.body || "",
+        icon: ICON,
+        badge: ICON,
+        tag: data.tag,
+        renotify: Boolean(data.tag),
+        data: { url: data.url || "/" },
+      },
+    ),
   );
 });
 

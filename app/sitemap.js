@@ -24,6 +24,7 @@ export default async function sitemap() {
       if (data.length < 500) break;
     }
   const policies = [
+    "/track",
     "/policies/shipping",
     "/policies/returns",
     "/policies/privacy",

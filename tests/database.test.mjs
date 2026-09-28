@@ -424,6 +424,28 @@ test("discount codes are applied by the database and limited to their uses", asy
   ]);
   assert.equal(await uses(), 0);
 });
+test("guests can track an order only with its phone number", async () => {
+  await role();
+  const track = async (id, phone) =>
+    (await db.query("select public.track_order($1,$2) as r", [id, phone]))
+      .rows[0].r;
+  const found = await track(saved.id.toLowerCase(), "+92 300 1234567");
+  assert.equal(found.id, saved.id);
+  assert.equal(found.status, "Cancelled");
+  assert.deepEqual(Object.keys(found.items[0]).sort(), [
+    "name",
+    "price",
+    "qty",
+  ]);
+  assert.equal(found.address, undefined);
+  assert.equal(
+    (await track(saved.id.replace("AA-", ""), "03001234567")).id,
+    saved.id,
+  );
+  assert.equal(await track(saved.id, "03009999999"), null);
+  assert.equal(await track("AA-1", "03001234567"), null);
+  assert.equal(await track(saved.id, ""), null);
+});
 test.after(async () => {
   await db.close();
 });

@@ -2059,7 +2059,8 @@ input[type="radio"] {
   }
   .checkout-grid,
   .pdp-grid {
-    grid-template-columns: 1fr;
+    /* minmax(0, …): the photo carousel must not widen the page on phones. */
+    grid-template-columns: minmax(0, 1fr);
   }
   .order-summary {
     position: static;

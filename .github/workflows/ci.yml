@@ -2,7 +2,7 @@ name: Store checks
 on:
   pull_request:
   push:
-    branches: [main, codex/premium-store-upgrade]
+    branches: [main]
 permissions:
   contents: read
 jobs:
@@ -15,6 +15,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Fails on known high or critical security problems in the shop's libraries.
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run format:check
       - run: npm test
       - run: npm run build

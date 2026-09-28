@@ -9,7 +9,7 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   `hnd1` Tokyo, next to the Supabase database in Tokyo). Admin panel:
   https://alammar-admin.vercel.app/admin (same Vercel project, see Notifications).
 - Database: Supabase project `ehxsrytdzyyyhsgbjccu`. All migrations up to
-  `202609290014_harden_functions.sql` are applied. New migrations are applied in
+  `202609290015_policy_cleanup.sql` are applied. New migrations are applied in
   the Supabase SQL Editor; the owner has approved running them without asking each
   time (report which one ran). Destructive-looking statements show a confirmation
   dialog that must be accepted.

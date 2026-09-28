@@ -1,40 +1,47 @@
 import "./globals.css";
 import { preconnect } from "react-dom";
-import {
-  DM_Sans,
-  Manrope,
-  Playfair_Display,
-  Great_Vibes,
-} from "next/font/google";
+import localFont from "next/font/local";
 import { getSettings } from "@/lib/catalogue";
 import Providers from "@/components/Providers";
 import AppShell from "@/components/AppShell";
 import ServiceWorker from "@/components/ServiceWorker";
 import { SITE_URL } from "@/lib/seo";
 export const revalidate = 60;
-// Fonts are served with the site (no request to Google while the page loads).
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// Fonts are served with the site from npm packages: no request to Google while the
+// page loads, and the build does not depend on Google being reachable.
+const dmSans = localFont({
+  src: "../node_modules/@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2",
+  weight: "100 1000",
   variable: "--font-dm-sans",
   display: "swap",
+  adjustFontFallback: "Arial",
 });
-const manrope = Manrope({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+const manrope = localFont({
+  src: "../node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2",
+  weight: "200 800",
   variable: "--font-manrope",
   display: "swap",
+  adjustFontFallback: "Arial",
 });
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
+const playfair = localFont({
+  src: [
+    {
+      path: "../node_modules/@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2",
+      style: "normal",
+    },
+    {
+      path: "../node_modules/@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2",
+      style: "italic",
+    },
+  ],
+  weight: "400 900",
   variable: "--font-playfair",
   display: "swap",
+  adjustFontFallback: "Times New Roman",
 });
 // Only on the bill, so it is not preloaded on every page.
-const greatVibes = Great_Vibes({
-  subsets: ["latin"],
+const greatVibes = localFont({
+  src: "../node_modules/@fontsource/great-vibes/files/great-vibes-latin-400-normal.woff2",
   weight: "400",
   variable: "--font-great-vibes",
   display: "swap",

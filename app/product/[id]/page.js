@@ -7,6 +7,7 @@ import {
   reviewFromRow,
   DEFAULT_SETTINGS,
   getVideoEmbed,
+  descriptionSummary,
 } from "@/lib/format";
 import Icon from "@/components/Icon";
 import ImageGallery from "@/components/ImageGallery";
@@ -25,12 +26,12 @@ export async function generateMetadata({ params }) {
   const storeName = settings.storeName || "Online Store";
   return {
     title: product.name,
-    description: (
-      product.description || `Buy ${product.name} at ${storeName}.`
-    ).slice(0, 160),
+    description:
+      descriptionSummary(product.description) ||
+      `Buy ${product.name} at ${storeName}.`,
     openGraph: {
       title: `${product.name} · ${storeName}`,
-      description: (product.description || "").slice(0, 160),
+      description: descriptionSummary(product.description),
       images: product.images?.[0] ? [product.images[0]] : [],
     },
   };

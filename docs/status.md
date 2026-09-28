@@ -73,5 +73,7 @@ writes in Urdu or Roman Urdu; reply in Urdu.
 - A first discount code (admin → Discounts).
 - Google Play: developer account, closed test with 12 testers for 14 days, then Play's
   app-signing SHA-256 in `assetlinks.json`.
-- Test orders from 28 September: AA-10005 and AA-10006 (Pending) to cancel in the admin
-  panel. AA-10007 was a test marked Delivered, so it counts in "Delivered sales".
+- Test orders from 28 September: AA-10005 and AA-10006 were cancelled (stock returned).
+  AA-10007 was a test marked Delivered, so it counts in "Delivered sales".
+- iPhone: notifications need the site added to the Home Screen (the notify button
+  shows a hint there); not yet tried on a real iPhone.

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useStore } from "./Providers";
 import Icon from "./Icon";
 import { formatMoney, salePercent } from "@/lib/format";
@@ -22,6 +22,13 @@ export default function ProductPurchasePanel({ product, settings }) {
     cart.find((l) => sameLine(l, String(product.id), choice))?.qty || 0;
   const available = Math.max(0, stock - inBasket);
   const needsChoice = options.length > 0 && !choice;
+  // Tapping Add to basket / Buy now before choosing an option points at the options.
+  const [nudge, setNudge] = useState(0);
+  const picker = useRef(null);
+  function askForChoice() {
+    setNudge((n) => n + 1);
+    picker.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
   const whatsappLink =
     stock && !needsChoice
       ? whatsappOrderLink(settings, [
@@ -55,7 +62,12 @@ export default function ProductPurchasePanel({ product, settings }) {
         )}
       </div>
       {options.length > 0 && (
-        <fieldset className="option-picker">
+        <fieldset
+          ref={picker}
+          // A new key restarts the attention animation on every tap.
+          key={needsChoice && nudge ? `nudge-${nudge}` : "picker"}
+          className={`option-picker${needsChoice && nudge ? " nudge" : ""}`}
+        >
           <legend className="stx-label">
             {label}
             {choice ? `: ${choice}` : ""}
@@ -81,6 +93,11 @@ export default function ProductPurchasePanel({ product, settings }) {
               </button>
             ))}
           </div>
+          {needsChoice && nudge > 0 && (
+            <p className="option-nudge" role="alert">
+              Please choose a {label.toLowerCase()} first.
+            </p>
+          )}
         </fieldset>
       )}
       <div className={`availability ${totalStock ? "" : "sold-out"}`}>
@@ -118,17 +135,22 @@ export default function ProductPurchasePanel({ product, settings }) {
             </div>
             <button
               className="stx-btn stx-btn-primary"
-              disabled={!cartReady || needsChoice || !available}
+              disabled={!cartReady || (!needsChoice && !available)}
               onClick={() =>
-                addToCart(product.id, Math.min(qty, available), stock, choice)
+                needsChoice
+                  ? askForChoice()
+                  : addToCart(
+                      product.id,
+                      Math.min(qty, available),
+                      stock,
+                      choice,
+                    )
               }
             >
               <Icon name="shopping_cart" />
-              {needsChoice
-                ? `Choose a ${label.toLowerCase()}`
-                : available
-                  ? "Add to basket"
-                  : "All available stock added"}
+              {needsChoice || available
+                ? "Add to basket"
+                : "All available stock added"}
             </button>
           </div>
           <BuyNowButton
@@ -136,9 +158,14 @@ export default function ProductPurchasePanel({ product, settings }) {
             productId={product.id}
             variant={choice}
             qty={Math.max(1, Math.min(qty, stock))}
-            disabled={needsChoice || !stock}
+            disabled={!needsChoice && !stock}
+            beforeBuy={() => {
+              if (!needsChoice) return true;
+              askForChoice();
+              return false;
+            }}
           >
-            {needsChoice ? `Choose a ${label.toLowerCase()}` : "Buy now"}
+            Buy now
           </BuyNowButton>
           {whatsappLink && (
             <a

@@ -2966,6 +2966,39 @@ input[type="radio"] {
   cursor: not-allowed;
   opacity: 0.6;
 }
+/* "Add to basket" / "Buy now" before choosing: point at the options. */
+.option-picker.nudge button {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(180, 150, 85, 0.25);
+}
+.option-picker.nudge > div {
+  animation: option-nudge 0.45s ease-in-out;
+}
+.option-nudge {
+  margin: 8px 0 0;
+  color: var(--brick);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+@keyframes option-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .option-picker.nudge > div {
+    animation: none;
+  }
+}
 .cart-option {
   display: block;
   font-weight: 600;

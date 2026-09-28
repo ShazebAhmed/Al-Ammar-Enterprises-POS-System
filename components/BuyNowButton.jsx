@@ -10,6 +10,8 @@ export default function BuyNowButton({
   disabled = false,
   className = "add-button buy-now",
   children = "Buy now",
+  // Called first; returning false stops (e.g. a colour still has to be chosen).
+  beforeBuy,
 }) {
   const router = useRouter();
   return (
@@ -18,6 +20,7 @@ export default function BuyNowButton({
       className={className}
       disabled={disabled}
       onClick={() => {
+        if (beforeBuy && beforeBuy() === false) return;
         saveBuyNow({ productId: String(productId), variant, qty });
         router.push("/checkout?buy=1");
       }}

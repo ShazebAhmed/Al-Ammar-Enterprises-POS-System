@@ -866,3 +866,34 @@ test("reviews still need a valid rating, name and comment", async () => {
   );
   await role();
 });
+
+test("only the store's own policies remain; everyone keeps the same access", async () => {
+  await db.exec("reset role");
+  const legacy = await db.query(
+    `select policyname from pg_policies where schemaname='public' and policyname in
+     ('cart_own_only','orders_insert','orders_select_own_or_admin','orders_admin_update',
+      'products_public_read','products_admin_write','products_admin_update','products_admin_delete',
+      'profiles_select_own','reviews_public_read','reviews_admin_delete',
+      'settings_public_read','settings_admin_write')`,
+  );
+  assert.deepEqual(legacy.rows, []);
+  // Visitors still see products, settings and approved reviews.
+  await role();
+  assert.ok((await db.query("select id from products")).rows.length >= 1);
+  assert.equal(
+    (await db.query("select id from store_settings")).rows.length,
+    1,
+  );
+  // A customer still reads and edits only their own profile; the admin edits products.
+  await role("authenticated", BUYER);
+  await db.exec(`update profiles set name='Buyer 2' where id='${BUYER}'`);
+  assert.equal((await db.query("select * from profiles")).rows.length, 1);
+  await assert.rejects(
+    () => db.exec(`insert into products(name,price,stock) values('x',1,1)`),
+    /row-level security/,
+  );
+  await role("authenticated", ADMIN);
+  await db.exec(`update products set stock=stock where id='${P1}'`);
+  assert.ok((await db.query("select * from profiles")).rows.length >= 2);
+  await role();
+});

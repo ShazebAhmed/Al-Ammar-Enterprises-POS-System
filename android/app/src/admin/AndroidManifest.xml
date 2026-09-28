@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
-        <!-- Links to the shop (for example a product shared on WhatsApp) open in the
-             app. Chrome also requires this to show the shop's notifications as this
-             app's. The admin app claims its own address the same way. -->
+        <!-- Admin app only: links to the admin address open in the app. Chrome also
+             needs this before it lets the app show the site's notifications (it only
+             delegates to an app that handles the site's links), so without it store
+             alerts appeared as Chrome notifications. -->
         <activity android:name="com.google.androidbrowserhelper.trusted.LauncherActivity">
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />

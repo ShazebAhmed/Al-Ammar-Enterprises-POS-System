@@ -6,6 +6,7 @@ import { useStore } from "@/components/Providers";
 import Icon from "@/components/Icon";
 import NotifyButton from "@/components/NotifyButton";
 import { watchNewOrders } from "@/lib/push";
+import DiscountsTab from "@/components/admin/DiscountsTab";
 import StarRow from "@/components/StarRow";
 import {
   formatMoney,
@@ -27,6 +28,7 @@ const ADMIN_TABS = [
   { key: "orders", label: "Orders", icon: "list_alt" },
   { key: "customers", label: "Customers", icon: "group" },
   { key: "reviews", label: "Reviews", icon: "chat" },
+  { key: "discounts", label: "Discounts", icon: "sell" },
   { key: "settings", label: "Settings", icon: "settings" },
 ];
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -154,6 +156,7 @@ export default function AdminPage() {
         name: p.name.trim(),
         category: p.category,
         price: p.price,
+        compare_at_price: p.compareAtPrice > p.price ? p.compareAtPrice : null,
         stock: p.stock,
         description: p.description,
         images: p.images,
@@ -617,6 +620,13 @@ export default function AdminPage() {
                   onApprove={(id) => approveReview(id).catch(() => {})}
                 />
               )}
+              {tab === "discounts" && (
+                <DiscountsTab
+                  supabase={supabase}
+                  settings={settings}
+                  notify={notify}
+                />
+              )}
               {tab === "settings" && (
                 <SettingsTab settings={settings} onSave={updateSettings} />
               )}
@@ -835,6 +845,7 @@ function ProductForm({
     name: product.name || "",
     category: product.category || categories[0] || "",
     price: product.price ?? "",
+    compareAtPrice: product.compareAtPrice ?? "",
     stock: product.stock ?? "",
     description: product.description || "",
     images: product.images || [],
@@ -1014,6 +1025,9 @@ function ProductForm({
     form.price !== "" &&
     Number.isFinite(Number(form.price)) &&
     Number(form.price) >= 0 &&
+    (form.compareAtPrice === "" ||
+      (Number.isFinite(Number(form.compareAtPrice)) &&
+        Number(form.compareAtPrice) >= 0)) &&
     form.stock !== "" &&
     Number.isSafeInteger(Number(form.stock)) &&
     Number(form.stock) >= 0 &&
@@ -1028,6 +1042,8 @@ function ProductForm({
       ...form,
       name: form.name.trim(),
       price: Number(form.price),
+      compareAtPrice:
+        form.compareAtPrice === "" ? null : Number(form.compareAtPrice),
       stock: Number(form.stock),
     };
     working.current = true;
@@ -1047,6 +1063,7 @@ function ProductForm({
           name: "",
           category: keepDetails ? submitted.category : categories[0] || "",
           price: keepDetails ? submitted.price : "",
+          compareAtPrice: keepDetails ? (submitted.compareAtPrice ?? "") : "",
           stock: keepDetails ? submitted.stock : "",
           description: keepDetails ? submitted.description : "",
           images: [],
@@ -1163,6 +1180,26 @@ function ProductForm({
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
                 required
+              />
+            </label>
+            <label
+              className="stx-label"
+              style={{ flex: "1 1 160px" }}
+              htmlFor="product-compare-price"
+            >
+              Old price (for a sale)
+              <input
+                id="product-compare-price"
+                type="number"
+                min="0"
+                step="0.01"
+                className="stx-input"
+                style={{ marginTop: 4 }}
+                placeholder="Leave empty if not on sale"
+                value={form.compareAtPrice}
+                onChange={(e) =>
+                  setForm({ ...form, compareAtPrice: e.target.value })
+                }
               />
             </label>
             <label
@@ -1669,6 +1706,21 @@ function OrdersTab({ orders, settings, onUpdateStatus, onCancelStale }) {
                         </span>
                       </div>
                     ))}
+                    {o.discount > 0 && (
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          fontSize: ".82rem",
+                          color: "var(--brick)",
+                        }}
+                      >
+                        <span>Discount ({o.couponCode || "code"})</span>
+                        <span className="stx-mono">
+                          − {formatMoney(o.discount, settings.currencySymbol)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div
                     style={{

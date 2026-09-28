@@ -21,7 +21,7 @@ export default function Footer({ settings }) {
             <div className="eyebrow">EXPLORE</div>
             <Link href="/">Shop the collection</Link>
             <Link href="/cart">Your basket</Link>
-            <Link href="/account">Track your orders</Link>
+            <Link href="/track">Track your order</Link>
             <Link href="/policies/shipping">Shipping &amp; delivery</Link>
             <Link href="/policies/returns">Returns &amp; refunds</Link>
             <Link href="/policies/privacy">Privacy policy</Link>

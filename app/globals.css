@@ -2772,6 +2772,105 @@ input[type="radio"] {
   }
 }
 
+/* Sale prices and discount codes */
+.was-price {
+  margin-left: 8px;
+  color: var(--ink-soft);
+  font-size: 0.82em;
+  font-weight: 400;
+}
+.sale-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--brick);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.product-badge.sale {
+  background: var(--brick);
+  color: #fff;
+}
+.coupon-box {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+.coupon-box .stx-input {
+  flex: 1;
+  min-width: 0;
+  text-transform: uppercase;
+}
+.summary-row.discount {
+  color: var(--brick);
+}
+
+/* Order tracking (/track) */
+.track-steps {
+  list-style: none;
+  margin: 18px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  counter-reset: none;
+}
+.track-steps li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  position: relative;
+}
+.track-steps li + li::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--line);
+  z-index: 0;
+}
+.track-steps li.done + li::before,
+.track-steps li.done + li.current::before {
+  background: var(--primary);
+}
+.track-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--cream);
+  display: grid;
+  place-items: center;
+  position: relative;
+  z-index: 1;
+}
+.track-steps li.done .track-dot,
+.track-steps li.current .track-dot {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.track-steps li.current {
+  color: var(--ink);
+  font-weight: 700;
+}
+.track-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 0.92rem;
+  border-top: 1px solid var(--line);
+}
+.track-total {
+  font-weight: 700;
+}
+
 /* Notifications */
 .notify-done {
   display: flex;

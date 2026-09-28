@@ -367,6 +367,89 @@ test("customers can delete their own account; orders stay without the link", asy
   ).rows[0];
   assert.deepEqual(kept, { customer_id: null, customer_name: "Test buyer" });
 });
+test("discount codes are applied by the database and limited to their uses", async () => {
+  const P3 = "a1a1a1a1-0000-4000-8000-000000000003";
+  await db.exec("reset role");
+  await db.query(
+    "insert into products(id,name,price,stock,compare_at_price) values($1,'Sale item',1000,50,1500)",
+    [P3],
+  );
+  await role("authenticated", ADMIN);
+  await db.exec(
+    "insert into coupons(code,kind,value,min_order,max_uses) values('SAVE10','percent',10,500,1),('FLAT300','amount',300,0,null)",
+  );
+  await role();
+  assert.equal((await db.query("select * from coupons")).rows.length, 0);
+  const check = async (code, subtotal) =>
+    (await db.query("select public.check_coupon($1,$2) as r", [code, subtotal]))
+      .rows[0].r;
+  assert.equal(Number((await check("save10", 2000)).discount), 200);
+  await assert.rejects(() => check("SAVE10", 100), /at least/);
+  await assert.rejects(() => check("NOPE", 2000), /not valid/);
+  await role("authenticated", BUYER);
+  const buyer = { ...customer, phone: "03111111111" };
+  const placed = await order(
+    "c0de0000-0000-4000-8000-0000000000c1",
+    [{ productId: P3, qty: 2 }],
+    { ...buyer, coupon: " save10 " },
+  );
+  assert.equal(placed.coupon_code, "SAVE10");
+  assert.equal(Number(placed.discount), 200);
+  assert.equal(Number(placed.total), 2000 - 200 + 150);
+  // Its only use is taken.
+  await assert.rejects(
+    () =>
+      order(
+        "c0de0000-0000-4000-8000-0000000000c2",
+        [{ productId: P3, qty: 1 }],
+        {
+          ...buyer,
+          coupon: "SAVE10",
+        },
+      ),
+    /not valid/,
+  );
+  // A fixed amount never exceeds the subtotal.
+  const flat = await order(
+    "c0de0000-0000-4000-8000-0000000000c3",
+    [{ productId: P3, qty: 1 }],
+    { ...buyer, phone: "03122222222", coupon: "FLAT300" },
+  );
+  assert.equal(Number(flat.total), 1000 - 300 + 150);
+  // Customers cannot hand out uses; cancelling gives the use back.
+  await db.exec("update coupons set used_count=0");
+  await role("authenticated", ADMIN);
+  const uses = async () =>
+    (await db.query("select used_count from coupons where code='SAVE10'"))
+      .rows[0].used_count;
+  assert.equal(await uses(), 1);
+  await db.query("update orders set status='Cancelled' where id=$1", [
+    placed.id,
+  ]);
+  assert.equal(await uses(), 0);
+});
+test("guests can track an order only with its phone number", async () => {
+  await role();
+  const track = async (id, phone) =>
+    (await db.query("select public.track_order($1,$2) as r", [id, phone]))
+      .rows[0].r;
+  const found = await track(saved.id.toLowerCase(), "+92 300 1234567");
+  assert.equal(found.id, saved.id);
+  assert.equal(found.status, "Cancelled");
+  assert.deepEqual(Object.keys(found.items[0]).sort(), [
+    "name",
+    "price",
+    "qty",
+  ]);
+  assert.equal(found.address, undefined);
+  assert.equal(
+    (await track(saved.id.replace("AA-", ""), "03001234567")).id,
+    saved.id,
+  );
+  assert.equal(await track(saved.id, "03009999999"), null);
+  assert.equal(await track("AA-1", "03001234567"), null);
+  assert.equal(await track(saved.id, ""), null);
+});
 test("orders notify the admin, and status changes notify customers who follow the order", async () => {
   const P4 = "a1a1a1a1-0000-4000-8000-000000000004";
   const sub = (name) => ({

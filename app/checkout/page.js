@@ -22,6 +22,12 @@ export default function CheckoutPage() {
   const [order, setOrder] = useState(null),
     [submitting, setSubmitting] = useState(false),
     [submitError, setSubmitError] = useState("");
+  // A discount code checked against the basket; the database applies it again
+  // (and may still refuse it) when the order is placed.
+  const [couponInput, setCouponInput] = useState(""),
+    [coupon, setCoupon] = useState(null),
+    [couponError, setCouponError] = useState(""),
+    [checkingCoupon, setCheckingCoupon] = useState(false);
   const busy = useRef(false),
     request = useRef(null);
   useEffect(() => {
@@ -33,7 +39,32 @@ export default function CheckoutPage() {
   }, [profile]);
   const valid = lines.filter((l) => l.product),
     totals = cartTotals(valid, settings.shippingFee),
-    money = (n) => formatMoney(n, settings.currencySymbol);
+    money = (n) => formatMoney(n, settings.currencySymbol),
+    discount = coupon ? Math.min(coupon.discount, totals.subtotal) : 0;
+  async function applyCoupon() {
+    const code = couponInput.trim().toUpperCase();
+    if (!code || !supabase || checkingCoupon) return;
+    setCheckingCoupon(true);
+    setCouponError("");
+    try {
+      const { data, error } = await supabase.rpc("check_coupon", {
+        p_code: code,
+        p_subtotal: totals.subtotal,
+      });
+      if (error) throw error;
+      setCoupon({ code: data.code, discount: Number(data.discount) || 0 });
+      setCouponInput("");
+    } catch (e) {
+      setCoupon(null);
+      setCouponError(
+        /discount code/i.test(e?.message || "")
+          ? e.message
+          : "Could not check the code. Please try again.",
+      );
+    } finally {
+      setCheckingCoupon(false);
+    }
+  }
   async function submit(e) {
     e.preventDefault();
     if (busy.current || invalid || !lines.length || !supabase) return;
@@ -51,6 +82,7 @@ export default function CheckoutPage() {
     const fingerprint = JSON.stringify({
       items,
       customer,
+      coupon: coupon?.code || "",
       owner: currentUser?.id || null,
     });
     // Retain the request ID after a timeout/reload, so retrying cannot create a duplicate order.
@@ -72,9 +104,15 @@ export default function CheckoutPage() {
       const { data, error } = await supabase.rpc("place_store_order", {
         p_request_id: request.current.id,
         p_items: items,
-        p_customer: customer,
+        p_customer: { ...customer, coupon: coupon?.code || "" },
       });
       if (error) {
+        if (/discount code/i.test(error.message)) {
+          setCoupon(null);
+          throw new Error(
+            `${error.message}. It has been removed, please place the order again.`,
+          );
+        }
         if (error.code === "PGRST202" || error.code === "42883")
           throw new Error(
             "Checkout is temporarily unavailable. Please contact the store or try again later.",
@@ -129,6 +167,12 @@ export default function CheckoutPage() {
           >
             <Icon name="download" size={17} /> Download bill (PDF)
           </button>
+          <Link
+            className="stx-btn stx-btn-outline"
+            href={`/track?order=${encodeURIComponent(order.id)}`}
+          >
+            <Icon name="local_shipping" size={17} /> Track this order
+          </Link>
           <Link className="stx-btn stx-btn-primary" href="/">
             Continue shopping
           </Link>
@@ -274,13 +318,59 @@ export default function CheckoutPage() {
                 <span>{money(l.product.price * l.qty)}</span>
               </div>
             ))}
+            {coupon ? (
+              <div className="summary-row discount">
+                <span>
+                  Discount ({coupon.code}){" "}
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={() => setCoupon(null)}
+                  >
+                    Remove
+                  </button>
+                </span>
+                <span>− {money(discount)}</span>
+              </div>
+            ) : (
+              <div className="coupon-box">
+                <input
+                  className="stx-input"
+                  aria-label="Discount code"
+                  placeholder="Discount code"
+                  value={couponInput}
+                  maxLength={30}
+                  autoCapitalize="characters"
+                  onChange={(e) => setCouponInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      applyCoupon();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="stx-btn stx-btn-outline"
+                  disabled={!couponInput.trim() || checkingCoupon}
+                  onClick={applyCoupon}
+                >
+                  {checkingCoupon ? "Checking…" : "Apply"}
+                </button>
+              </div>
+            )}
+            {couponError && (
+              <p className="inline-error" role="alert">
+                {couponError}
+              </p>
+            )}
             <div className="summary-row">
               <span>Delivery</span>
               <span>{money(totals.shipping)}</span>
             </div>
             <div className="summary-row total">
               <span>Total</span>
-              <span>{money(totals.total)}</span>
+              <span>{money(totals.total - discount)}</span>
             </div>
             <p className="muted small">
               The latest prices and stock are verified when you place the order.

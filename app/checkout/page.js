@@ -8,10 +8,24 @@ import OrderReceipt from "@/components/OrderReceipt";
 import NotifyButton from "@/components/NotifyButton";
 import { watchOrder } from "@/lib/push";
 import { formatMoney, itemName, orderFromRow, printBill } from "@/lib/format";
-import { cartTotals, validateCustomer } from "@/lib/cart";
+import {
+  cartTotals,
+  clearBuyNow,
+  readBuyNow,
+  validateCustomer,
+} from "@/lib/cart";
 export default function CheckoutPage() {
   const { supabase, currentUser, profile, authReady, clearCart } = useStore();
-  const { lines, settings, loading, error, invalid, retry } = useCartProducts();
+  // /checkout?buy=1 (from "Buy now") checks out that one item; the basket stays.
+  const [buyNow, setBuyNow] = useState(undefined);
+  useEffect(() => {
+    const buy = new URLSearchParams(window.location.search).get("buy");
+    setBuyNow(buy ? readBuyNow() : null);
+  }, []);
+  const { lines, settings, loading, error, invalid, retry } = useCartProducts(
+    buyNow || undefined,
+  );
+  const backHref = buyNow ? `/product/${buyNow[0].productId}` : "/cart";
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -140,7 +154,8 @@ export default function CheckoutPage() {
       if (!data?.id)
         throw new Error("The order could not be confirmed. Please try again.");
       setOrder(orderFromRow(data));
-      clearCart();
+      if (buyNow) clearBuyNow();
+      else clearCart();
       request.current = null;
       try {
         sessionStorage.removeItem("al-ammar:checkout-request");
@@ -191,8 +206,9 @@ export default function CheckoutPage() {
     );
   return (
     <main className="page-wrap">
-      <Link href="/cart" className="back-link">
-        <Icon name="chevron_left" size={15} /> Back to your basket
+      <Link href={backHref} className="back-link">
+        <Icon name="chevron_left" size={15} />{" "}
+        {buyNow ? "Back to the product" : "Back to your basket"}
       </Link>
       <div className="page-heading">
         <span className="eyebrow">ONE LAST LITTLE STEP</span>
@@ -202,13 +218,13 @@ export default function CheckoutPage() {
         <p>Tell us where to deliver. Pay when your order arrives.</p>
       </div>
       <div className="checkout-steps">
-        <Link href="/cart">01 Basket</Link>
+        <Link href={backHref}>{buyNow ? "01 Product" : "01 Basket"}</Link>
         <span>—</span>
         <span className="active">02 Delivery details</span>
         <span>—</span>
         <span>03 Confirmation</span>
       </div>
-      {loading || !authReady ? (
+      {loading || !authReady || buyNow === undefined ? (
         <p role="status">Checking your basket…</p>
       ) : error ? (
         <div className="inline-error" role="alert">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Icon from "./Icon";
 import StarRow from "./StarRow";
 import AddToCartButton from "./AddToCartButton";
+import BuyNowButton from "./BuyNowButton";
 import CardGallery from "./CardGallery";
 import { formatMoney, salePercent } from "@/lib/format";
 export default function ProductCard({ product, settings, rating }) {
@@ -64,7 +65,10 @@ export default function ProductCard({ product, settings, rating }) {
               Choose
             </Link>
           ) : (
-            <AddToCartButton productId={product.id} stock={product.stock} />
+            <div className="card-actions">
+              <AddToCartButton productId={product.id} stock={product.stock} />
+              <BuyNowButton productId={product.id} />
+            </div>
           )}
         </div>
       </div>

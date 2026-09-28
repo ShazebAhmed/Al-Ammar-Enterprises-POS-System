@@ -6,7 +6,38 @@ import {
   changeQuantity,
   cartTotals,
   validateCustomer,
+  lineStock,
 } from "../lib/cart.js";
+test("each product option is its own basket line with its own stock", () => {
+  const cart = normalizeCart([
+    { productId: "a", variant: "M", qty: 1 },
+    { productId: "a", variant: "L", qty: 2 },
+    { productId: "a", variant: "M", qty: 1 },
+    { productId: "b", qty: 1 },
+  ]);
+  assert.deepEqual(cart, [
+    { productId: "a", variant: "M", qty: 2 },
+    { productId: "a", variant: "L", qty: 2 },
+    { productId: "b", qty: 1 },
+  ]);
+  const next = changeQuantity(cart, "a", 0, 5, "M");
+  assert.deepEqual(next, [
+    { productId: "a", variant: "L", qty: 2 },
+    { productId: "b", qty: 1 },
+  ]);
+  const shirt = {
+    stock: 7,
+    variants: [
+      { name: "M", stock: 3 },
+      { name: "L", stock: 4 },
+    ],
+  };
+  assert.equal(lineStock(shirt, "L"), 4);
+  assert.equal(lineStock(shirt, ""), 0); // an option must be chosen
+  assert.equal(lineStock(shirt, "XL"), 0);
+  assert.equal(lineStock({ stock: 5, variants: [] }, ""), 5);
+  assert.equal(lineStock({ stock: 5, variants: [] }, "M"), 0);
+});
 import {
   formatMoney,
   productFromRow,

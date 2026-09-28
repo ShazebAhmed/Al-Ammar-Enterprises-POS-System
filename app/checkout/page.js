@@ -7,7 +7,7 @@ import Icon from "@/components/Icon";
 import OrderReceipt from "@/components/OrderReceipt";
 import NotifyButton from "@/components/NotifyButton";
 import { watchOrder } from "@/lib/push";
-import { formatMoney, orderFromRow, printBill } from "@/lib/format";
+import { formatMoney, itemName, orderFromRow, printBill } from "@/lib/format";
 import { cartTotals, validateCustomer } from "@/lib/cart";
 export default function CheckoutPage() {
   const { supabase, currentUser, profile, authReady, clearCart } = useStore();
@@ -78,7 +78,11 @@ export default function CheckoutPage() {
     }
     busy.current = true;
     setSubmitting(true);
-    const items = lines.map((l) => ({ productId: l.productId, qty: l.qty }));
+    const items = lines.map((l) => ({
+      productId: l.productId,
+      qty: l.qty,
+      ...(l.variant && { variant: l.variant }),
+    }));
     const fingerprint = JSON.stringify({
       items,
       customer,
@@ -311,9 +315,12 @@ export default function CheckoutPage() {
           <aside className="stx-card order-summary">
             <h2>Your order</h2>
             {valid.map((l) => (
-              <div className="summary-row" key={l.productId}>
+              <div
+                className="summary-row"
+                key={`${l.productId}:${l.variant || ""}`}
+              >
                 <span>
-                  {l.product.name} × {l.qty}
+                  {itemName(l.product.name, l.variant)} × {l.qty}
                 </span>
                 <span>{money(l.product.price * l.qty)}</span>
               </div>

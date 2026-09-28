@@ -4,18 +4,32 @@ import { useStore } from "./Providers";
 import Icon from "./Icon";
 import { formatMoney, salePercent } from "@/lib/format";
 import { whatsappOrderLink } from "@/lib/whatsapp";
+import { lineStock, sameLine } from "@/lib/cart";
 export default function ProductPurchasePanel({ product, settings }) {
   const { cart, addToCart, cartReady } = useStore();
   const [qty, setQty] = useState(1);
-  const stock = Number(product.stock) || 0;
+  // Products with options (size, colour) need one chosen before adding.
+  const options = product.variants || [];
+  const label = product.optionLabel || "Option";
+  const [choice, setChoice] = useState(
+    options.length === 1 && options[0].stock > 0 ? options[0].name : "",
+  );
+  const totalStock = Number(product.stock) || 0;
+  const stock = options.length ? lineStock(product, choice) : totalStock;
   const inBasket =
-    cart.find((l) => l.productId === String(product.id))?.qty || 0;
+    cart.find((l) => sameLine(l, String(product.id), choice))?.qty || 0;
   const available = Math.max(0, stock - inBasket);
-  const whatsappLink = stock
-    ? whatsappOrderLink(settings, [
-        { product, qty: Math.max(1, Math.min(qty, stock)) },
-      ])
-    : "";
+  const needsChoice = options.length > 0 && !choice;
+  const whatsappLink =
+    stock && !needsChoice
+      ? whatsappOrderLink(settings, [
+          {
+            product,
+            variant: choice,
+            qty: Math.max(1, Math.min(qty, stock)),
+          },
+        ])
+      : "";
   return (
     <div className="purchase-panel">
       <span className="eyebrow">{product.category || "THE COLLECTION"}</span>
@@ -38,17 +52,44 @@ export default function ProductPurchasePanel({ product, settings }) {
           </>
         )}
       </div>
-      <div className={`availability ${stock ? "" : "sold-out"}`}>
+      {options.length > 0 && (
+        <fieldset className="option-picker">
+          <legend className="stx-label">
+            {label}
+            {choice ? `: ${choice}` : ""}
+          </legend>
+          <div>
+            {options.map((o) => (
+              <button
+                key={o.name}
+                type="button"
+                className={o.name === choice ? "active" : ""}
+                aria-pressed={o.name === choice}
+                disabled={o.stock <= 0}
+                onClick={() => {
+                  setChoice(o.name);
+                  setQty(1);
+                }}
+              >
+                {o.name}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
+      <div className={`availability ${totalStock ? "" : "sold-out"}`}>
         <span />
-        {stock
-          ? `${stock} available${inBasket ? ` · ${inBasket} in your basket` : ""}`
-          : "Currently out of stock"}
+        {!totalStock
+          ? "Currently out of stock"
+          : needsChoice
+            ? `Choose a ${label.toLowerCase()}`
+            : `${stock} available${inBasket ? ` · ${inBasket} in your basket` : ""}`}
       </div>
       <p className="purchase-description">
         {product.description?.slice(0, 200) ||
           "An everyday find from our collection."}
       </p>
-      {stock > 0 && (
+      {totalStock > 0 && (
         <>
           <label className="stx-label">Quantity</label>
           <div className="purchase-actions">
@@ -71,13 +112,17 @@ export default function ProductPurchasePanel({ product, settings }) {
             </div>
             <button
               className="stx-btn stx-btn-primary"
-              disabled={!cartReady || !available}
+              disabled={!cartReady || needsChoice || !available}
               onClick={() =>
-                addToCart(product.id, Math.min(qty, available), stock)
+                addToCart(product.id, Math.min(qty, available), stock, choice)
               }
             >
               <Icon name="shopping_cart" />
-              {available ? "Add to basket" : "All available stock added"}
+              {needsChoice
+                ? `Choose a ${label.toLowerCase()}`
+                : available
+                  ? "Add to basket"
+                  : "All available stock added"}
             </button>
           </div>
           {whatsappLink && (

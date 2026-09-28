@@ -45,11 +45,12 @@ These come from real problems found while releasing PR #1:
 npm ci
 npm audit --omit=dev --audit-level=high
 npm run format:check
+npm run lint
 npm test
 npm run build
 ```
 
-All five must pass. CI runs the same checks.
+All six must pass. CI runs the same checks.
 
 ## Talking to each other
 

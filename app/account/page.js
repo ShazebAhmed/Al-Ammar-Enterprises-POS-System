@@ -74,6 +74,8 @@ export default function AccountPage() {
     return () => {
       alive = false;
     };
+    // Only when the signed-in person changes, not on every token refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, supabase]);
 
   async function handleLogOut() {

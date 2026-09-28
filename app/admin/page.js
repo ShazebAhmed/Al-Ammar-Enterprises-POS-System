@@ -966,11 +966,12 @@ function ProductForm({
       }
     }
     node.addEventListener("keydown", keydown);
+    const urls = previews.current; // the same Set for the form's lifetime
     return () => {
       alive.current = false;
       node.removeEventListener("keydown", keydown);
-      previews.current.forEach((url) => URL.revokeObjectURL(url));
-      previews.current.clear();
+      urls.forEach((url) => URL.revokeObjectURL(url));
+      urls.clear();
       previous?.focus();
     };
   }, []);
@@ -2405,7 +2406,7 @@ function SettingsTab({ settings, onSave }) {
                 fontWeight: 600,
               }}
             >
-              Couldn't save — check your connection and try again.
+              Couldn’t save — check your connection and try again.
             </span>
           )}
         </div>
@@ -2432,8 +2433,8 @@ function SettingsTab({ settings, onSave }) {
           }}
         >
           Right now customers pay by cash on delivery or a phone-confirmed
-          order. When you're ready to accept cards, JazzCash or EasyPaisa
-          online, you'll need a merchant account with that provider first.
+          order. When you’re ready to accept cards, JazzCash or EasyPaisa
+          online, you’ll need a merchant account with that provider first.
         </p>
         <span className="badge-soon">Coming soon</span>
       </div>

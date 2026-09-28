@@ -18,5 +18,6 @@ jobs:
       # Fails on known high or critical security problems in the shop's libraries.
       - run: npm audit --omit=dev --audit-level=high
       - run: npm run format:check
+      - run: npm run lint
       - run: npm test
       - run: npm run build

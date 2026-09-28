@@ -73,6 +73,7 @@ test("each product option is its own basket line with its own stock", () => {
 import {
   formatMoney,
   productFromRow,
+  descriptionSummary,
   orderFromRow,
   getVideoEmbed,
 } from "../lib/format.js";
@@ -134,6 +135,14 @@ test("customer details are trimmed and invalid phone numbers rejected", () => {
   assert.equal(validateCustomer(customer).name, "Ali");
   assert.throws(() => validateCustomer({ ...customer, phone: "abc" }), /phone/);
   assert.throws(() => validateCustomer({ ...customer, city: " " }));
+});
+test("a description summary is the first paragraph, cut at a word", () => {
+  assert.equal(
+    descriptionSummary("First line  here.\n\nSecond paragraph."),
+    "First line here.",
+  );
+  assert.equal(descriptionSummary("one two three four", 12), "one two…");
+  assert.equal(descriptionSummary(null), "");
 });
 test("an option keeps its photo only while it is one of the product's photos", () => {
   const product = productFromRow({

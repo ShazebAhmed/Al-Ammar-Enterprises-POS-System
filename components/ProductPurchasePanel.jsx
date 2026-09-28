@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import { useStore } from "./Providers";
 import Icon from "./Icon";
-import { formatMoney, salePercent } from "@/lib/format";
+import { descriptionSummary, formatMoney, salePercent } from "@/lib/format";
 import { whatsappOrderLink } from "@/lib/whatsapp";
 import { lineStock, sameLine } from "@/lib/cart";
 import BuyNowButton from "./BuyNowButton";
@@ -109,7 +109,7 @@ export default function ProductPurchasePanel({ product, settings }) {
             : `${stock} available${inBasket ? ` · ${inBasket} in your basket` : ""}`}
       </div>
       <p className="purchase-description">
-        {product.description?.slice(0, 200) ||
+        {descriptionSummary(product.description, 200) ||
           "An everyday find from our collection."}
       </p>
       {totalStock > 0 && (

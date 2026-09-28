@@ -1,6 +1,6 @@
 # Project status and working notes
 
-Updated 28 September 2026 so work can continue from another computer. The owner
+Updated 29 September 2026 so work can continue from another computer. The owner
 writes in Urdu or Roman Urdu; reply in Urdu.
 
 ## Live
@@ -16,7 +16,34 @@ writes in Urdu or Roman Urdu; reply in Urdu.
 - Features: order tracking (`/track`, with discount line and chosen option), sale
   price and discount codes (admin Discounts tab), order notifications, product
   options with their own stock, "Buy now" (checks out one item without touching the
-  basket: `/checkout?buy=1`).
+  basket: `/checkout?buy=1`), terms (`/policies/terms`) and FAQ (`/faq`), "You may
+  also like" and Share on product pages, search by name/category/description,
+  customers can edit their name and phone on `/account`, "Confirm on WhatsApp"
+  after checkout, admin Orders → Export CSV.
+- Owner's working rules (29 September): each task on its own `claude/` branch and
+  PR, merged by Claude once CI is green (never stacked); live migrations may run
+  without asking.
+
+## Quality checks (29 September audit)
+
+- CI runs `npm audit --omit=dev --audit-level=high`, Prettier, ESLint
+  (`npm run lint`, covers .js and .jsx), the tests and the build.
+- Security headers in `next.config.js` (nosniff, frame-ancestors 'none',
+  referrer and permissions policies). Pages cannot be put in an iframe.
+- Lighthouse (mobile, live): Accessibility 100, Best Practices 100, SEO 100.
+  Performance about 70-80 on this laptop; fonts are self-hosted from npm
+  (`@fontsource`) through `next/font/local`.
+- Structured data (`lib/seo.js`): OnlineStore, WebSite search box, Product with
+  delivery and return policy, breadcrumbs, FAQPage.
+- Supabase advisors: Security 26 warnings, all intended (public order/track/coupon
+  functions check their own inputs; leaked-password protection needs a paid plan);
+  Performance 4, intended (public read + admin write).
+- A React "error #418" in the console is only seen in automated browsers (their
+  injected code); Lighthouse's clean Chrome shows no console errors.
+- Admin panel code: `app/admin/page.js` (data and layout) plus one file per tab in
+  `components/admin/`.
+- Older product photos (evogrip-*.webp) are served with a 1-hour cache; photos added
+  through the admin panel get a 1-year cache.
 
 ## Notifications
 

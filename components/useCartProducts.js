@@ -7,9 +7,14 @@ import {
   settingsFromRow,
   productFromRow,
 } from "@/lib/format";
-export default function useCartProducts() {
-  const { supabase, cart, cartReady, cartLoadError, retryCartLoad } =
-    useStore();
+// The basket's lines with current products and settings. `override` (lines like
+// the basket's) is used instead of the basket, e.g. for "Buy now".
+export default function useCartProducts(override) {
+  const store = useStore();
+  const cart = override || store.cart;
+  const cartReady = override ? true : store.cartReady;
+  const cartLoadError = override ? "" : store.cartLoadError;
+  const { supabase, retryCartLoad } = store;
   const [data, setData] = useState({
     products: [],
     settings: DEFAULT_SETTINGS,

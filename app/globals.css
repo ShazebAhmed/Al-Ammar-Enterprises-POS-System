@@ -840,6 +840,7 @@ input[type="radio"] {
   justify-content: space-between;
   gap: 6px;
   align-items: center;
+  flex-wrap: wrap;
   margin-top: 9px;
 }
 .product-bottom > strong {
@@ -862,6 +863,31 @@ input[type="radio"] {
   background: var(--primary);
   color: #fff;
   border-color: var(--primary);
+}
+/* "Buy now": the gold action next to "Add to basket". */
+.card-actions {
+  display: flex;
+  gap: 6px;
+}
+.add-button.buy-now {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.add-button.buy-now:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+.stx-btn-gold {
+  background: var(--accent);
+  color: #fff;
+}
+.stx-btn-gold:hover {
+  background: var(--accent-dark);
+}
+.buy-now-wide {
+  width: 100%;
+  margin-top: 10px;
 }
 .rating {
   display: flex;

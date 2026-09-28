@@ -7,7 +7,39 @@ import {
   cartTotals,
   validateCustomer,
   lineStock,
+  saveBuyNow,
+  readBuyNow,
+  clearBuyNow,
 } from "../lib/cart.js";
+test("buy now keeps one clean line apart from the basket", () => {
+  const store = new Map();
+  globalThis.sessionStorage = {
+    getItem: (k) => store.get(k) ?? null,
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: (k) => store.delete(k),
+  };
+  try {
+    assert.equal(readBuyNow(), null);
+    saveBuyNow({ productId: "p1", variant: " M ", qty: 2 });
+    assert.deepEqual(readBuyNow(), [{ productId: "p1", variant: "M", qty: 2 }]);
+    // Tampered storage cannot sneak in more lines or bad quantities.
+    store.set(
+      "al-ammar:buy-now",
+      JSON.stringify([
+        { productId: "p1", qty: -1 },
+        { productId: "p2", qty: 1 },
+        { productId: "p3", qty: 1 },
+      ]),
+    );
+    assert.deepEqual(readBuyNow(), [{ productId: "p2", qty: 1 }]);
+    store.set("al-ammar:buy-now", "not json");
+    assert.equal(readBuyNow(), null);
+    clearBuyNow();
+    assert.equal(readBuyNow(), null);
+  } finally {
+    delete globalThis.sessionStorage;
+  }
+});
 test("each product option is its own basket line with its own stock", () => {
   const cart = normalizeCart([
     { productId: "a", variant: "M", qty: 1 },

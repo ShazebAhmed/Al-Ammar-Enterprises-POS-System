@@ -5,6 +5,7 @@ import Icon from "./Icon";
 import { formatMoney, salePercent } from "@/lib/format";
 import { whatsappOrderLink } from "@/lib/whatsapp";
 import { lineStock, sameLine } from "@/lib/cart";
+import BuyNowButton from "./BuyNowButton";
 export default function ProductPurchasePanel({ product, settings }) {
   const { cart, addToCart, cartReady } = useStore();
   const [qty, setQty] = useState(1);
@@ -125,6 +126,15 @@ export default function ProductPurchasePanel({ product, settings }) {
                   : "All available stock added"}
             </button>
           </div>
+          <BuyNowButton
+            className="stx-btn stx-btn-gold buy-now-wide"
+            productId={product.id}
+            variant={choice}
+            qty={Math.max(1, Math.min(qty, stock))}
+            disabled={needsChoice || !stock}
+          >
+            {needsChoice ? `Choose a ${label.toLowerCase()}` : "Buy now"}
+          </BuyNowButton>
           {whatsappLink && (
             <a
               className="stx-btn stx-btn-outline"

@@ -5,7 +5,7 @@
              needs this before it lets the app show the site's notifications (it only
              delegates to an app that handles the site's links), so without it store
              alerts appeared as Chrome notifications. -->
-        <activity android:name="com.google.androidbrowserhelper.trusted.LauncherActivity">
+        <activity android:name="com.alammar.app.AppLauncherActivity">
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

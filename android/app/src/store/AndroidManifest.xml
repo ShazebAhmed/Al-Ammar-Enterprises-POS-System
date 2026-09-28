@@ -4,7 +4,7 @@
         <!-- Links to the shop (for example a product shared on WhatsApp) open in the
              app. Chrome also requires this to show the shop's notifications as this
              app's. The admin app claims its own address the same way. -->
-        <activity android:name="com.google.androidbrowserhelper.trusted.LauncherActivity">
+        <activity android:name="com.alammar.app.AppLauncherActivity">
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

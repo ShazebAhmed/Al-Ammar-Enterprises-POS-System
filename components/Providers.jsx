@@ -264,6 +264,15 @@ export default function Providers({ children }) {
   function clearCart() {
     commit([]);
   }
+  // Saves the signed-in customer's name and phone (used to fill in checkout).
+  async function updateProfile({ name, phone }) {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ name, phone })
+      .eq("id", currentUser.id);
+    if (error) throw error;
+    setProfile((p) => ({ ...p, name, phone }));
+  }
   async function logOut() {
     await queue.current;
     const { error } = await supabase.auth.signOut();
@@ -298,6 +307,7 @@ export default function Providers({ children }) {
         removeFromCart,
         clearCart,
         logOut,
+        updateProfile,
         notify,
         syncError,
         retrySync: () => sync(cartRef.current, ownerRef.current),

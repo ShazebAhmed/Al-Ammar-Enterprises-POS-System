@@ -6,6 +6,7 @@ import { useStore } from "@/components/Providers";
 import Icon from "@/components/Icon";
 import OrderReceipt from "@/components/OrderReceipt";
 import NotifyButton from "@/components/NotifyButton";
+import ProfileForm from "@/components/ProfileForm";
 import { followMyOrders } from "@/lib/push";
 import {
   formatMoney,
@@ -177,6 +178,8 @@ export default function AccountPage() {
           <Icon name="logout" size={16} /> Log out
         </button>
       </div>
+
+      <ProfileForm />
 
       <div className="stx-label" style={{ marginBottom: 10 }}>
         Your orders

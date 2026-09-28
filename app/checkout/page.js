@@ -7,6 +7,7 @@ import Icon from "@/components/Icon";
 import OrderReceipt from "@/components/OrderReceipt";
 import NotifyButton from "@/components/NotifyButton";
 import { followMyOrders, watchOrder } from "@/lib/push";
+import { whatsappPlacedOrderLink } from "@/lib/whatsapp";
 import {
   downloadBill,
   formatMoney,
@@ -197,6 +198,16 @@ export default function CheckoutPage() {
           >
             <Icon name="local_shipping" size={17} /> Track this order
           </Link>
+          {whatsappPlacedOrderLink(settings, order) && (
+            <a
+              className="stx-btn stx-btn-outline"
+              href={whatsappPlacedOrderLink(settings, order)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon name="chat" size={17} /> Confirm on WhatsApp
+            </a>
+          )}
           <Link className="stx-btn stx-btn-primary" href="/">
             Continue shopping
           </Link>

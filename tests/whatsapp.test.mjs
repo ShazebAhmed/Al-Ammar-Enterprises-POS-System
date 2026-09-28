@@ -45,3 +45,16 @@ test("no link without a store number or without items", () => {
   assert.ok(link.startsWith("https://wa.me/923217654321?text="));
   assert.match(decodeURIComponent(link), /Tea 950g/);
 });
+
+test("after checkout the customer can message the store about their order", async () => {
+  const { whatsappPlacedOrderLink } = await import("../lib/whatsapp.js");
+  const link = whatsappPlacedOrderLink(
+    { whatsapp: "0333 3386641", currencySymbol: "Rs." },
+    { id: "AA-10007", total: 2149, customer: { name: "Ali" } },
+  );
+  assert.ok(link.startsWith("https://wa.me/923333386641?text="));
+  const text = decodeURIComponent(link.split("text=")[1]);
+  assert.match(text, /Order number: AA-10007/);
+  assert.match(text, /Total: Rs\. 2,149 \(cash on delivery\)/);
+  assert.equal(whatsappPlacedOrderLink({}, { id: "AA-1" }), "");
+});

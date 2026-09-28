@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/components/Providers";
 // Where to go after signing in: ?next=/admin (same-site paths only), else the account page.
@@ -219,6 +220,13 @@ export default function AuthPage() {
             >
               Forgot password?
             </button>
+          )}
+          {mode === "signup" && (
+            <p className="muted small">
+              By creating an account you agree to our{" "}
+              <Link href="/policies/terms">terms</Link> and{" "}
+              <Link href="/policies/privacy">privacy policy</Link>.
+            </p>
           )}
           {error && (
             <div className="inline-error" role="alert">

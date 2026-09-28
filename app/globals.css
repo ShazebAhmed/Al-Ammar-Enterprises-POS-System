@@ -2462,6 +2462,21 @@ input[type="radio"] {
     padding: 18px;
   }
 }
+.profile-form .stx-label {
+  margin-bottom: 12px;
+}
+.profile-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+}
+.profile-actions .text-link {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
 .share-button {
   display: inline-flex;
   align-items: center;

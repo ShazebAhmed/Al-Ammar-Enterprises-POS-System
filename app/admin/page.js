@@ -233,7 +233,11 @@ export default function AdminPage() {
     const path = `products/${uid("img_")}.jpg`;
     const { error } = await supabase.storage
       .from("product-images")
-      .upload(path, blob, { contentType: "image/jpeg" });
+      .upload(path, blob, {
+        contentType: "image/jpeg",
+        // Every upload gets a new file name, so phones can keep images for a year.
+        cacheControl: "31536000",
+      });
     if (error) throw error;
     return supabase.storage.from("product-images").getPublicUrl(path).data
       .publicUrl;

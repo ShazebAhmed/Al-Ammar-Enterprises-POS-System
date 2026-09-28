@@ -47,9 +47,48 @@ export default async function ProductPage({ params }) {
   if (!product) return notFound();
 
   const video = getVideoEmbed(product.videoUrl);
+  // Product details for Google (price, stock and rating in search results).
+  const ratings = reviews.filter((r) => r.rating >= 1 && r.rating <= 5);
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
+  const productData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description || undefined,
+    image: product.images,
+    sku: product.id,
+    category: product.category || undefined,
+    brand: { "@type": "Brand", name: settings.storeName || "Al Ammar Store" },
+    offers: {
+      "@type": "Offer",
+      url: `${site}/product/${product.id}`,
+      price: product.price,
+      priceCurrency: "PKR",
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+    },
+    ...(ratings.length && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: (
+          ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+        ).toFixed(1),
+        reviewCount: ratings.length,
+      },
+    }),
+  };
 
   return (
     <main className="page-wrap">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productData).replace(/</g, "\\u003c"),
+        }}
+      />
       <Link
         href="/"
         style={{

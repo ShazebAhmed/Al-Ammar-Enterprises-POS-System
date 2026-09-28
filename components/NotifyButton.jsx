@@ -13,7 +13,12 @@ export default function NotifyButton({ label, done, enable, className }) {
   const started = useRef(false);
   useEffect(() => {
     if (!pushSupported()) {
-      setState("unsupported");
+      // iPhone Safari only allows notifications for sites added to the Home Screen.
+      setState(
+        /iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone
+          ? "iphone"
+          : "unsupported",
+      );
       return;
     }
     if (Notification.permission !== "granted" || started.current) return;
@@ -26,6 +31,13 @@ export default function NotifyButton({ label, done, enable, className }) {
     // Once per page: `enable` is a new function on every render.
   }, []);
   if (state === "unsupported") return null;
+  if (state === "iphone")
+    return (
+      <p className={`muted small ${className || ""}`}>
+        <Icon name="notifications" size={15} /> On iPhone, tap Share, then “Add
+        to Home Screen”, and open the store from there to get notifications.
+      </p>
+    );
   if (state === "on")
     return (
       <p className={`notify-done ${className || ""}`} role="status">

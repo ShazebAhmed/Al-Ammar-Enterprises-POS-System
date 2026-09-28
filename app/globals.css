@@ -2772,6 +2772,38 @@ input[type="radio"] {
   }
 }
 
+/* Sale prices and discount codes */
+.was-price {
+  margin-left: 8px;
+  color: var(--ink-soft);
+  font-size: 0.82em;
+  font-weight: 400;
+}
+.sale-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--brick);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.product-badge.sale {
+  background: var(--brick);
+  color: #fff;
+}
+.coupon-box {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+.coupon-box .stx-input {
+  flex: 1;
+  min-width: 0;
+  text-transform: uppercase;
+}
+.summary-row.discount {
+  color: var(--brick);
+}
+
 /* Order tracking (/track) */
 .track-steps {
   list-style: none;

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useStore } from "./Providers";
 import Icon from "./Icon";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, salePercent } from "@/lib/format";
 import { whatsappOrderLink } from "@/lib/whatsapp";
 export default function ProductPurchasePanel({ product, settings }) {
   const { cart, addToCart, cartReady } = useStore();
@@ -22,6 +22,21 @@ export default function ProductPurchasePanel({ product, settings }) {
       <h1>{product.name}</h1>
       <div className="purchase-price">
         {formatMoney(product.price, settings.currencySymbol)}
+        {salePercent(product) > 0 && (
+          <>
+            <s className="was-price">
+              {formatMoney(product.compareAtPrice, settings.currencySymbol)}
+            </s>
+            <span className="sale-note">
+              Save{" "}
+              {formatMoney(
+                product.compareAtPrice - product.price,
+                settings.currencySymbol,
+              )}{" "}
+              ({salePercent(product)}% off)
+            </span>
+          </>
+        )}
       </div>
       <div className={`availability ${stock ? "" : "sold-out"}`}>
         <span />

@@ -408,6 +408,7 @@ export default function CheckoutPage() {
             <p className="muted small">
               The latest prices and stock are verified when you place the order.
               By ordering you agree to our{" "}
+              <Link href="/policies/terms">terms</Link>,{" "}
               <Link href="/policies/shipping">shipping</Link> and{" "}
               <Link href="/policies/returns">returns</Link> policies.
             </p>

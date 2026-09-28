@@ -29,6 +29,8 @@ export default async function sitemap() {
     "/policies/returns",
     "/policies/privacy",
     "/policies/delete-account",
+    "/policies/terms",
+    "/faq",
   ].map((path) => ({
     url: base + path,
     changeFrequency: "monthly",

@@ -23,6 +23,10 @@ create function auth.role() returns text language sql stable as $$ select nullif
 create table storage.buckets(id text primary key,name text not null,public boolean not null default false);
 create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text references storage.buckets(id),name text);
 alter table storage.objects enable row level security;
+-- pg_net stand-in: records the requests the database would send.
+create schema net;create table net.calls(id serial primary key,url text,body jsonb);
+create function net.http_post(url text,body jsonb default '{}',params jsonb default '{}',headers jsonb default '{}',timeout_milliseconds integer default 5000) returns bigint language sql as $$ insert into net.calls(url,body) values(url,body) returning id::bigint $$;
+grant usage on schema net to anon,authenticated;grant select on net.calls to anon,authenticated;
 `);
 // Apply every migration in order, exactly as a fresh project would.
 const migrations = new URL("../supabase/migrations/", import.meta.url);
@@ -445,6 +449,150 @@ test("guests can track an order only with its phone number", async () => {
   assert.equal(await track(saved.id, "03009999999"), null);
   assert.equal(await track("AA-1", "03001234567"), null);
   assert.equal(await track(saved.id, ""), null);
+});
+test("orders notify the admin, and status changes notify customers who follow the order", async () => {
+  const P4 = "a1a1a1a1-0000-4000-8000-000000000004";
+  const sub = (name) => ({
+    endpoint: `https://push.example/${name}`,
+    keys: { p256dh: "p".repeat(87), auth: "a".repeat(22) },
+  });
+  await db.exec("reset role");
+  await db.query(
+    "insert into products(id,name,price,stock) values($1,'Push item',500,20)",
+    [P4],
+  );
+  const calls = async () =>
+    (await db.query("select body from net.calls order by id")).rows.map(
+      (r) => r.body.id,
+    );
+  const rpc = async (sql, params = []) =>
+    (await db.query(sql, params)).rows[0]?.r;
+
+  // Nothing is sent before the admin sets notifications up.
+  await role("authenticated", BUYER);
+  await order(
+    "f0f0f0f0-0000-4000-8000-000000000001",
+    [{ productId: P4, qty: 1 }],
+    {
+      ...customer,
+      phone: "03211111111",
+    },
+  );
+  assert.equal((await calls()).length, 0);
+  await assert.rejects(
+    () =>
+      db.query("select public.set_push_keys($1,$2)", [
+        "K".repeat(87),
+        "k".repeat(43),
+      ]),
+    /Administrator/,
+  );
+  await assert.rejects(
+    () =>
+      db.query("select public.watch_new_orders($1)", [
+        JSON.stringify(sub("buyer")),
+      ]),
+    /Administrator/,
+  );
+
+  await role("authenticated", ADMIN);
+  assert.equal(
+    await rpc("select public.set_push_keys($1,$2) as r", [
+      "K".repeat(87),
+      "k".repeat(43),
+    ]),
+    "K".repeat(87),
+  );
+  // A second setup never replaces the key.
+  assert.equal(
+    await rpc("select public.set_push_keys($1,$2) as r", [
+      "Z".repeat(87),
+      "z".repeat(43),
+    ]),
+    "K".repeat(87),
+  );
+  await db.query("select public.watch_new_orders($1)", [
+    JSON.stringify(sub("admin")),
+  ]);
+
+  await role();
+  assert.equal(
+    await rpc("select public.push_public_key() as r"),
+    "K".repeat(87),
+  );
+  assert.equal((await db.query("select * from push_keys")).rows.length, 0);
+  assert.equal(
+    (await db.query("select * from push_subscriptions")).rows.length,
+    0,
+  );
+
+  await role("authenticated", BUYER);
+  const placed = await order(
+    "f0f0f0f0-0000-4000-8000-000000000002",
+    [{ productId: P4, qty: 2 }],
+    {
+      ...customer,
+      phone: "03222222222",
+    },
+  );
+  let ids = await calls();
+  assert.equal(ids.length, 1);
+  await role();
+  const first = await rpc("select public.claim_push($1) as r", [ids[0]]);
+  assert.match(first.notification.title, new RegExp(placed.id));
+  assert.match(first.notification.title, /Rs. 1,150/);
+  assert.equal(first.notification.url, "/admin");
+  assert.deepEqual(
+    first.subscriptions.map((x) => x.endpoint),
+    ["https://push.example/admin"],
+  );
+  assert.equal(first.privateKey, "k".repeat(43));
+  // Single use.
+  assert.equal(await rpc("select public.claim_push($1) as r", [ids[0]]), null);
+
+  // A guest follows the order with its phone number.
+  await assert.rejects(
+    () =>
+      db.query("select public.watch_order($1,$2,$3)", [
+        placed.id,
+        "03000000000",
+        JSON.stringify(sub("guest")),
+      ]),
+    /not found/,
+  );
+  await db.query("select public.watch_order($1,$2,$3)", [
+    placed.id.replace("AA-", ""),
+    "+92 322 2222222",
+    JSON.stringify(sub("guest")),
+  ]);
+  await role("authenticated", ADMIN);
+  await db.query("update orders set status='Confirmed' where id=$1", [
+    placed.id,
+  ]);
+  ids = await calls();
+  assert.equal(ids.length, 2);
+  await role();
+  const second = await rpc("select public.claim_push($1) as r", [ids[1]]);
+  assert.match(second.notification.title, /confirmed/);
+  assert.equal(second.notification.url, `/track?order=${placed.id}`);
+  assert.deepEqual(
+    second.subscriptions.map((x) => x.endpoint),
+    ["https://push.example/guest"],
+  );
+  // A browser the push service says is gone is forgotten.
+  await db.query("select public.finish_push($1,$2)", [
+    ids[1],
+    ["https://push.example/guest", "https://push.example/admin"],
+  ]);
+  await db.exec("reset role");
+  assert.deepEqual(
+    (
+      await db.query(
+        "select endpoint from push_subscriptions order by endpoint",
+      )
+    ).rows.map((r) => r.endpoint),
+    ["https://push.example/admin"],
+  );
 });
 test.after(async () => {
   await db.close();

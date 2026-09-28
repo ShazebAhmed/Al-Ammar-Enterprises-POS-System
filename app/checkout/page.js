@@ -5,6 +5,8 @@ import { useStore } from "@/components/Providers";
 import useCartProducts from "@/components/useCartProducts";
 import Icon from "@/components/Icon";
 import OrderReceipt from "@/components/OrderReceipt";
+import NotifyButton from "@/components/NotifyButton";
+import { watchOrder } from "@/lib/push";
 import { formatMoney, orderFromRow, printBill } from "@/lib/format";
 import { cartTotals, validateCustomer } from "@/lib/cart";
 export default function CheckoutPage() {
@@ -175,6 +177,12 @@ export default function CheckoutPage() {
             Continue shopping
           </Link>
         </div>
+        <NotifyButton
+          className="mt-6 no-print"
+          label="Notify me about this order"
+          done="Done. This phone will be notified when your order is confirmed, sent and delivered."
+          enable={() => watchOrder(supabase, order.id, order.customer.phone)}
+        />
       </main>
     );
   return (

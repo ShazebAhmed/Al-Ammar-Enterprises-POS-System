@@ -2870,3 +2870,24 @@ input[type="radio"] {
 .track-total {
   font-weight: 700;
 }
+
+/* Notifications */
+.notify-done {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 16px 0 0;
+  color: var(--primary);
+  font-weight: 600;
+}
+.admin-alerts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.admin-alerts .notify-done {
+  margin: 0;
+}

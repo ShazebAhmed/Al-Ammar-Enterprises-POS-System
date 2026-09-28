@@ -3,7 +3,10 @@ import { getSettings, getCatalogue } from "@/lib/catalogue";
 import { formatMoney } from "@/lib/format";
 import Icon from "@/components/Icon";
 import ProductCard from "@/components/ProductCard";
+import { storeData, jsonLd } from "@/lib/seo";
 export const revalidate = 60;
+// Filtered and sorted lists all point search engines at the main shop page.
+export const metadata = { alternates: { canonical: "/" } };
 const text = (value) => (typeof value === "string" ? value : "");
 export default async function HomePage({ searchParams }) {
   const sp = await searchParams;
@@ -42,6 +45,10 @@ export default async function HomePage({ searchParams }) {
   const filtered = category !== "All" || q || stock;
   return (
     <main className="store-home">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(storeData(settings)) }}
+      />
       {!filtered && page === 1 && (
         <section className="container hero">
           <div className="hero-copy">

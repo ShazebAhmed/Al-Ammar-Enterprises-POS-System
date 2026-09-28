@@ -1,20 +1,18 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSettings, getProduct } from "@/lib/catalogue";
-import {
-  settingsFromRow,
-  productFromRow,
-  reviewFromRow,
-  DEFAULT_SETTINGS,
-  getVideoEmbed,
-  descriptionSummary,
-} from "@/lib/format";
+import { getVideoEmbed, descriptionSummary } from "@/lib/format";
 import Icon from "@/components/Icon";
 import ImageGallery from "@/components/ImageGallery";
 import ProductPurchasePanel from "@/components/ProductPurchasePanel";
 import ReviewsSection from "@/components/ReviewsSection";
+import { productData, jsonLd } from "@/lib/seo";
 
 export const revalidate = 60;
+// Pages are made on first visit and then cached, refreshed at most once a minute.
+export function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -29,7 +27,10 @@ export async function generateMetadata({ params }) {
     description:
       descriptionSummary(product.description) ||
       `Buy ${product.name} at ${storeName}.`,
+    alternates: { canonical: `/product/${product.id}` },
     openGraph: {
+      type: "website",
+      url: `/product/${product.id}`,
       title: `${product.name} · ${storeName}`,
       description: descriptionSummary(product.description),
       images: product.images?.[0] ? [product.images[0]] : [],
@@ -48,46 +49,12 @@ export default async function ProductPage({ params }) {
   if (!product) return notFound();
 
   const video = getVideoEmbed(product.videoUrl);
-  // Product details for Google (price, stock and rating in search results).
-  const ratings = reviews.filter((r) => r.rating >= 1 && r.rating <= 5);
-  const site = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
-  const productData = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    description: product.description || undefined,
-    image: product.images,
-    sku: product.id,
-    category: product.category || undefined,
-    brand: { "@type": "Brand", name: settings.storeName || "Al Ammar Store" },
-    offers: {
-      "@type": "Offer",
-      url: `${site}/product/${product.id}`,
-      price: product.price,
-      priceCurrency: "PKR",
-      availability:
-        product.stock > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
-      itemCondition: "https://schema.org/NewCondition",
-    },
-    ...(ratings.length && {
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: (
-          ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
-        ).toFixed(1),
-        reviewCount: ratings.length,
-      },
-    }),
-  };
-
   return (
     <main className="page-wrap">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productData).replace(/</g, "\\u003c"),
+          __html: jsonLd(productData(product, settings, reviews)),
         }}
       />
       <Link

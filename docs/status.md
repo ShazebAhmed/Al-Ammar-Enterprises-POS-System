@@ -31,9 +31,13 @@ writes in Urdu or Roman Urdu; reply in Urdu.
 ## Android apps
 
 - `android/` builds two Trusted Web Activity apps (store, admin) with
-  `android/build-apks.ps1`. Version 1.3.0: the Admin app opens
-  https://alammar-admin.vercel.app/admin (1.2.0 still works there, with an address bar,
-  and its alerts show in the Store app). Release `android-v1.2.0` is on GitHub.
+  `android/build-apks.ps1`. Version 1.3.1: the Admin app opens
+  https://alammar-admin.vercel.app/admin and claims that address's links
+  (`src/admin/AndroidManifest.xml`). Chrome only shows a site's notifications as an
+  app's when the app handles the site's links, so without this admin alerts came as
+  Chrome notifications. Checked on the owner's phone (vivo V30, Android 16, Chrome
+  154): test alert posted by com.alammar.admin, tapping it opens the Admin app.
+  Release `android-v1.2.0` is on GitHub.
 - Signing key: `android/signing/alammar-release.keystore` + `android/keystore.properties`
   are not in Git. The owner keeps the backup zip on Google Drive
   ("AlAmmar-Signing-Backup"). Never create a new key; Play only accepts this one.

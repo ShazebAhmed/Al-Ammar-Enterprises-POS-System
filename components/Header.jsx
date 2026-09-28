@@ -17,12 +17,10 @@ export default function Header({ settings }) {
       </div>
       <header className="site-header">
         <div className="container header-inner">
-          <Link
-            href="/"
-            className="brand"
-            aria-label={`${settings.storeName || "Al-Ammar"} home`}
-          >
-            <span className="brand-mark">{settings.logoInitial || "A"}</span>
+          <Link href="/" className="brand">
+            <span className="brand-mark" aria-hidden="true">
+              {settings.logoInitial || "A"}
+            </span>
             <span>
               <strong>{settings.storeName || "Al-Ammar"}</strong>
               <small>THE EVERYDAY STORE</small>

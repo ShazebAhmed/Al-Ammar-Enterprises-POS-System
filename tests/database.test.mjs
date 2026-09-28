@@ -424,6 +424,99 @@ test("discount codes are applied by the database and limited to their uses", asy
   ]);
   assert.equal(await uses(), 0);
 });
+test("product options keep their own stock through orders and cancellations", async () => {
+  const P5 = "a1a1a1a1-0000-4000-8000-000000000005";
+  await role("authenticated", ADMIN);
+  await db.query(
+    `insert into products(id,name,price,stock,option_label,variants)
+     values($1,'Shirt',800,0,'Size',$2)`,
+    [
+      P5,
+      JSON.stringify([
+        { name: "M", stock: 2 },
+        { name: "L", stock: 5 },
+      ]),
+    ],
+  );
+  const stockOf = async () =>
+    (await db.query("select stock, variants from products where id=$1", [P5]))
+      .rows[0];
+  assert.equal((await stockOf()).stock, 7); // total of the options
+  await assert.rejects(
+    () =>
+      db.query("update products set variants=$2 where id=$1", [
+        P5,
+        JSON.stringify([
+          { name: "M", stock: 1 },
+          { name: "m", stock: 1 },
+        ]),
+      ]),
+    /different/,
+  );
+  await role("authenticated", BUYER);
+  const buyer = { ...customer, phone: "03133333333" };
+  await assert.rejects(
+    () =>
+      order(
+        "0b0b0b0b-0000-4000-8000-000000000001",
+        [{ productId: P5, qty: 1 }],
+        buyer,
+      ),
+    /choose an option/,
+  );
+  await assert.rejects(
+    () =>
+      order(
+        "0b0b0b0b-0000-4000-8000-000000000002",
+        [{ productId: P5, variant: "M", qty: 3 }],
+        buyer,
+      ),
+    /stock/,
+  );
+  const placed = await order(
+    "0b0b0b0b-0000-4000-8000-000000000003",
+    [
+      { productId: P5, variant: "M", qty: 2 },
+      { productId: P5, variant: "L", qty: 1 },
+    ],
+    buyer,
+  );
+  assert.deepEqual(
+    placed.items.map((i) => [i.variant, i.qty]),
+    [
+      ["L", 1],
+      ["M", 2],
+    ],
+  );
+  assert.equal(Number(placed.total), 800 * 3 + 150);
+  let now = await stockOf();
+  assert.equal(now.stock, 4);
+  assert.deepEqual(now.variants, [
+    { name: "M", stock: 0 },
+    { name: "L", stock: 4 },
+  ]);
+  await role("authenticated", ADMIN);
+  await db.query("update orders set status='Cancelled' where id=$1", [
+    placed.id,
+  ]);
+  now = await stockOf();
+  assert.equal(now.stock, 7);
+  assert.deepEqual(now.variants, [
+    { name: "M", stock: 2 },
+    { name: "L", stock: 5 },
+  ]);
+  // Baskets keep one row per option.
+  await role("authenticated", BUYER);
+  await db.query(
+    "insert into cart_items(customer_id,product_id,variant,qty) values($1,$2,'M',1),($1,$2,'L',2)",
+    [BUYER, P5],
+  );
+  assert.equal(
+    (await db.query("select * from cart_items where product_id=$1", [P5])).rows
+      .length,
+    2,
+  );
+});
 test.after(async () => {
   await db.close();
 });

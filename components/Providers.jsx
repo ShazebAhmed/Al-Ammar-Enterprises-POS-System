@@ -1,7 +1,12 @@
 "use client";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase";
-import { changeQuantity, mergeCarts, normalizeCart } from "@/lib/cart";
+import {
+  changeQuantity,
+  mergeCarts,
+  normalizeCart,
+  sameLine,
+} from "@/lib/cart";
 const StoreContext = createContext(null);
 export const useStore = () => useContext(StoreContext);
 const storageKey = (owner) => `al-ammar:cart:v2:${owner || "guest"}`;
@@ -111,7 +116,7 @@ export default function Providers({ children }) {
         if (ownerRef.current !== owner) return;
         const existing = await supabase
           .from("cart_items")
-          .select("product_id")
+          .select("product_id,variant")
           .eq("customer_id", owner);
         if (existing.error) throw existing.error;
         if (lines.length) {
@@ -119,24 +124,27 @@ export default function Providers({ children }) {
             lines.map((l) => ({
               customer_id: owner,
               product_id: l.productId,
+              variant: l.variant || "",
               qty: l.qty,
               updated_at: new Date().toISOString(),
             })),
-            { onConflict: "customer_id,product_id" },
+            { onConflict: "customer_id,product_id,variant" },
           );
           if (res.error) throw res.error;
         }
-        const removed = (existing.data || [])
-          .filter(
-            (r) => !lines.some((l) => l.productId === String(r.product_id)),
-          )
-          .map((r) => r.product_id);
-        if (removed.length) {
+        const removed = (existing.data || []).filter(
+          (r) =>
+            !lines.some((l) =>
+              sameLine(l, String(r.product_id), r.variant || ""),
+            ),
+        );
+        for (const r of removed) {
           const res = await supabase
             .from("cart_items")
             .delete()
             .eq("customer_id", owner)
-            .in("product_id", removed);
+            .eq("product_id", r.product_id)
+            .eq("variant", r.variant || "");
           if (res.error) throw res.error;
         }
         if (
@@ -195,6 +203,7 @@ export default function Providers({ children }) {
           ? cached?.lines || []
           : (c.data || []).map((r) => ({
               productId: String(r.product_id),
+              ...(r.variant && { variant: r.variant }),
               qty: r.qty,
             }));
         const guest = readCache(null)?.lines || [];
@@ -220,10 +229,11 @@ export default function Providers({ children }) {
     const next = setLocal(lines);
     sync(next, ownerRef.current);
   }
-  function addToCart(productId, qty = 1, stock = 999) {
+  function addToCart(productId, qty = 1, stock = 999, variant = "") {
     if (!cartReady) return false;
     const previous =
-      cartRef.current.find((l) => l.productId === String(productId))?.qty || 0;
+      cartRef.current.find((l) => sameLine(l, String(productId), variant))
+        ?.qty || 0;
     if (previous >= Number(stock)) {
       notify("You already have all available stock in your basket.", "error");
       return false;
@@ -234,17 +244,22 @@ export default function Providers({ children }) {
         String(productId),
         previous + Number(qty),
         stock,
+        variant,
       ),
     );
     notify("Added to your basket");
     return true;
   }
-  function setCartQty(productId, qty, stock = 999) {
+  function setCartQty(productId, qty, stock = 999, variant = "") {
     if (cartReady)
-      commit(changeQuantity(cartRef.current, String(productId), qty, stock));
+      commit(
+        changeQuantity(cartRef.current, String(productId), qty, stock, variant),
+      );
   }
-  function removeFromCart(productId) {
-    commit(cartRef.current.filter((l) => l.productId !== String(productId)));
+  function removeFromCart(productId, variant = "") {
+    commit(
+      cartRef.current.filter((l) => !sameLine(l, String(productId), variant)),
+    );
   }
   function clearCart() {
     commit([]);

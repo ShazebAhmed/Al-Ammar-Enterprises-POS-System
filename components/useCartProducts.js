@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useStore } from "./Providers";
+import { lineStock } from "@/lib/cart";
 import {
   DEFAULT_SETTINGS,
   settingsFromRow,
@@ -16,10 +17,7 @@ export default function useCartProducts() {
     error: "",
   });
   const [revision, setRevision] = useState(0);
-  const ids = cart
-    .map((l) => l.productId)
-    .sort()
-    .join(",");
+  const ids = [...new Set(cart.map((l) => l.productId))].sort().join(",");
   useEffect(() => {
     if (!cartReady) return;
     let cancelled = false;
@@ -68,10 +66,7 @@ export default function useCartProducts() {
     product: data.products.find((p) => String(p.id) === l.productId),
   }));
   const invalid = lines.some(
-    (l) =>
-      !l.product ||
-      l.qty > Number(l.product.stock) ||
-      Number(l.product.stock) <= 0,
+    (l) => !l.product || l.qty > lineStock(l.product, l.variant || ""),
   );
   return {
     ...data,

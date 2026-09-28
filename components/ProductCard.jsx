@@ -59,6 +59,10 @@ export default function ProductCard({ product, settings, rating }) {
           </strong>
           {soldOut ? (
             <span className="muted small">Unavailable</span>
+          ) : product.variants?.length ? (
+            <Link className="add-button" href={`/product/${product.id}`}>
+              Choose
+            </Link>
           ) : (
             <AddToCartButton productId={product.id} stock={product.stock} />
           )}

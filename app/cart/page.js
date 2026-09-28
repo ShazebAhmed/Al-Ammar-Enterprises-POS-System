@@ -4,7 +4,7 @@ import { useStore } from "@/components/Providers";
 import useCartProducts from "@/components/useCartProducts";
 import Icon from "@/components/Icon";
 import { formatMoney } from "@/lib/format";
-import { cartTotals } from "@/lib/cart";
+import { cartTotals, lineStock } from "@/lib/cart";
 import { whatsappOrderLink } from "@/lib/whatsapp";
 export default function CartPage() {
   const { setCartQty, removeFromCart, syncError, retrySync } = useStore();
@@ -57,7 +57,10 @@ export default function CartPage() {
         <div className="checkout-grid">
           <section aria-label="Basket items">
             {lines.map((l) => (
-              <article key={l.productId} className="cart-item">
+              <article
+                key={`${l.productId}:${l.variant || ""}`}
+                className="cart-item"
+              >
                 <div className="cart-thumb">
                   {l.product?.images?.[0] ? (
                     <img src={l.product.images[0]} alt={l.product.name} />
@@ -78,6 +81,11 @@ export default function CartPage() {
                   </h3>
                   {l.product && (
                     <>
+                      {l.variant && (
+                        <small className="cart-option">
+                          {l.product.optionLabel || "Option"}: {l.variant}
+                        </small>
+                      )}
                       <small>{money(l.product.price)} each</small>
                       <div
                         style={{ marginTop: 10 }}
@@ -86,7 +94,12 @@ export default function CartPage() {
                         <button
                           aria-label={`Decrease ${l.product.name}`}
                           onClick={() =>
-                            setCartQty(l.productId, l.qty - 1, l.product.stock)
+                            setCartQty(
+                              l.productId,
+                              l.qty - 1,
+                              lineStock(l.product, l.variant),
+                              l.variant,
+                            )
                           }
                         >
                           <Icon name="remove" size={14} />
@@ -94,9 +107,14 @@ export default function CartPage() {
                         <output>{l.qty}</output>
                         <button
                           aria-label={`Increase ${l.product.name}`}
-                          disabled={l.qty >= Number(l.product.stock)}
+                          disabled={l.qty >= lineStock(l.product, l.variant)}
                           onClick={() =>
-                            setCartQty(l.productId, l.qty + 1, l.product.stock)
+                            setCartQty(
+                              l.productId,
+                              l.qty + 1,
+                              lineStock(l.product, l.variant),
+                              l.variant,
+                            )
                           }
                         >
                           <Icon name="add" size={14} />
@@ -104,11 +122,13 @@ export default function CartPage() {
                       </div>
                     </>
                   )}
-                  {(!l.product || l.qty > Number(l.product.stock)) && (
+                  {(!l.product || l.qty > lineStock(l.product, l.variant)) && (
                     <p className="cart-stock-warning">
-                      {l.product
-                        ? `Only ${l.product.stock} available. Update the quantity.`
-                        : "Remove this item to continue."}
+                      {!l.product
+                        ? "Remove this item to continue."
+                        : l.product.variants?.length && !l.variant
+                          ? `Remove this item and choose a ${(l.product.optionLabel || "option").toLowerCase()} on the product page.`
+                          : `Only ${lineStock(l.product, l.variant)} available. Update the quantity.`}
                     </p>
                   )}
                 </div>
@@ -119,7 +139,7 @@ export default function CartPage() {
                   <button
                     className="remove-button"
                     aria-label={`Remove ${l.product?.name || "unavailable product"}`}
-                    onClick={() => removeFromCart(l.productId)}
+                    onClick={() => removeFromCart(l.productId, l.variant)}
                   >
                     <Icon name="delete" size={13} /> Remove
                   </button>

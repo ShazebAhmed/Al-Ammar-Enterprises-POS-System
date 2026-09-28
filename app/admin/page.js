@@ -16,6 +16,7 @@ import {
   DEFAULT_SETTINGS,
   productFromRow,
   orderFromRow,
+  itemName,
   reviewFromRow,
   ORDER_STATUSES,
   STATUS_COLOR,
@@ -156,6 +157,8 @@ export default function AdminPage() {
         price: p.price,
         compare_at_price: p.compareAtPrice > p.price ? p.compareAtPrice : null,
         stock: p.stock,
+        option_label: p.optionLabel || "",
+        variants: p.variants || [],
         description: p.description,
         images: p.images,
         video_url: p.videoUrl,
@@ -831,6 +834,11 @@ function ProductForm({
     price: product.price ?? "",
     compareAtPrice: product.compareAtPrice ?? "",
     stock: product.stock ?? "",
+    optionLabel: product.optionLabel || "",
+    variants: (product.variants || []).map((v) => ({
+      name: v.name,
+      stock: String(v.stock),
+    })),
     description: product.description || "",
     images: product.images || [],
     videoUrl: product.videoUrl || "",
@@ -1012,9 +1020,19 @@ function ProductForm({
     (form.compareAtPrice === "" ||
       (Number.isFinite(Number(form.compareAtPrice)) &&
         Number(form.compareAtPrice) >= 0)) &&
-    form.stock !== "" &&
-    Number.isSafeInteger(Number(form.stock)) &&
-    Number(form.stock) >= 0 &&
+    (form.variants.length
+      ? form.variants.every(
+          (v) =>
+            v.name.trim() &&
+            v.stock !== "" &&
+            Number.isSafeInteger(Number(v.stock)) &&
+            Number(v.stock) >= 0,
+        ) &&
+        new Set(form.variants.map((v) => v.name.trim().toLowerCase())).size ===
+          form.variants.length
+      : form.stock !== "" &&
+        Number.isSafeInteger(Number(form.stock)) &&
+        Number(form.stock) >= 0) &&
     !uploading &&
     uploads.length === 0;
   async function save(event) {
@@ -1028,7 +1046,16 @@ function ProductForm({
       price: Number(form.price),
       compareAtPrice:
         form.compareAtPrice === "" ? null : Number(form.compareAtPrice),
-      stock: Number(form.stock),
+      stock: form.variants.length
+        ? form.variants.reduce((sum, v) => sum + Number(v.stock), 0)
+        : Number(form.stock),
+      optionLabel: form.variants.length
+        ? form.optionLabel.trim() || "Size"
+        : "",
+      variants: form.variants.map((v) => ({
+        name: v.name.trim(),
+        stock: Number(v.stock),
+      })),
     };
     working.current = true;
     setSaving(true);
@@ -1049,6 +1076,13 @@ function ProductForm({
           price: keepDetails ? submitted.price : "",
           compareAtPrice: keepDetails ? (submitted.compareAtPrice ?? "") : "",
           stock: keepDetails ? submitted.stock : "",
+          optionLabel: keepDetails ? submitted.optionLabel : "",
+          variants: keepDetails
+            ? submitted.variants.map((v) => ({
+                name: v.name,
+                stock: String(v.stock),
+              }))
+            : [],
           description: keepDetails ? submitted.description : "",
           images: [],
           videoUrl: "",
@@ -1199,12 +1233,112 @@ function ProductForm({
                 step="1"
                 className="stx-input"
                 style={{ marginTop: 4 }}
-                value={form.stock}
+                value={
+                  form.variants.length
+                    ? form.variants.reduce(
+                        (sum, v) => sum + (Number(v.stock) || 0),
+                        0,
+                      )
+                    : form.stock
+                }
+                disabled={form.variants.length > 0}
+                title={
+                  form.variants.length
+                    ? "The total of the options below"
+                    : undefined
+                }
                 onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                required
+                required={!form.variants.length}
               />
             </label>
           </div>
+          <fieldset className="options-editor">
+            <legend className="stx-label">
+              Options (size, colour…) <span className="muted">optional</span>
+            </legend>
+            {form.variants.length > 0 && (
+              <label className="stx-label" htmlFor="product-option-label">
+                Options are called
+                <input
+                  id="product-option-label"
+                  className="stx-input"
+                  style={{ marginTop: 4 }}
+                  placeholder="Size"
+                  maxLength={40}
+                  value={form.optionLabel}
+                  onChange={(e) =>
+                    setForm({ ...form, optionLabel: e.target.value })
+                  }
+                />
+              </label>
+            )}
+            {form.variants.map((v, i) => (
+              <div className="option-row" key={i}>
+                <input
+                  className="stx-input"
+                  aria-label={`Option ${i + 1} name`}
+                  placeholder="e.g. Medium or Black"
+                  maxLength={40}
+                  value={v.name}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      variants: form.variants.map((x, j) =>
+                        j === i ? { ...x, name: e.target.value } : x,
+                      ),
+                    })
+                  }
+                />
+                <input
+                  className="stx-input"
+                  type="number"
+                  min="0"
+                  step="1"
+                  aria-label={`Option ${i + 1} stock`}
+                  placeholder="Stock"
+                  value={v.stock}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      variants: form.variants.map((x, j) =>
+                        j === i ? { ...x, stock: e.target.value } : x,
+                      ),
+                    })
+                  }
+                />
+                <button
+                  type="button"
+                  className="icon-button"
+                  aria-label={`Remove option ${v.name || i + 1}`}
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      variants: form.variants.filter((_, j) => j !== i),
+                    })
+                  }
+                >
+                  <Icon name="close" size={16} />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="stx-btn stx-btn-outline"
+              disabled={form.variants.length >= 50}
+              onClick={() =>
+                setForm({
+                  ...form,
+                  variants: [...form.variants, { name: "", stock: "" }],
+                })
+              }
+            >
+              <Icon name="add" size={16} /> Add option
+            </button>
+            <p className="muted small" style={{ margin: 0 }}>
+              Each option has its own stock. Customers choose one before adding
+              to the basket.
+            </p>
+          </fieldset>
           <label className="stx-label" htmlFor="product-category">
             Category
             <select
@@ -1672,7 +1806,7 @@ function OrdersTab({ orders, settings, onUpdateStatus, onCancelStale }) {
                   >
                     {o.items.map((it) => (
                       <div
-                        key={it.productId}
+                        key={`${it.productId}:${it.variant || ""}`}
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
@@ -1680,7 +1814,7 @@ function OrdersTab({ orders, settings, onUpdateStatus, onCancelStale }) {
                         }}
                       >
                         <span>
-                          {it.name} × {it.qty}
+                          {itemName(it.name, it.variant)} × {it.qty}
                         </span>
                         <span className="stx-mono">
                           {formatMoney(

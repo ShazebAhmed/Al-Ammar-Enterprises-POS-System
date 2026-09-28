@@ -2803,3 +2803,58 @@ input[type="radio"] {
 .summary-row.discount {
   color: var(--brick);
 }
+
+/* Product options (size, colour) */
+.option-picker {
+  border: 0;
+  margin: 14px 0 6px;
+  padding: 0;
+}
+.option-picker > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.option-picker button {
+  min-width: 48px;
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.option-picker button.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+.option-picker button:disabled {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.cart-option {
+  display: block;
+  font-weight: 600;
+}
+.options-editor {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px 14px;
+  margin: 0;
+}
+.options-editor .stx-btn {
+  justify-self: start;
+}
+.option-row {
+  display: grid;
+  grid-template-columns: 1fr 110px auto;
+  gap: 8px;
+  align-items: center;
+}

@@ -8,6 +8,7 @@ import OrderReceipt from "@/components/OrderReceipt";
 import {
   formatMoney,
   formatOrderTime,
+  itemName,
   orderFromRow,
   printBill,
   settingsFromRow,
@@ -220,7 +221,7 @@ export default function AccountPage() {
               </div>
               {o.items.map((it) => (
                 <div
-                  key={it.productId}
+                  key={`${it.productId}:${it.variant || ""}`}
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
@@ -230,7 +231,7 @@ export default function AccountPage() {
                   }}
                 >
                   <span>
-                    {it.name} × {it.qty}
+                    {itemName(it.name, it.variant)} × {it.qty}
                   </span>
                   <span className="stx-mono">
                     {formatMoney(it.price * it.qty, settings.currencySymbol)}

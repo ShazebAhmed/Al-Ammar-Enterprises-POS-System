@@ -1,4 +1,4 @@
-import { formatMoney, formatOrderTime } from "@/lib/format";
+import { formatMoney, formatOrderTime, itemName } from "@/lib/format";
 import { billPolicySummary } from "@/lib/policies";
 
 const STATUS_LABEL = {
@@ -95,7 +95,7 @@ export default function OrderReceipt({ order, settings }) {
             {order.items.map((it, i) => (
               <tr key={`${it.productId}-${i}`}>
                 <td>{String(i + 1).padStart(2, "0")}</td>
-                <td>{it.name}</td>
+                <td>{itemName(it.name, it.variant)}</td>
                 <td>{it.qty}</td>
                 <td>{money(it.price)}</td>
                 <td>{money(it.price * it.qty)}</td>

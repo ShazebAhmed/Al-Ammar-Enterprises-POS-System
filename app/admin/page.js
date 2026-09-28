@@ -898,6 +898,7 @@ function ProductForm({
     variants: (product.variants || []).map((v) => ({
       name: v.name,
       stock: String(v.stock),
+      image: v.image || "",
     })),
     description: product.description || "",
     images: product.images || [],
@@ -1115,6 +1116,8 @@ function ProductForm({
       variants: form.variants.map((v) => ({
         name: v.name.trim(),
         stock: Number(v.stock),
+        // The option's own photo, if it is still one of the product's photos.
+        ...(v.image && form.images.includes(v.image) && { image: v.image }),
       })),
     };
     working.current = true;
@@ -1141,6 +1144,7 @@ function ProductForm({
             ? submitted.variants.map((v) => ({
                 name: v.name,
                 stock: String(v.stock),
+                image: v.image || "",
               }))
             : [],
           description: keepDetails ? submitted.description : "",
@@ -1366,6 +1370,28 @@ function ProductForm({
                     })
                   }
                 />
+                <select
+                  className="stx-input"
+                  aria-label={`Option ${i + 1} photo`}
+                  title="The photo shown when a customer chooses this option"
+                  value={form.images.includes(v.image) ? v.image : ""}
+                  disabled={!form.images.length}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      variants: form.variants.map((x, j) =>
+                        j === i ? { ...x, image: e.target.value } : x,
+                      ),
+                    })
+                  }
+                >
+                  <option value="">No photo</option>
+                  {form.images.map((url, n) => (
+                    <option key={url} value={url}>
+                      Photo {n + 1}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="button"
                   className="icon-button"
@@ -1388,7 +1414,10 @@ function ProductForm({
               onClick={() =>
                 setForm({
                   ...form,
-                  variants: [...form.variants, { name: "", stock: "" }],
+                  variants: [
+                    ...form.variants,
+                    { name: "", stock: "", image: "" },
+                  ],
                 })
               }
             >

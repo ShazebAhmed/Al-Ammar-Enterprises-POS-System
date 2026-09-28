@@ -1,6 +1,9 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
+
+// Choosing an option with its own photo (for example a colour) shows that photo.
+export const SHOW_PHOTO_EVENT = "al-ammar:show-photo";
 
 // Product page photos: swipe the large photo on phones, arrows on hover with a
 // mouse, and thumbnails that follow along. Uses the same scroll-snap track as
@@ -9,6 +12,14 @@ export default function ImageGallery({ images, name }) {
   const [activeImg, setActiveImg] = useState(0);
   const track = useRef(null);
   const photos = images || [];
+  useEffect(() => {
+    const onShow = (e) => {
+      const i = photos.indexOf(e.detail);
+      if (i >= 0) show(i);
+    };
+    window.addEventListener(SHOW_PHOTO_EVENT, onShow);
+    return () => window.removeEventListener(SHOW_PHOTO_EVENT, onShow);
+  });
 
   function onScroll() {
     const el = track.current;

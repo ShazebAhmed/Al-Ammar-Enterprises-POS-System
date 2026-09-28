@@ -135,6 +135,24 @@ test("customer details are trimmed and invalid phone numbers rejected", () => {
   assert.throws(() => validateCustomer({ ...customer, phone: "abc" }), /phone/);
   assert.throws(() => validateCustomer({ ...customer, city: " " }));
 });
+test("an option keeps its photo only while it is one of the product's photos", () => {
+  const product = productFromRow({
+    id: "w",
+    price: 2450,
+    images: ["https://x/brown.jpg", "https://x/black.webp"],
+    option_label: "Colour",
+    variants: [
+      { name: "Black", stock: 8, image: "https://x/black.webp" },
+      { name: "Brown", stock: 7, image: "https://x/removed.jpg" },
+      { name: "Tan", stock: 1 },
+    ],
+  });
+  assert.deepEqual(product.variants, [
+    { name: "Black", stock: 8, image: "https://x/black.webp" },
+    { name: "Brown", stock: 7 },
+    { name: "Tan", stock: 1 },
+  ]);
+});
 test("database numerics are normalized before calculating revenue", () => {
   assert.equal(
     productFromRow({ id: "a", price: "19.99", stock: "3" }).price,

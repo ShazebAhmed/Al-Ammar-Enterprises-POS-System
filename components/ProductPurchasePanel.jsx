@@ -6,6 +6,7 @@ import { formatMoney, salePercent } from "@/lib/format";
 import { whatsappOrderLink } from "@/lib/whatsapp";
 import { lineStock, sameLine } from "@/lib/cart";
 import BuyNowButton from "./BuyNowButton";
+import { SHOW_PHOTO_EVENT } from "./ImageGallery";
 export default function ProductPurchasePanel({ product, settings }) {
   const { cart, addToCart, cartReady } = useStore();
   const [qty, setQty] = useState(1);
@@ -70,6 +71,10 @@ export default function ProductPurchasePanel({ product, settings }) {
                 onClick={() => {
                   setChoice(o.name);
                   setQty(1);
+                  if (o.image)
+                    window.dispatchEvent(
+                      new CustomEvent(SHOW_PHOTO_EVENT, { detail: o.image }),
+                    );
                 }}
               >
                 {o.name}

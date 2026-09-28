@@ -27,7 +27,8 @@ Regenerate the icon and graphic with `scripts/brand-assets.ps1`.
   >
   > • Browse groceries, home and kitchen, fashion, electronics, beauty and more
   > • Swipe through product photos and see what is in stock
-  > • Add to your basket and order in a few taps
+  > • Add to your basket, or tap Buy now to order one item straight away
+  > • Get a notification when your order is confirmed, sent and delivered
   > • Pay cash on delivery. No card needed
   > • One delivery charge per order, shown before you order
   > • We call to confirm every order before it is sent
@@ -61,10 +62,12 @@ Does the app collect or share user data? **Yes, collects** (not shared except wi
 | Address (physical) | Yes | App functionality (delivery) | Required to order |
 | Purchase history | Yes | App functionality (order history) | Required |
 | Other user-generated content (reviews) | Yes | App functionality | Optional |
+| Device or other IDs (push notification address) | Yes | App functionality (order status notifications) | Optional (only if notifications are allowed) |
 
 - Encrypted in transit: **Yes** (HTTPS only).
 - Users can request deletion: **Yes** (in-app and the web link above).
-- No location, contacts, photos, financial/card info, device IDs or advertising data are collected.
+- No location, contacts, photos, financial/card info or advertising data are collected.
+- The app asks for the notifications permission (Android 13+) the first time it opens.
 
 ## Step by step
 

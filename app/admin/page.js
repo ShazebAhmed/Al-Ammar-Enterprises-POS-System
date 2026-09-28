@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/components/Providers";
 import Icon from "@/components/Icon";
 import NotifyButton from "@/components/NotifyButton";
-import { watchNewOrders } from "@/lib/push";
+import { sendTestAlert, watchNewOrders } from "@/lib/push";
 import DiscountsTab from "@/components/admin/DiscountsTab";
 import StarRow from "@/components/StarRow";
 import {
@@ -56,7 +56,17 @@ export default function AdminPage() {
     [reviews, setReviews] = useState([]),
     [tab, setTab] = useState("overview"),
     [editingProduct, setEditingProduct] = useState(null),
-    [mobileNavOpen, setMobileNavOpen] = useState(false);
+    [mobileNavOpen, setMobileNavOpen] = useState(false),
+    [focusOrder, setFocusOrder] = useState(""),
+    [testAlert, setTestAlert] = useState("");
+  // A new-order alert opens /admin?order=AA-10003: show that order.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("order");
+    if (id) {
+      setFocusOrder(id.slice(0, 64));
+      setTab("orders");
+    }
+  }, []);
   useEffect(() => {
     if (authReady && !currentUser && supabase)
       router.replace("/auth?next=/admin");
@@ -440,11 +450,43 @@ export default function AdminPage() {
                         Turn it on once on each phone you use.
                       </p>
                     </div>
-                    <NotifyButton
-                      label="Turn on alerts"
-                      done="Alerts are on for this phone."
-                      enable={() => watchNewOrders(supabase)}
-                    />
+                    <div className="admin-alerts-actions">
+                      <NotifyButton
+                        label="Turn on alerts"
+                        done="Alerts are on for this phone."
+                        enable={() => watchNewOrders(supabase)}
+                      />
+                      <button
+                        type="button"
+                        className="stx-btn stx-btn-outline"
+                        disabled={testAlert === "sending"}
+                        onClick={async () => {
+                          setTestAlert("sending");
+                          try {
+                            setTestAlert(
+                              (await sendTestAlert(supabase)) ? "sent" : "off",
+                            );
+                          } catch {
+                            setTestAlert("failed");
+                          }
+                        }}
+                      >
+                        Send test alert
+                      </button>
+                      {testAlert && testAlert !== "sending" && (
+                        <p
+                          className="muted small"
+                          role="status"
+                          style={{ margin: 0 }}
+                        >
+                          {testAlert === "sent"
+                            ? "Sent. It should arrive on this phone in a few seconds."
+                            : testAlert === "off"
+                              ? "Alerts are not on for this phone yet. Tap Turn on alerts first."
+                              : "Could not send. Please check your internet and try again."}
+                        </p>
+                      )}
+                    </div>
                   </section>
                   <div className="admin-stats">
                     <StatCard
@@ -602,6 +644,8 @@ export default function AdminPage() {
               )}
               {tab === "orders" && (
                 <OrdersTab
+                  key={focusOrder}
+                  focusOrder={focusOrder}
                   orders={orders}
                   settings={settings}
                   onUpdateStatus={(id, status) =>
@@ -1623,15 +1667,21 @@ function ProductForm({
 /* ---------------------------------------------------------------------
    ORDERS TAB
 --------------------------------------------------------------------- */
-function OrdersTab({ orders, settings, onUpdateStatus, onCancelStale }) {
-  const [expanded, setExpanded] = useState(null);
+function OrdersTab({
+  orders,
+  settings,
+  onUpdateStatus,
+  onCancelStale,
+  focusOrder = "",
+}) {
+  const [expanded, setExpanded] = useState(focusOrder.toUpperCase() || null);
   const pendingDays = (o) =>
     Math.floor((Date.now() - new Date(o.createdAt).getTime()) / DAY_MS);
   const stale = orders.filter(
     (o) => o.status === "Pending" && pendingDays(o) >= STALE_ORDER_DAYS,
   ).length;
   const [filter, setFilter] = useState("All");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(focusOrder);
   const visible = orders.filter(
     (o) =>
       (filter === "All" || o.status === filter) &&

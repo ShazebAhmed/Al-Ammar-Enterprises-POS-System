@@ -2891,6 +2891,12 @@ input[type="radio"] {
 .admin-alerts .notify-done {
   margin: 0;
 }
+.admin-alerts-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
 /* Product options (size, colour) */
 .option-picker {

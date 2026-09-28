@@ -6,6 +6,7 @@ const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
 
 export default [
   { ignores: [".next/**", "node_modules/**", "android/**", "public/**"] },
+  { files: ["**/*.{js,jsx,mjs}"] },
   js.configs.recommended,
   ...compat.extends("next/core-web-vitals"),
   {

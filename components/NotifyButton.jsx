@@ -29,6 +29,7 @@ export default function NotifyButton({ label, done, enable, className }) {
       // Quietly fall back to the button; tapping it shows what went wrong.
       .catch(() => setState("idle"));
     // Once per page: `enable` is a new function on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   if (state === "unsupported") return null;
   if (state === "iphone")

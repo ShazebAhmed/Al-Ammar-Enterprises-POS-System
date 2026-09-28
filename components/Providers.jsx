@@ -223,6 +223,8 @@ export default function Providers({ children }) {
     return () => {
       cancelled = true;
     };
+    // Only when the signed-in person changes (not on token refresh) or on retry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady, currentUser?.id, supabase, loadRevision]);
   function commit(lines) {
     if (!cartReady) return;

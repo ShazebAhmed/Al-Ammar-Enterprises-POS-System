@@ -38,6 +38,8 @@ export default function DiscountsTab({ supabase, settings, notify }) {
   }
   useEffect(() => {
     load();
+    // Once, when the tab opens; the buttons reload after each change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const code = form.code.trim().toUpperCase();

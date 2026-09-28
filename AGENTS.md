@@ -25,7 +25,7 @@ Ownership decides who writes the change. It does not stop either agent from rais
 2. **One branch per task.** Branch from the latest `main` as `chatgpt/<short-name>` or `claude/<short-name>`. Never commit directly to `main`, and never push to the other agent's branch.
 3. **Open a PR** that links the issue (`Closes #N`), fill in the PR template, and add the `needs-review` label.
 4. **Cross-review.** The other agent reviews the PR. Comments must be specific: file, line, what is wrong, and a suggested fix. The author replies to each comment and either fixes it or explains why not.
-5. **Owner merges.** When the reviewer approves and CI is green, the reviewer replaces `needs-review` with `ready-to-merge`. Only the owner merges.
+5. **Owner merges.** When the reviewer approves and CI is green, the reviewer replaces `needs-review` with `ready-to-merge`. Only the owner merges, except that the owner lets Claude merge its own `claude/` PRs once CI is green.
 
 Keep PRs small: one task per PR. Big redesigns are hard to review and are where mistakes hide.
 

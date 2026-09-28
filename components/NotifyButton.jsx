@@ -1,20 +1,34 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import { pushErrorMessage, pushSupported } from "@/lib/push";
 
 // A button that turns on phone/browser notifications. `enable` does the work
-// (watchNewOrders or watchOrder); `done` is shown once it succeeded.
+// (watchNewOrders, watchOrder or followMyOrders); `done` is shown once it succeeded.
+// When notifications are already allowed (the apps ask when first opened) it turns
+// them on by itself, so there is nothing to tap.
 export default function NotifyButton({ label, done, enable, className }) {
   const [state, setState] = useState("idle");
   const [error, setError] = useState("");
+  const started = useRef(false);
   useEffect(() => {
-    if (!pushSupported()) setState("unsupported");
+    if (!pushSupported()) {
+      setState("unsupported");
+      return;
+    }
+    if (Notification.permission !== "granted" || started.current) return;
+    started.current = true;
+    setState("working");
+    enable()
+      .then(() => setState("on"))
+      // Quietly fall back to the button; tapping it shows what went wrong.
+      .catch(() => setState("idle"));
+    // Once per page: `enable` is a new function on every render.
   }, []);
   if (state === "unsupported") return null;
   if (state === "on")
     return (
-      <p className="notify-done" role="status">
+      <p className={`notify-done ${className || ""}`} role="status">
         <Icon name="check" size={16} /> {done}
       </p>
     );

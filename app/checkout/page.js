@@ -6,7 +6,7 @@ import useCartProducts from "@/components/useCartProducts";
 import Icon from "@/components/Icon";
 import OrderReceipt from "@/components/OrderReceipt";
 import NotifyButton from "@/components/NotifyButton";
-import { watchOrder } from "@/lib/push";
+import { followMyOrders, watchOrder } from "@/lib/push";
 import { formatMoney, itemName, orderFromRow, printBill } from "@/lib/format";
 import {
   cartTotals,
@@ -200,7 +200,12 @@ export default function CheckoutPage() {
           className="mt-6 no-print"
           label="Notify me about this order"
           done="Done. This phone will be notified when your order is confirmed, sent and delivered."
-          enable={() => watchOrder(supabase, order.id, order.customer.phone)}
+          // Signed in: follow every order on the account; guests: this order.
+          enable={() =>
+            currentUser
+              ? followMyOrders(supabase)
+              : watchOrder(supabase, order.id, order.customer.phone)
+          }
         />
       </main>
     );

@@ -34,3 +34,36 @@ test("policies still read well without contact details", () => {
   assert.match(shipping, /Rs\. 150 per order/);
   assert.match(shipping, /through the contact details below/);
 });
+
+test("product data for Google has price, delivery, returns and breadcrumbs", async () => {
+  const { productData, jsonLd } = await import("../lib/seo.js");
+  const [product, crumbs] = productData(
+    {
+      id: "p1",
+      name: "Wallet </script>",
+      category: "Men",
+      price: 1999,
+      stock: 3,
+      images: ["https://x/a.webp"],
+    },
+    { storeName: "Al Ammar Store", shippingFee: 150 },
+    [{ rating: 5 }, { rating: 4 }, { rating: 0 }],
+  );
+  assert.equal(product.offers.price, 1999);
+  assert.equal(product.offers.availability, "https://schema.org/InStock");
+  assert.equal(product.offers.shippingDetails.shippingRate.value, 150);
+  assert.deepEqual(product.offers.shippingDetails.deliveryTime.transitTime, {
+    "@type": "QuantitativeValue",
+    minValue: 2,
+    maxValue: 5,
+    unitCode: "DAY",
+  });
+  assert.equal(product.offers.hasMerchantReturnPolicy.merchantReturnDays, 7);
+  assert.equal(product.aggregateRating.ratingValue, "4.5");
+  assert.equal(product.aggregateRating.reviewCount, 2);
+  assert.deepEqual(
+    crumbs.itemListElement.map((c) => c.position + c.name),
+    ["1Home", "2Men", "3Wallet </script>"],
+  );
+  assert.ok(!jsonLd(product).includes("</script>"));
+});

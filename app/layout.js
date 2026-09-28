@@ -3,6 +3,7 @@ import { getSettings } from "@/lib/catalogue";
 import Providers from "@/components/Providers";
 import AppShell from "@/components/AppShell";
 import ServiceWorker from "@/components/ServiceWorker";
+import { SITE_URL } from "@/lib/seo";
 export const revalidate = 60;
 export const viewport = { themeColor: "#174f42" };
 export async function generateMetadata() {
@@ -13,9 +14,7 @@ export async function generateMetadata() {
     settings.aboutText ||
     `Discover everyday essentials at ${name}. Shop online with cash on delivery.`;
   return {
-    metadataBase: new URL(
-      process.env.NEXT_PUBLIC_SITE_URL || "https://alammarstore.vercel.app",
-    ),
+    metadataBase: new URL(SITE_URL),
     title: {
       default: `${name} — The everyday, elevated`,
       template: `%s · ${name}`,

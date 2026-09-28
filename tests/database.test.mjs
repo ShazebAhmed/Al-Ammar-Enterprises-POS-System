@@ -551,7 +551,7 @@ test("orders notify the admin, and status changes notify customers who follow th
   const first = await rpc("select public.claim_push($1) as r", [ids[0]]);
   assert.match(first.notification.title, new RegExp(placed.id));
   assert.match(first.notification.title, /Rs. 1,150/);
-  assert.equal(first.notification.url, "/admin");
+  assert.equal(first.notification.url, `/admin?order=${placed.id}`);
   assert.deepEqual(
     first.subscriptions.map((x) => x.endpoint),
     ["https://push.example/admin"],
@@ -603,6 +603,128 @@ test("orders notify the admin, and status changes notify customers who follow th
     ).rows.map((r) => r.endpoint),
     ["https://push.example/admin"],
   );
+});
+test("store alerts go only to the admin, order updates only to the order's customer", async () => {
+  const P6 = "a1a1a1a1-0000-4000-8000-000000000006";
+  const sub = (name) => ({
+    endpoint: `https://push.example/${name}`,
+    keys: { p256dh: "p".repeat(87), auth: "a".repeat(22) },
+  });
+  const rpc = async (sql, params = []) =>
+    (await db.query(sql, params)).rows[0]?.r;
+  // The endpoints the newest queued notification goes to.
+  const lastSent = async () => {
+    await db.exec("reset role");
+    const id = (await db.query("select body from net.calls order by id desc"))
+      .rows[0].body.id;
+    await role();
+    const box = await rpc("select public.claim_push($1) as r", [id]);
+    return { ...box, to: box.subscriptions.map((s) => s.endpoint).sort() };
+  };
+  await db.exec("reset role");
+  await db.query(
+    "insert into products(id,name,price,stock) values($1,'Mix item',300,20)",
+    [P6],
+  );
+
+  // A signed-in customer follows every order on the account; guests cannot.
+  await role();
+  await assert.rejects(
+    () =>
+      db.query("select public.follow_my_orders($1)", [
+        JSON.stringify(sub("guest-account")),
+      ]),
+    /permission denied/,
+  );
+  await role("authenticated", BUYER);
+  await db.query("select public.follow_my_orders($1)", [
+    JSON.stringify(sub("buyer-phone")),
+  ]);
+  const placed = await order(
+    "e0e0e0e0-0000-4000-8000-000000000001",
+    [{ productId: P6, qty: 1 }],
+    { ...customer, phone: "03244444444" },
+  );
+  // The new-order alert goes to the admin's phone only and opens that order.
+  let sent = await lastSent();
+  assert.deepEqual(sent.to, ["https://push.example/admin"]);
+  assert.equal(sent.notification.url, `/admin?order=${placed.id}`);
+
+  // The admin's phone cannot follow orders (it would get customers' updates).
+  await assert.rejects(
+    () =>
+      db.query("select public.watch_order($1,$2,$3)", [
+        placed.id,
+        "03244444444",
+        JSON.stringify(sub("admin")),
+      ]),
+    /store alerts/,
+  );
+  // A device that followed an order and then turns on store alerts stops following.
+  await db.query("select public.watch_order($1,$2,$3)", [
+    placed.id,
+    "03244444444",
+    JSON.stringify(sub("switched")),
+  ]);
+  await role("authenticated", ADMIN);
+  await db.query("select public.watch_new_orders($1)", [
+    JSON.stringify(sub("switched")),
+  ]);
+
+  // The status update goes to the customer's phone only.
+  await db.query("update orders set status='Confirmed' where id=$1", [
+    placed.id,
+  ]);
+  sent = await lastSent();
+  assert.deepEqual(sent.to, ["https://push.example/buyer-phone"]);
+  assert.match(sent.notification.body, /is confirmed/);
+
+  // Another account's order never reaches this customer (nor the admin's phones).
+  await role("authenticated", ADMIN);
+  const other = await order(
+    "e0e0e0e0-0000-4000-8000-000000000002",
+    [{ productId: P6, qty: 1 }],
+    { ...customer, phone: "03255555555" },
+  );
+  await db.query("update orders set status='Confirmed' where id=$1", [
+    other.id,
+  ]);
+  await db.exec("reset role");
+  assert.equal(
+    (
+      await db.query(
+        "select count(*)::int as n from push_outbox where notification->>'tag'=$1",
+        [`order-${other.id}`],
+      )
+    ).rows[0].n,
+    0,
+  );
+
+  // Test alert: admin only, and only to a store-alert device.
+  await role("authenticated", BUYER);
+  await assert.rejects(
+    () =>
+      db.query("select public.send_test_alert($1)", [
+        "https://push.example/admin",
+      ]),
+    /Administrator/,
+  );
+  await role("authenticated", ADMIN);
+  assert.equal(
+    await rpc("select public.send_test_alert($1) as r", [
+      "https://push.example/buyer-phone",
+    ]),
+    false,
+  );
+  assert.equal(
+    await rpc("select public.send_test_alert($1) as r", [
+      "https://push.example/admin",
+    ]),
+    true,
+  );
+  sent = await lastSent();
+  assert.deepEqual(sent.to, ["https://push.example/admin"]);
+  assert.equal(sent.notification.title, "Test alert");
 });
 test("product options keep their own stock through orders and cancellations", async () => {
   const P5 = "a1a1a1a1-0000-4000-8000-000000000005";

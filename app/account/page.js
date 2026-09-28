@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/components/Providers";
 import Icon from "@/components/Icon";
 import OrderReceipt from "@/components/OrderReceipt";
+import NotifyButton from "@/components/NotifyButton";
+import { followMyOrders } from "@/lib/push";
 import {
   formatMoney,
   formatOrderTime,
@@ -182,6 +184,12 @@ export default function AccountPage() {
       <div className="stx-label" style={{ marginBottom: 10 }}>
         Your orders
       </div>
+      <NotifyButton
+        className="mb-4"
+        label="Get order updates on this phone"
+        done="Done. This phone will be notified when your orders are confirmed, sent and delivered."
+        enable={() => followMyOrders(supabase)}
+      />
       {loadingOrders ? (
         <p style={{ color: "var(--ink-soft)" }}>Loading…</p>
       ) : orders.length === 0 ? (

@@ -64,6 +64,9 @@ self.addEventListener("notificationclick", (event) => {
       .then((windows) => {
         const open = windows.find((w) => w.url === url);
         if (open) return open.focus();
+        // Reuse the open app window (the order the alert is about opens in it).
+        const any = windows.find((w) => "navigate" in w);
+        if (any) return any.navigate(url).then((w) => (w || any).focus());
         return self.clients.openWindow(url);
       }),
   );

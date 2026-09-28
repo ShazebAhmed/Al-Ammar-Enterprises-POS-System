@@ -2,6 +2,7 @@ const paths = {
   shopping_cart: "M3 3h2l3 12h10l3-9H6M9 20h.01M18 20h.01",
   person: "M20 21v-2a7 7 0 0 0-14 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8",
   search: "m21 21-5-5M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14",
+  sell: "M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01",
   inventory_2: "m3 7 9 5 9-5M12 12v10M3 7v10l9 5 9-5V7l-9-5-9 5m5-3 9 5",
   chevron_left: "m15 18-6-6 6-6",
   chevron_right: "m9 18 6-6-6-6",

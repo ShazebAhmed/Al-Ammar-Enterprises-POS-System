@@ -123,6 +123,14 @@ export default function OrderReceipt({ order, settings }) {
               <dt>Subtotal</dt>
               <dd>{money(order.subtotal)}</dd>
             </div>
+            {order.discount > 0 && (
+              <div>
+                <dt>
+                  Discount{order.couponCode ? ` (${order.couponCode})` : ""}
+                </dt>
+                <dd>− {money(order.discount)}</dd>
+              </div>
+            )}
             <div>
               <dt>Delivery</dt>
               <dd>{money(order.shippingFee)}</dd>

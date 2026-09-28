@@ -3,9 +3,10 @@ import Icon from "./Icon";
 import StarRow from "./StarRow";
 import AddToCartButton from "./AddToCartButton";
 import CardGallery from "./CardGallery";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, salePercent } from "@/lib/format";
 export default function ProductCard({ product, settings, rating }) {
   const soldOut = Number(product.stock) <= 0;
+  const off = salePercent(product);
   return (
     <article className="product-card">
       <div className="product-image">
@@ -26,6 +27,8 @@ export default function ProductCard({ product, settings, rating }) {
         )}
         {soldOut ? (
           <span className="product-badge">Sold out</span>
+        ) : off ? (
+          <span className="product-badge sale">{off}% off</span>
         ) : Number(product.stock) <= 5 ? (
           <span className="product-badge">Only {product.stock} left</span>
         ) : null}
@@ -46,7 +49,14 @@ export default function ProductCard({ product, settings, rating }) {
           </div>
         )}
         <div className="product-bottom">
-          <strong>{formatMoney(product.price, settings.currencySymbol)}</strong>
+          <strong>
+            {formatMoney(product.price, settings.currencySymbol)}
+            {off > 0 && (
+              <s className="was-price">
+                {formatMoney(product.compareAtPrice, settings.currencySymbol)}
+              </s>
+            )}
+          </strong>
           {soldOut ? (
             <span className="muted small">Unavailable</span>
           ) : (

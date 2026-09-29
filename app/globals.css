@@ -944,6 +944,7 @@ input[type="radio"] {
   border-radius: 12px;
   margin-bottom: 20px;
 }
+.empty-state h2,
 .empty-state h3 {
   font-size: 22px;
   margin: 16px 0 8px;
@@ -2498,6 +2499,15 @@ input[type="radio"] {
 .related-products h2 {
   margin: 0 0 22px;
   font-size: 1.5rem;
+}
+/* Read by screen readers, not shown. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 .faq-list {
   display: grid;

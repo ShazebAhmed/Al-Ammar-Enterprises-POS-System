@@ -47,7 +47,7 @@ export default function CartPage() {
       ) : !lines.length ? (
         <div className="empty-state">
           <Icon name="shopping_cart" size={40} />
-          <h3>Your next favourite is waiting.</h3>
+          <h2>Your next favourite is waiting.</h2>
           <p>Your basket is empty. Let’s find something you’ll love.</p>
           <Link className="stx-btn stx-btn-primary" href="/#collection">
             Shop the collection <Icon name="arrow_forward" />
@@ -55,7 +55,10 @@ export default function CartPage() {
         </div>
       ) : (
         <div className="checkout-grid">
-          <section aria-label="Basket items">
+          <section aria-labelledby="basket-items">
+            <h2 id="basket-items" className="sr-only">
+              Items in your basket
+            </h2>
             {lines.map((l) => (
               <article
                 key={`${l.productId}:${l.variant || ""}`}

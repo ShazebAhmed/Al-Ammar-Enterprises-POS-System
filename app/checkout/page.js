@@ -253,7 +253,7 @@ export default function CheckoutPage() {
         </div>
       ) : !lines.length ? (
         <div className="empty-state">
-          <h3>Your basket is empty.</h3>
+          <h2>Your basket is empty.</h2>
           <Link href="/" className="stx-btn stx-btn-primary">
             Explore the collection
           </Link>

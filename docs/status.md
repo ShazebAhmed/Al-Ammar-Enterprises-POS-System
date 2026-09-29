@@ -32,8 +32,11 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   referrer and permissions policies). Pages cannot be put in an iframe.
 - Lighthouse (mobile, live): Accessibility 100, Best Practices 100, SEO 100 on
   every public page (cart, checkout and sign-in show SEO 63 only because robots.txt
-  hides them on purpose). Performance about 78 home / 82 product on this laptop.
+  hides them on purpose). Performance about 88 home / 80 product on this laptop.
   Fonts are self-hosted from npm (`@fontsource`) through `next/font/local`.
+- The browser's Supabase client loads after the page shows
+  (`lib/supabase-browser.js`, via `Providers`); `authReady` stays false until then.
+  First Load JS about 118 kB (home), was 182 kB.
 - Product photos go through Next's image optimiser (`lib/photo.js`): right-sized
   WebP, cached for a year.
 - Structured data (`lib/seo.js`): OnlineStore, WebSite search box, Product with

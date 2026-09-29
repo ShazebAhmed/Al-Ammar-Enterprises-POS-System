@@ -114,6 +114,17 @@ export default function SettingsTab({ settings, onSave }) {
               onChange={(e) => set("shippingFee", e.target.value)}
             />
           </div>
+          <div style={{ flex: "1 1 140px" }}>
+            <label className="stx-label">Free delivery over (0 = off)</label>
+            <input
+              type="number"
+              min="0"
+              className="stx-input"
+              style={{ marginTop: 4 }}
+              value={form.freeDeliveryOver ?? 0}
+              onChange={(e) => set("freeDeliveryOver", e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="stx-label" style={{ marginTop: 6 }}>

@@ -120,9 +120,14 @@ test("totals use integer minor units and do not charge shipping on an empty cart
       ],
       150.25,
     ),
-    { subtotal: 0.5, shipping: 150.25, total: 150.75 },
+    { subtotal: 0.5, shipping: 150.25, total: 150.75, freeLeft: 0 },
   );
-  assert.deepEqual(cartTotals([], 150), { subtotal: 0, shipping: 0, total: 0 });
+  assert.deepEqual(cartTotals([], 150), {
+    subtotal: 0,
+    shipping: 0,
+    total: 0,
+    freeLeft: 0,
+  });
   assert.match(formatMoney(10.25, "Rs."), /10\.25/);
 });
 test("customer details are trimmed and invalid phone numbers rejected", () => {
@@ -181,4 +186,21 @@ test("video embedding checks trusted YouTube host and safe direct media URLs", (
   });
   assert.equal(getVideoEmbed("javascript:alert(1)"), null);
   assert.equal(getVideoEmbed("https://example.test/file.mp4").type, "file");
+});
+
+test("delivery is free once the items reach the admin's amount", async () => {
+  const { cartTotals } = await import("../lib/cart.js");
+  const lines = [{ product: { price: 1000 }, qty: 2 }];
+  assert.deepEqual(cartTotals(lines, 250, 3000), {
+    subtotal: 2000,
+    shipping: 250,
+    total: 2250,
+    freeLeft: 1000,
+  });
+  assert.equal(cartTotals(lines, 250, 2000).shipping, 0);
+  // The discount counts: Rs. 2,000 of items with Rs. 100 off is below Rs. 2,000.
+  assert.equal(cartTotals(lines, 250, 2000, 100).shipping, 250);
+  // 0 means free delivery is off.
+  assert.equal(cartTotals(lines, 250, 0).freeLeft, 0);
+  assert.equal(cartTotals(lines, 250).total, 2250);
 });

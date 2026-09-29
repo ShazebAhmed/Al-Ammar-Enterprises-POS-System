@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getSettings, getCatalogue } from "@/lib/catalogue";
-import { formatMoney } from "@/lib/format";
+import { getSettings, getCatalogue, getUsedCategories } from "@/lib/catalogue";
+import { formatMoney, categoryTabs } from "@/lib/format";
 import Icon from "@/components/Icon";
 import ProductCard from "@/components/ProductCard";
 import { storeData, jsonLd } from "@/lib/seo";
@@ -16,12 +16,13 @@ export default async function HomePage({ searchParams }) {
   const sort = text(sp?.sort) || "newest";
   const stock = sp?.stock === "1";
   const page = Math.min(10000, Math.max(1, parseInt(sp?.page, 10) || 1));
-  const [settings, result] = await Promise.all([
+  const [settings, result, used] = await Promise.all([
     getSettings(),
     getCatalogue({ category, q, sort, stock, page }),
+    getUsedCategories(),
   ]);
   const { products, count, ratings, unavailable } = result;
-  const categories = ["All", ...new Set(settings.categories || [])];
+  const categories = categoryTabs(settings.categories, used, category);
   const featured = products.find((p) => p.images?.[0]);
   function url(patch = {}) {
     const params = new URLSearchParams();

@@ -3037,7 +3037,7 @@ input[type="radio"] {
   color: var(--ink-soft);
   text-decoration: line-through;
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.9;
 }
 /* "Add to basket" / "Buy now" before choosing: point at the options. */
 .option-picker.nudge button {
@@ -3158,8 +3158,8 @@ input[type="radio"] {
   height: 124%;
   max-width: none;
   object-fit: cover;
-  filter: blur(28px) saturate(1.15);
-  opacity: 0.6;
+  filter: blur(30px) saturate(1.25) brightness(0.92);
+  opacity: 0.9;
   z-index: -1;
   pointer-events: none;
 }

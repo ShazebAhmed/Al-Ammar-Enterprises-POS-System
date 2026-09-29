@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getSettings, getCatalogue, getUsedCategories } from "@/lib/catalogue";
-import { formatMoney, categoryTabs } from "@/lib/format";
+import { formatMoney, categoryTabs, deliveryLine } from "@/lib/format";
 import Icon from "@/components/Icon";
 import ProductCard from "@/components/ProductCard";
 import { storeData, jsonLd } from "@/lib/seo";
@@ -136,10 +136,7 @@ export default async function HomePage({ searchParams }) {
             <Icon name="local_shipping" size={23} />
             <span>
               <strong>Delivered to your door</strong>
-              <small>
-                {formatMoney(settings.shippingFee, settings.currencySymbol)}{" "}
-                delivery per order
-              </small>
+              <small>{deliveryLine(settings)}</small>
             </span>
           </div>
           <div>

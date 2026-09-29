@@ -11,7 +11,11 @@ export default function CartPage() {
   const { setCartQty, removeFromCart, syncError, retrySync } = useStore();
   const { lines, settings, loading, error, invalid, retry } = useCartProducts();
   const valid = lines.filter((l) => l.product);
-  const totals = cartTotals(valid, settings.shippingFee);
+  const totals = cartTotals(
+    valid,
+    settings.shippingFee,
+    settings.freeDeliveryOver,
+  );
   const money = (n) => formatMoney(n, settings.currencySymbol);
   const whatsappLink = invalid ? "" : whatsappOrderLink(settings, valid);
   return (
@@ -162,8 +166,13 @@ export default function CartPage() {
             </div>
             <div className="summary-row">
               <span>Delivery</span>
-              <span>{money(totals.shipping)}</span>
+              <span>{totals.shipping ? money(totals.shipping) : "Free"}</span>
             </div>
+            {totals.freeLeft > 0 && (
+              <p className="free-delivery-hint">
+                Add {money(totals.freeLeft)} more for free delivery
+              </p>
+            )}
             <div className="summary-row total">
               <span>Total</span>
               <span>{money(totals.total)}</span>

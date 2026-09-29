@@ -897,3 +897,35 @@ test("only the store's own policies remain; everyone keeps the same access", asy
   assert.ok((await db.query("select * from profiles")).rows.length >= 2);
   await role();
 });
+
+test("delivery is free when the items reach the admin's amount", async () => {
+  const PF = "a1a1a1a1-0000-4000-8000-0000000000ff";
+  await db.exec("reset role");
+  await db.query(
+    "insert into products(id,name,price,stock) values($1,'Free delivery item',1000,50)",
+    [PF],
+  );
+  await db.exec("update store_settings set free_delivery_over=2000 where id=1");
+  await role("authenticated", BUYER);
+  const buyer = { ...customer, phone: "03222222222" };
+  const big = await order(
+    "f4ee0000-0000-4000-8000-0000000000f1",
+    [{ productId: PF, qty: 2 }],
+    buyer,
+  );
+  assert.equal(Number(big.shipping_fee), 0);
+  assert.equal(Number(big.total), 2000);
+  const small = await order(
+    "f4ee0000-0000-4000-8000-0000000000f2",
+    [{ productId: PF, qty: 1 }],
+    buyer,
+  );
+  assert.equal(Number(small.shipping_fee), 150);
+  assert.equal(Number(small.total), 1150);
+  await db.exec("reset role");
+  await assert.rejects(
+    () => db.exec("update store_settings set free_delivery_over=-1 where id=1"),
+    /store_valid_free_delivery/,
+  );
+  await db.exec("update store_settings set free_delivery_over=0 where id=1");
+});

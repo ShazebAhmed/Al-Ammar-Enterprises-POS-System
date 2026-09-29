@@ -139,9 +139,15 @@ export default function AdminPage() {
       const row = settingsToRow({
         ...patch,
         shippingFee: Number(patch.shippingFee),
+        freeDeliveryOver: Number(patch.freeDeliveryOver) || 0,
       });
       if (!Number.isFinite(row.shipping_fee) || row.shipping_fee < 0)
         throw new Error("Invalid delivery fee");
+      if (
+        !Number.isFinite(row.free_delivery_over) ||
+        row.free_delivery_over < 0
+      )
+        throw new Error("Invalid free delivery amount");
       const { error } = await supabase
         .from("store_settings")
         .upsert({ id: 1, ...row });
@@ -150,6 +156,7 @@ export default function AdminPage() {
         ...settings,
         ...patch,
         shippingFee: Number(patch.shippingFee),
+        freeDeliveryOver: Number(patch.freeDeliveryOver) || 0,
       });
       router.refresh();
     }, "Store settings saved");

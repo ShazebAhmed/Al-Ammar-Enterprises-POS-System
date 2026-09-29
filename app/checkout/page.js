@@ -58,9 +58,15 @@ export default function CheckoutPage() {
     }));
   }, [profile]);
   const valid = lines.filter((l) => l.product),
-    totals = cartTotals(valid, settings.shippingFee),
-    money = (n) => formatMoney(n, settings.currencySymbol),
-    discount = coupon ? Math.min(coupon.discount, totals.subtotal) : 0;
+    subtotal = cartTotals(valid).subtotal,
+    discount = coupon ? Math.min(coupon.discount, subtotal) : 0,
+    totals = cartTotals(
+      valid,
+      settings.shippingFee,
+      settings.freeDeliveryOver,
+      discount,
+    ),
+    money = (n) => formatMoney(n, settings.currencySymbol);
   async function applyCoupon() {
     const code = couponInput.trim().toUpperCase();
     if (!code || !supabase || checkingCoupon) return;
@@ -410,7 +416,7 @@ export default function CheckoutPage() {
             )}
             <div className="summary-row">
               <span>Delivery</span>
-              <span>{money(totals.shipping)}</span>
+              <span>{totals.shipping ? money(totals.shipping) : "Free"}</span>
             </div>
             <div className="summary-row total">
               <span>Total</span>

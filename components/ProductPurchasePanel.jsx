@@ -195,6 +195,8 @@ export default function ProductPurchasePanel({ product, settings }) {
         <p>
           <Icon name="local_shipping" /> Delivery:{" "}
           {formatMoney(settings.shippingFee, settings.currencySymbol)}
+          {settings.freeDeliveryOver > 0 &&
+            ` (free over ${formatMoney(settings.freeDeliveryOver, settings.currencySymbol)})`}
         </p>
         <p>
           <Icon name="account_balance_wallet" /> Cash on delivery

@@ -9,7 +9,7 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   `hnd1` Tokyo, next to the Supabase database in Tokyo). Admin panel:
   https://alammar-admin.vercel.app/admin (same Vercel project, see Notifications).
 - Database: Supabase project `ehxsrytdzyyyhsgbjccu`. All migrations up to
-  `202609290015_policy_cleanup.sql` are applied. New migrations are applied in
+  `202609290016_free_delivery.sql` are applied. New migrations are applied in
   the Supabase SQL Editor; the owner has approved running them without asking each
   time (report which one ran). Destructive-looking statements show a confirmation
   dialog that must be accepted.
@@ -24,7 +24,9 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   basket: `/checkout?buy=1`), terms (`/policies/terms`) and FAQ (`/faq`), "You may
   also like" and Share on product pages, search by name/category/description,
   customers can edit their name and phone on `/account`, "Confirm on WhatsApp"
-  after checkout, admin Orders → Export CSV.
+  after checkout, admin Orders → Export CSV, free delivery above an amount (admin
+  Settings → "Free delivery over", 0 = off), "Ask on WhatsApp when it's back" on
+  sold-out products, and only categories with products show as shop tabs.
 - Owner's working rules (29 September): each task on its own `claude/` branch and
   PR, merged by Claude once CI is green (never stacked); live migrations may run
   without asking.

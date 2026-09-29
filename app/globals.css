@@ -1180,9 +1180,18 @@ input[type="radio"] {
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
   gap: 65px;
 }
+/* The whole side column (panel and Share) stays in view together while scrolling,
+   on screens tall enough to show all of it. */
+.pdp-side {
+  align-self: start;
+}
+@media (min-height: 1100px) {
+  .pdp-side {
+    position: sticky;
+    top: 125px;
+  }
+}
 .purchase-panel {
-  position: sticky;
-  top: 125px;
   padding: 20px 0;
 }
 .purchase-panel h1 {
@@ -2066,8 +2075,10 @@ input[type="radio"] {
   .order-summary {
     position: static;
   }
-  .purchase-panel {
+  .pdp-side {
     position: static;
+  }
+  .purchase-panel {
     padding-top: 0;
   }
   /* On phones show price and Add to basket right after the photos,

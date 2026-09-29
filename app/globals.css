@@ -3098,3 +3098,44 @@ input[type="radio"] {
   font-size: 13px;
   color: var(--accent-strong);
 }
+/* A product photo fills the whole hero frame, like a magazine cover, with a soft
+   shade at the bottom so the spotlight card stands out. */
+.hero-visual.has-photo {
+  background: #1f2a22;
+}
+.hero-visual.has-photo .hero-image {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mix-blend-mode: normal;
+  transition: transform 1.2s ease;
+}
+.hero-visual.has-photo:hover .hero-image {
+  transform: scale(1.04);
+}
+.hero-visual.has-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, rgba(12, 20, 14, 0.55), transparent 45%),
+    linear-gradient(to bottom, rgba(12, 20, 14, 0.35), transparent 25%);
+}
+.hero-visual.has-photo .hero-orbit {
+  display: none;
+}
+.hero-visual.has-photo .hero-edition {
+  color: rgba(255, 255, 255, 0.92);
+}
+.hero-visual.has-photo .hero-edition,
+.hero-visual.has-photo .hero-seal,
+.hero-visual.has-photo .hero-product {
+  z-index: 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-visual.has-photo .hero-image {
+    transition: none;
+  }
+}

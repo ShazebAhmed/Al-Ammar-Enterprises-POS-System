@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { useStore } from "./Providers";
 import Icon from "./Icon";
 import { descriptionSummary, formatMoney, salePercent } from "@/lib/format";
-import { whatsappOrderLink } from "@/lib/whatsapp";
+import { whatsappOrderLink, whatsappRestockLink } from "@/lib/whatsapp";
 import { lineStock, sameLine } from "@/lib/cart";
 import BuyNowButton from "./BuyNowButton";
 import { SHOW_PHOTO_EVENT } from "./ImageGallery";
@@ -39,6 +39,7 @@ export default function ProductPurchasePanel({ product, settings }) {
           },
         ])
       : "";
+  const restockLink = totalStock ? "" : whatsappRestockLink(settings, product);
   return (
     <div className="purchase-panel">
       <span className="eyebrow">{product.category || "THE COLLECTION"}</span>
@@ -112,6 +113,16 @@ export default function ProductPurchasePanel({ product, settings }) {
         {descriptionSummary(product.description, 200) ||
           "An everyday find from our collection."}
       </p>
+      {restockLink && (
+        <a
+          className="stx-btn stx-btn-outline"
+          href={restockLink}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Icon name="chat" /> Ask on WhatsApp when it&apos;s back
+        </a>
+      )}
       {totalStock > 0 && (
         <>
           <label className="stx-label">Quantity</label>

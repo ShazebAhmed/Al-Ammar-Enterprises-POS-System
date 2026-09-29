@@ -58,3 +58,14 @@ test("after checkout the customer can message the store about their order", asyn
   assert.match(text, /Total: Rs\. 2,149 \(cash on delivery\)/);
   assert.equal(whatsappPlacedOrderLink({}, { id: "AA-1" }), "");
 });
+
+test("a sold-out product can be asked about on WhatsApp", async () => {
+  const { whatsappRestockLink } = await import("../lib/whatsapp.js");
+  const link = whatsappRestockLink(
+    { whatsapp: "0333 3386641" },
+    { name: "Leather Wallet" },
+  );
+  assert.ok(link.startsWith("https://wa.me/923333386641?text="));
+  assert.match(decodeURIComponent(link), /"Leather Wallet" is back in stock/);
+  assert.equal(whatsappRestockLink({}, { name: "Wallet" }), "");
+});

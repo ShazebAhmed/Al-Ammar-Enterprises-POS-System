@@ -1,4 +1,5 @@
 "use client";
+import { photo, PHOTO_SIZES } from "@/lib/photo";
 import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 
@@ -46,7 +47,7 @@ export default function ImageGallery({ images, name }) {
             {photos.map((src, i) => (
               <div className="card-slide" key={src}>
                 <img
-                  src={src}
+                  {...photo(src, PHOTO_SIZES.gallery)}
                   alt={photos.length > 1 ? `${name}, photo ${i + 1}` : name}
                   loading={i === 0 ? "eager" : "lazy"}
                   decoding="async"
@@ -108,7 +109,7 @@ export default function ImageGallery({ images, name }) {
               }}
             >
               <img
-                src={img}
+                {...photo(img, PHOTO_SIZES.thumb)}
                 alt=""
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />

@@ -17,6 +17,8 @@ const nextConfig = {
   poweredByHeader: false,
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**.supabase.co" }],
+    // Photos never change at the same address (a new upload gets a new name).
+    minimumCacheTTL: 31536000,
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

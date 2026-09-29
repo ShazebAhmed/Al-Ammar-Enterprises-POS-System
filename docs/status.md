@@ -9,7 +9,7 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   `hnd1` Tokyo, next to the Supabase database in Tokyo). Admin panel:
   https://alammar-admin.vercel.app/admin (same Vercel project, see Notifications).
 - Database: Supabase project `ehxsrytdzyyyhsgbjccu`. All migrations up to
-  `202609290017_low_stock_alert.sql` are applied. New migrations are applied in
+  `202609290018_product_costs.sql` are applied. New migrations are applied in
   the Supabase SQL Editor; the owner has approved running them without asking each
   time (report which one ran). Destructive-looking statements show a confirmation
   dialog that must be accepted.
@@ -60,6 +60,9 @@ writes in Urdu or Roman Urdu; reply in Urdu.
 - Admin reports: the overview has Today / This month / This year / All time; the
   Reports tab shows a year by month and a month by day, with CSV export
   (`lib/reports.js`). Sales = delivered orders only (cash on delivery received).
+  Profit = sales without delivery minus cost of goods. Cost prices live in the
+  admin-only `product_costs` table (products are public); each order saves its
+  costs in `order_item_costs` (migration 0018).
 - Admin panel code: `app/admin/page.js` (data and layout) plus one file per tab in
   `components/admin/`.
 

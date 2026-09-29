@@ -18,6 +18,7 @@ export default function ProductForm({
     category: product.category || categories[0] || "",
     price: product.price ?? "",
     compareAtPrice: product.compareAtPrice ?? "",
+    cost: product.cost ?? "",
     stock: product.stock ?? "",
     optionLabel: product.optionLabel || "",
     variants: (product.variants || []).map((v) => ({
@@ -207,6 +208,8 @@ export default function ProductForm({
     (form.compareAtPrice === "" ||
       (Number.isFinite(Number(form.compareAtPrice)) &&
         Number(form.compareAtPrice) >= 0)) &&
+    (form.cost === "" ||
+      (Number.isFinite(Number(form.cost)) && Number(form.cost) >= 0)) &&
     (form.variants.length
       ? form.variants.every(
           (v) =>
@@ -233,6 +236,7 @@ export default function ProductForm({
       price: Number(form.price),
       compareAtPrice:
         form.compareAtPrice === "" ? null : Number(form.compareAtPrice),
+      cost: form.cost === "" ? null : Number(form.cost),
       stock: form.variants.length
         ? form.variants.reduce((sum, v) => sum + Number(v.stock), 0)
         : Number(form.stock),
@@ -264,6 +268,7 @@ export default function ProductForm({
           category: keepDetails ? submitted.category : categories[0] || "",
           price: keepDetails ? submitted.price : "",
           compareAtPrice: keepDetails ? (submitted.compareAtPrice ?? "") : "",
+          cost: keepDetails ? (submitted.cost ?? "") : "",
           stock: keepDetails ? submitted.stock : "",
           optionLabel: keepDetails ? submitted.optionLabel : "",
           variants: keepDetails
@@ -408,6 +413,24 @@ export default function ProductForm({
                 onChange={(e) =>
                   setForm({ ...form, compareAtPrice: e.target.value })
                 }
+              />
+            </label>
+            <label
+              className="stx-label"
+              style={{ flex: "1 1 160px" }}
+              htmlFor="product-cost"
+            >
+              Cost price (only you see this)
+              <input
+                id="product-cost"
+                type="number"
+                min="0"
+                step="0.01"
+                className="stx-input"
+                style={{ marginTop: 4 }}
+                placeholder="What you pay for one"
+                value={form.cost}
+                onChange={(e) => setForm({ ...form, cost: e.target.value })}
               />
             </label>
             <label

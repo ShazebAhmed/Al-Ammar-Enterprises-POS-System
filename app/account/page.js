@@ -109,7 +109,7 @@ export default function AccountPage() {
     }
   }
 
-  if (loadError || !supabase)
+  if (loadError || (authReady && !supabase))
     return (
       <main className="page-wrap">
         <div className="inline-error" role="alert">

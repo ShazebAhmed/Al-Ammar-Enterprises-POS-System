@@ -30,9 +30,12 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   (`npm run lint`, covers .js and .jsx), the tests and the build.
 - Security headers in `next.config.js` (nosniff, frame-ancestors 'none',
   referrer and permissions policies). Pages cannot be put in an iframe.
-- Lighthouse (mobile, live): Accessibility 100, Best Practices 100, SEO 100.
-  Performance about 70-80 on this laptop; fonts are self-hosted from npm
-  (`@fontsource`) through `next/font/local`.
+- Lighthouse (mobile, live): Accessibility 100, Best Practices 100, SEO 100 on
+  every public page (cart, checkout and sign-in show SEO 63 only because robots.txt
+  hides them on purpose). Performance about 78 home / 82 product on this laptop.
+  Fonts are self-hosted from npm (`@fontsource`) through `next/font/local`.
+- Product photos go through Next's image optimiser (`lib/photo.js`): right-sized
+  WebP, cached for a year.
 - Structured data (`lib/seo.js`): OnlineStore, WebSite search box, Product with
   delivery and return policy, breadcrumbs, FAQPage.
 - Supabase advisors: Security 26 warnings, all intended (public order/track/coupon
@@ -42,8 +45,6 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   injected code); Lighthouse's clean Chrome shows no console errors.
 - Admin panel code: `app/admin/page.js` (data and layout) plus one file per tab in
   `components/admin/`.
-- Older product photos (evogrip-*.webp) are served with a 1-hour cache; photos added
-  through the admin panel get a 1-year cache.
 
 ## Notifications
 

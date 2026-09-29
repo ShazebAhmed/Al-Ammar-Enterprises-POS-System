@@ -6,7 +6,7 @@ A Next.js 15 / React 19 storefront with Supabase authentication, product catalog
 
 Use Node.js 22 or newer. Run `npm ci`, copy `.env.example` to `.env.local`, fill in your project values, then run `npm run dev`. Do not put a Supabase service-role key in a `NEXT_PUBLIC_*` variable. Without configuration the interface renders a store-unavailable state.
 
-Run `npm test`, `npm run format:check` and `npm run build` before deployment. The database tests use embedded PostgreSQL (PGlite): they apply every file in `supabase/migrations/` in order, starting from the baseline copied from the live schema, on top of minimal stand-ins for the Supabase `auth` and `storage` schemas.
+Before a pull request run `npm audit --omit=dev --audit-level=high`, `npm run format:check`, `npm run lint`, `npm test`, `npm run build` and `npm run smoke` (starts the built site and opens every public page); CI runs the same checks. The database tests use embedded PostgreSQL (PGlite): they apply every file in `supabase/migrations/` in order, starting from the baseline copied from the live schema, on top of minimal stand-ins for the Supabase `auth` and `storage` schemas.
 
 ## Keeping Supabase awake
 

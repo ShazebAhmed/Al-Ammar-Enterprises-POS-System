@@ -79,9 +79,9 @@ export default function ReportsTab({ orders, settings, costOf }) {
       <div className="admin-stats">
         <StatCard
           icon="account_balance_wallet"
-          label="Sales"
+          label="Sales received"
           value={money(report.total.sales)}
-          caption={`${report.total.delivered} delivered · order value, not profit`}
+          caption={`${report.total.delivered} delivered · incl. ${money(report.total.delivery)} delivery`}
           accent
         />
         <StatCard
@@ -100,7 +100,7 @@ export default function ReportsTab({ orders, settings, costOf }) {
           icon="bar_chart"
           label="Profit"
           value={money(report.total.profit)}
-          caption={`Goods cost ${money(report.total.cost)} · discounts ${money(report.total.discounts)}`}
+          caption={`Items ${money(report.total.itemSales)} − goods cost ${money(report.total.cost)}`}
         />
       </div>
       <section className="stx-card">
@@ -112,11 +112,12 @@ export default function ReportsTab({ orders, settings, costOf }) {
                 <th>Orders</th>
                 <th>Delivered</th>
                 <th>Cancelled</th>
-                <th>Sales</th>
-                <th>Delivery</th>
-                <th>Discounts</th>
-                <th>Cost of goods</th>
-                <th>Profit</th>
+                <th>Sales received</th>
+                <th>− Delivery</th>
+                <th>= Items</th>
+                <th>− Cost of goods</th>
+                <th>= Profit</th>
+                <th>Discounts given</th>
                 <th>In progress</th>
               </tr>
             </thead>
@@ -143,17 +144,18 @@ export default function ReportsTab({ orders, settings, costOf }) {
                     <strong>{money(r.sales)}</strong>
                   </td>
                   <td>{money(r.delivery)}</td>
-                  <td>{money(r.discounts)}</td>
+                  <td>{money(r.itemSales)}</td>
                   <td>{money(r.cost)}</td>
                   <td>
                     <strong>{money(r.profit)}</strong>
                   </td>
+                  <td>{money(r.discounts)}</td>
                   <td>{money(r.inProgressValue)}</td>
                 </tr>
               ))}
               {!rows.length && (
                 <tr>
-                  <td colSpan={10} className="muted">
+                  <td colSpan={11} className="muted">
                     No orders in this period.
                   </td>
                 </tr>
@@ -168,9 +170,10 @@ export default function ReportsTab({ orders, settings, costOf }) {
                   <td>{report.total.cancelled}</td>
                   <td>{money(report.total.sales)}</td>
                   <td>{money(report.total.delivery)}</td>
-                  <td>{money(report.total.discounts)}</td>
+                  <td>{money(report.total.itemSales)}</td>
                   <td>{money(report.total.cost)}</td>
                   <td>{money(report.total.profit)}</td>
+                  <td>{money(report.total.discounts)}</td>
                   <td>{money(report.total.inProgressValue)}</td>
                 </tr>
               </tfoot>
@@ -190,9 +193,10 @@ export default function ReportsTab({ orders, settings, costOf }) {
         {month
           ? "Days with orders, by order date in Pakistan time."
           : "Tap a month to see its days."}{" "}
-        Sales are delivered orders only (cash received); in progress orders
-        count once delivered. Profit = sales without delivery charges, minus the
-        cost price of the goods (the cost saved when each order was placed).
+        Sales received = delivered orders only (cash on delivery), including
+        delivery. Items = sales received − delivery (already after discounts).
+        Profit = items − cost of goods (the cost saved when each order was
+        placed). In progress orders count once delivered.
       </p>
     </div>
   );

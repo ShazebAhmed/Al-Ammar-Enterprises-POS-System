@@ -5,11 +5,13 @@ import { useRef, useState } from "react";
 import Icon from "./Icon";
 
 // Photos on a product card. Swipe on phones (native scroll snapping), arrows on
-// hover with a mouse; tapping any photo opens the product.
+// hover with a mouse; tapping any photo opens the product. Cards show up to five
+// photos to keep the shop page light; the last one says how many more are inside.
 export default function CardGallery({ images, name, href }) {
   const track = useRef(null);
   const [index, setIndex] = useState(0);
   const photos = images.slice(0, 5);
+  const more = images.length - photos.length;
 
   if (photos.length < 2)
     return (
@@ -58,6 +60,11 @@ export default function CardGallery({ images, name, href }) {
               decoding="async"
               draggable={false}
             />
+            {more > 0 && i === photos.length - 1 && (
+              <span className="card-more">
+                +{more} more {more === 1 ? "photo" : "photos"}
+              </span>
+            )}
           </Link>
         ))}
       </div>

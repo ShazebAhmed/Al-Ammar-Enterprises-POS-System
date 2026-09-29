@@ -9,7 +9,7 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   `hnd1` Tokyo, next to the Supabase database in Tokyo). Admin panel:
   https://alammar-admin.vercel.app/admin (same Vercel project, see Notifications).
 - Database: Supabase project `ehxsrytdzyyyhsgbjccu`. All migrations up to
-  `202609290016_free_delivery.sql` are applied. New migrations are applied in
+  `202609290017_low_stock_alert.sql` are applied. New migrations are applied in
   the Supabase SQL Editor; the owner has approved running them without asking each
   time (report which one ran). Destructive-looking statements show a confirmation
   dialog that must be accepted.
@@ -74,6 +74,9 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   account; guest: that order), on `/track`, `/account` and in the admin panel. The
   button only shows where notifications are not allowed yet (for example a browser).
 - Admin: "Send test alert"; tapping a new-order alert opens that order.
+- Low stock: admin devices get "Low stock: <product>" once when a product or option
+  drops from more than 2 to 2 or fewer (migration 0017); the admin's own edits are
+  not announced.
 - Checked end to end: owner's phone (vivo V30, Android 16, Chrome 154) got the admin
   test alert as Al Ammar Admin; emulator (Pixel 8, Android 16) with Store 1.4.0 asked
   on first open, followed an order by itself and showed the status update as Al

@@ -929,3 +929,58 @@ test("delivery is free when the items reach the admin's amount", async () => {
   );
   await db.exec("update store_settings set free_delivery_over=0 where id=1");
 });
+
+test("the admin is told when a product runs low", async () => {
+  const PL = "a1a1a1a1-0000-4000-8000-0000000000aa";
+  const PV = "a1a1a1a1-0000-4000-8000-0000000000ab";
+  await db.exec("reset role");
+  await db.query(
+    "insert into products(id,name,price,stock) values($1,'Low item',100,4)",
+    [PL],
+  );
+  await db.query(
+    `insert into products(id,name,price,stock,option_label,variants)
+     values($1,'Low shirt',100,0,'Size','[{"name":"M","stock":3},{"name":"L","stock":9}]')`,
+    [PV],
+  );
+  const alerts = async () =>
+    (
+      await db.query(
+        "select notification from push_outbox where notification->>'title' like 'Low stock:%'",
+      )
+    ).rows
+      .map((r) => r.notification.body)
+      .sort();
+  await role("authenticated", BUYER);
+  const buyer = { ...customer, phone: "03233333333" };
+  await order(
+    "10710000-0000-4000-8000-000000000001",
+    [{ productId: PL, qty: 1 }],
+    buyer,
+  );
+  await db.exec("reset role");
+  assert.deepEqual(await alerts(), []); // 3 left: not low yet
+  await role("authenticated", BUYER);
+  await order(
+    "10710000-0000-4000-8000-000000000002",
+    [
+      { productId: PL, qty: 1 },
+      { productId: PV, variant: "M", qty: 3 },
+    ],
+    buyer,
+  );
+  await db.exec("reset role");
+  assert.deepEqual(await alerts(), [
+    "M: sold out. Time to restock.",
+    "Only 2 left. Time to restock.",
+  ]);
+  // Only once: going lower does not repeat it.
+  await role("authenticated", BUYER);
+  await order(
+    "10710000-0000-4000-8000-000000000003",
+    [{ productId: PL, qty: 1 }],
+    buyer,
+  );
+  await db.exec("reset role");
+  assert.equal((await alerts()).length, 2);
+});

@@ -9,6 +9,7 @@ import { sendTestAlert, watchNewOrders } from "@/lib/push";
 import DiscountsTab from "@/components/admin/DiscountsTab";
 import StatCard from "@/components/admin/StatCard";
 import ReportsTab from "@/components/admin/ReportsTab";
+import { customersFromOrders } from "@/lib/customers";
 import { inPeriod, makeCostOf, periodPrefix, summarize } from "@/lib/reports";
 import ProductsTab from "@/components/admin/ProductsTab";
 import ProductForm from "@/components/admin/ProductForm";
@@ -401,18 +402,7 @@ export default function AdminPage() {
   const lowStock = products
     .filter((p) => Number(p.stock) <= 5)
     .sort((a, b) => a.stock - b.stock);
-  const customersMap = new Map();
-  for (const o of orders) {
-    if (!o.customerId) continue;
-    const c = customersMap.get(o.customerId) || {
-      id: o.customerId,
-      name: o.customer.name,
-      phone: o.customer.phone,
-      orderCount: 0,
-    };
-    c.orderCount++;
-    customersMap.set(o.customerId, c);
-  }
+  const customers = customersFromOrders(orders);
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setUTCDate(d.getUTCDate() - 6 + i);
@@ -788,7 +778,7 @@ export default function AdminPage() {
                 />
               )}
               {tab === "customers" && (
-                <CustomersTab customers={[...customersMap.values()]} />
+                <CustomersTab customers={customers} settings={settings} />
               )}
               {tab === "reviews" && (
                 <ReviewsTab

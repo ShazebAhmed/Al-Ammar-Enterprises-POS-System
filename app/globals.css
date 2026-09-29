@@ -3139,3 +3139,42 @@ input[type="radio"] {
     transition: none;
   }
 }
+
+/* Photo system
+   - Grids, cards and thumbnails fill a fixed frame (object-fit: cover), so every
+     card lines up whatever the photo's shape.
+   - Where the whole product must be seen (the product page), .photo-full shows the
+     complete photo and fills the spare space with a soft, blurred copy of the same
+     photo instead of empty bands. */
+.photo-full {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.photo-full > .photo-backdrop {
+  position: absolute;
+  inset: -12%;
+  width: 124%;
+  height: 124%;
+  max-width: none;
+  object-fit: cover;
+  filter: blur(28px) saturate(1.15);
+  opacity: 0.6;
+  z-index: -1;
+  pointer-events: none;
+}
+.gallery-main .photo-full > .photo-main {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 24px rgba(20, 28, 22, 0.18));
+}
+.cart-thumb {
+  overflow: hidden;
+}
+.cart-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Icon from "@/components/Icon";
 import { formatMoney } from "@/lib/format";
+import { photo, PHOTO_SIZES } from "@/lib/photo";
 
 export default function ProductsTab({
   products,
@@ -81,7 +82,7 @@ export default function ProductsTab({
               >
                 {p.images?.[0] && (
                   <img
-                    src={p.images[0]}
+                    {...photo(p.images[0], PHOTO_SIZES.thumb)}
                     alt=""
                     style={{
                       width: "100%",

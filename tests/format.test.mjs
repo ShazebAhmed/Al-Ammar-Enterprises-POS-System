@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { formatOrderTime } from "../lib/format.js";
+import { formatOrderTime, categoryTabs } from "../lib/format.js";
 
 test("order times are shown in Pakistan time with date and time", () => {
   // 10:46 UTC is 3:46 pm in Karachi (UTC+5).
@@ -57,4 +57,22 @@ test("orders export as a spreadsheet-safe CSV", async () => {
     /,"'=HYPERLINK\(""x""\)",\+923001234567,"House 1, Street 2",Lahore,/,
   );
   assert.match(row, /,Wallet \(Black\) x 2,20,0,,150,170$/);
+});
+
+test("category tabs hide categories without products", () => {
+  const all = ["Groceries", "Fashion", "Beauty", "Fashion"];
+  assert.deepEqual(categoryTabs(all, ["Fashion"], "All"), ["All", "Fashion"]);
+  // The category being viewed stays, so the customer can see it is empty.
+  assert.deepEqual(categoryTabs(all, ["Fashion"], "Beauty"), [
+    "All",
+    "Fashion",
+    "Beauty",
+  ]);
+  // If the products could not be read, every category shows.
+  assert.deepEqual(categoryTabs(all, null, "All"), [
+    "All",
+    "Groceries",
+    "Fashion",
+    "Beauty",
+  ]);
 });

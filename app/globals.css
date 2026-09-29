@@ -3315,3 +3315,26 @@ input[type="radio"] {
   border-color: var(--primary);
   color: #fff;
 }
+
+/* Admin customers list */
+.customer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+}
+.customer-badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: 1px;
+  background: #e3efe6;
+  color: var(--primary);
+}
+.customer-badge.guest {
+  background: #f3ecdc;
+  color: #7a5a1c;
+}

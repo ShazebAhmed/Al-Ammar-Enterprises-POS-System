@@ -3,6 +3,7 @@ import { getSettings, getCatalogue, getUsedCategories } from "@/lib/catalogue";
 import { formatMoney, categoryTabs, deliveryLine } from "@/lib/format";
 import Icon from "@/components/Icon";
 import ProductCard from "@/components/ProductCard";
+import AutoSubmitForm from "@/components/AutoSubmitForm";
 import { storeData, jsonLd } from "@/lib/seo";
 import { photo, PHOTO_SIZES } from "@/lib/photo";
 export const revalidate = 60;
@@ -190,7 +191,11 @@ export default async function HomePage({ searchParams }) {
             </Link>
           ))}
         </div>
-        <form className="catalogue-toolbar" action="/#collection" method="get">
+        <AutoSubmitForm
+          className="catalogue-toolbar"
+          action="/#collection"
+          method="get"
+        >
           <input type="hidden" name="category" value={category} />
           <label className="catalogue-search">
             <Icon name="search" />
@@ -227,9 +232,9 @@ export default async function HomePage({ searchParams }) {
             </select>
           </label>
           <button className="filter-button" type="submit">
-            <Icon name="tune" size={16} /> Apply
+            <Icon name="search" size={16} /> Search
           </button>
-        </form>
+        </AutoSubmitForm>
         {unavailable ? (
           <div className="empty-state">
             <Icon name="warning" size={36} />

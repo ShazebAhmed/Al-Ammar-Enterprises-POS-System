@@ -57,6 +57,9 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   form); "Confirm email" is off, so sign-ups work without email delivery (turning
   it on needs a custom SMTP sender for reliable mail). Redirect URLs: the shop, the
   admin address and the old address.
+- Admin reports: the overview has Today / This month / This year / All time; the
+  Reports tab shows a year by month and a month by day, with CSV export
+  (`lib/reports.js`). Sales = delivered orders only (cash on delivery received).
 - Admin panel code: `app/admin/page.js` (data and layout) plus one file per tab in
   `components/admin/`.
 

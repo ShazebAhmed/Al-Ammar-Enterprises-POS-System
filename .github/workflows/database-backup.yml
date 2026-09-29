@@ -1,0 +1,71 @@
+name: Database backup
+# Daily copy of the live database (products, orders, customers, settings, sign-ins),
+# encrypted with the owner's passphrase and kept for 30 days as a workflow artifact.
+# Needs two repository secrets, set by the owner (see docs/backups.md):
+#   SUPABASE_DB_URL    Supabase "Session pooler" connection string (with password)
+#   BACKUP_PASSPHRASE  a passphrase of 20+ characters the owner keeps safe; needed
+#                      to restore
+on:
+  schedule:
+    - cron: "0 21 * * *" # 02:00 in Pakistan
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the secrets are set
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DB_URL" ] || [ -z "$PASSPHRASE" ]; then
+            echo "::error::Add the SUPABASE_DB_URL and BACKUP_PASSPHRASE secrets (docs/backups.md)."
+            exit 1
+          fi
+          # The repository is public, so anyone signed in to GitHub can download the
+          # encrypted file: the passphrase must be long enough to resist guessing.
+          if [ ${#PASSPHRASE} -lt 20 ]; then
+            echo "::error::BACKUP_PASSPHRASE should be at least 20 characters."
+            exit 1
+          fi
+
+      - name: Install the PostgreSQL 17 client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          /usr/lib/postgresql/17/bin/pg_dump --version
+
+      - name: Dump and encrypt
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          name="alammar-db-$(date -u +%Y-%m-%d)"
+          # The shop's own tables (public), customer sign-ins (auth) and the photo
+          # records (storage). Custom format: compressed, and tables can be restored
+          # one at a time. The photo files themselves are in Supabase Storage.
+          /usr/lib/postgresql/17/bin/pg_dump "$DB_URL" \
+            --format=custom --no-owner --no-privileges \
+            --schema=public --schema=auth --schema=storage \
+            --file="$name.dump"
+          /usr/lib/postgresql/17/bin/pg_restore --list "$name.dump" > /dev/null
+          gpg --batch --yes --symmetric --cipher-algo AES256 \
+            --passphrase-fd 0 --output "$name.dump.gpg" "$name.dump" <<< "$PASSPHRASE"
+          shred -u "$name.dump"
+          echo "BACKUP_FILE=$name.dump.gpg" >> "$GITHUB_ENV"
+          ls -l "$name.dump.gpg"
+
+      - name: Keep for 30 days
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_FILE }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 30
+          if-no-files-found: error

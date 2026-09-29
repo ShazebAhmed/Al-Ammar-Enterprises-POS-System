@@ -1185,7 +1185,7 @@ input[type="radio"] {
 .pdp-side {
   align-self: start;
 }
-@media (min-height: 860px) {
+@media (min-height: 1100px) {
   .pdp-side {
     position: sticky;
     top: 125px;

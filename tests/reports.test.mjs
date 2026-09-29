@@ -9,6 +9,7 @@ import {
   dailyReport,
   reportYears,
   reportCsv,
+  makeCostOf,
 } from "../lib/reports.js";
 
 const order = (createdAt, status, total, shippingFee = 250, discount = 0) => ({
@@ -50,7 +51,46 @@ test("only delivered orders count as sales", () => {
     delivery: 500,
     discounts: 100,
     inProgressValue: 1500,
+    cost: 0,
+    profit: 4350.5,
+    costMissing: 0,
   });
+});
+
+test("profit uses the cost saved with the order, else today's cost", () => {
+  const orders = [
+    {
+      id: "AA-1",
+      createdAt: "2026-09-01T10:00:00Z",
+      status: "Delivered",
+      total: 2250,
+      shippingFee: 250,
+      discount: 0,
+      items: [
+        { productId: "p1", qty: 2, price: 500 },
+        { productId: "p2", qty: 1, price: 1000 },
+      ],
+    },
+    {
+      id: "AA-2",
+      createdAt: "2026-09-02T10:00:00Z",
+      status: "Delivered",
+      total: 750,
+      shippingFee: 250,
+      discount: 0,
+      items: [{ productId: "p3", qty: 1, price: 500 }],
+    },
+  ];
+  const costOf = makeCostOf(
+    [{ order_id: "AA-1", product_id: "p1", unit_cost: "300" }],
+    { p1: 350, p2: 600 },
+  );
+  const s = summarize(orders, "", costOf);
+  // p1 at the saved 300 ×2, p2 at today's 600, p3 has no cost.
+  assert.equal(s.cost, 1200);
+  assert.equal(s.itemSales, 2500);
+  assert.equal(s.profit, 1300);
+  assert.equal(s.costMissing, 1);
 });
 
 test("a year splits into twelve months and a month into its days", () => {
@@ -78,6 +118,6 @@ test("a year splits into twelve months and a month into its days", () => {
   );
   const csv = reportCsv(year.rows, year.total);
   assert.ok(csv.startsWith("﻿Period,Orders"));
-  assert.match(csv, /"September 2026",1,1,0,0,2000,1750,250,0,0/);
+  assert.match(csv, /"September 2026",1,1,0,0,2000,1750,250,0,0,0,1750/);
   assert.match(csv, /\r\nTotal,3,3,0,0,6000,/);
 });

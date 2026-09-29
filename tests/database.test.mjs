@@ -984,3 +984,58 @@ test("the admin is told when a product runs low", async () => {
   await db.exec("reset role");
   assert.equal((await alerts()).length, 2);
 });
+
+test("cost prices are admin-only and saved with each order", async () => {
+  const PC = "a1a1a1a1-0000-4000-8000-0000000000cc";
+  await db.exec("reset role");
+  await db.query(
+    "insert into products(id,name,price,stock) values($1,'Costed item',1000,50)",
+    [PC],
+  );
+  await role("authenticated", ADMIN);
+  await db.query("insert into product_costs(product_id,cost) values($1,600)", [
+    PC,
+  ]);
+  // Customers and visitors cannot see or set costs.
+  await role("authenticated", BUYER);
+  assert.equal((await db.query("select * from product_costs")).rows.length, 0);
+  await assert.rejects(() =>
+    db.query("insert into product_costs(product_id,cost) values($1,1)", [PC]),
+  );
+  await role();
+  assert.equal((await db.query("select * from product_costs")).rows.length, 0);
+  // An order keeps the cost of the day it was placed.
+  await role("authenticated", BUYER);
+  const placed = await order(
+    "c0510000-0000-4000-8000-000000000001",
+    [{ productId: PC, qty: 2 }],
+    { ...customer, phone: "03244444444" },
+  );
+  assert.equal(
+    (await db.query("select * from order_item_costs")).rows.length,
+    0,
+  );
+  await role("authenticated", ADMIN);
+  await db.query("update product_costs set cost=700 where product_id=$1", [PC]);
+  const saved = await db.query(
+    "select unit_cost from order_item_costs where order_id=$1",
+    [placed.id],
+  );
+  assert.deepEqual(
+    saved.rows.map((r) => Number(r.unit_cost)),
+    [600],
+  );
+  // Saved costs cannot be rewritten, not even by the admin.
+  await db.query("update order_item_costs set unit_cost=1");
+  assert.equal(
+    Number(
+      (
+        await db.query(
+          "select unit_cost from order_item_costs where order_id=$1",
+          [placed.id],
+        )
+      ).rows[0].unit_cost,
+    ),
+    600,
+  );
+});

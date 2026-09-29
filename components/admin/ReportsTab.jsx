@@ -24,15 +24,18 @@ function download(name, text) {
 
 // Sales by month for a year, and by day for a month. Sales count delivered
 // (cash on delivery received) orders only; see lib/reports.js.
-export default function ReportsTab({ orders, settings }) {
+export default function ReportsTab({ orders, settings, costOf }) {
   const years = useMemo(() => reportYears(orders), [orders]);
   const [year, setYear] = useState(years[0]);
   const [month, setMonth] = useState("");
   const money = (n) => formatMoney(n, settings.currencySymbol);
   const today = pkDay(new Date());
   const report = useMemo(
-    () => (month ? dailyReport(orders, month) : monthlyReport(orders, year)),
-    [orders, year, month],
+    () =>
+      month
+        ? dailyReport(orders, month, costOf)
+        : monthlyReport(orders, year, costOf),
+    [orders, year, month, costOf],
   );
   // Months up to this one; days that had orders.
   const rows = month
@@ -94,10 +97,10 @@ export default function ReportsTab({ orders, settings }) {
           caption={`${report.total.inProgress} orders not delivered yet`}
         />
         <StatCard
-          icon="sell"
-          label="Discounts given"
-          value={money(report.total.discounts)}
-          caption={`Delivery charged: ${money(report.total.delivery)}`}
+          icon="bar_chart"
+          label="Profit"
+          value={money(report.total.profit)}
+          caption={`Goods cost ${money(report.total.cost)} · discounts ${money(report.total.discounts)}`}
         />
       </div>
       <section className="stx-card">
@@ -112,6 +115,8 @@ export default function ReportsTab({ orders, settings }) {
                 <th>Sales</th>
                 <th>Delivery</th>
                 <th>Discounts</th>
+                <th>Cost of goods</th>
+                <th>Profit</th>
                 <th>In progress</th>
               </tr>
             </thead>
@@ -139,12 +144,16 @@ export default function ReportsTab({ orders, settings }) {
                   </td>
                   <td>{money(r.delivery)}</td>
                   <td>{money(r.discounts)}</td>
+                  <td>{money(r.cost)}</td>
+                  <td>
+                    <strong>{money(r.profit)}</strong>
+                  </td>
                   <td>{money(r.inProgressValue)}</td>
                 </tr>
               ))}
               {!rows.length && (
                 <tr>
-                  <td colSpan={8} className="muted">
+                  <td colSpan={10} className="muted">
                     No orders in this period.
                   </td>
                 </tr>
@@ -160,6 +169,8 @@ export default function ReportsTab({ orders, settings }) {
                   <td>{money(report.total.sales)}</td>
                   <td>{money(report.total.delivery)}</td>
                   <td>{money(report.total.discounts)}</td>
+                  <td>{money(report.total.cost)}</td>
+                  <td>{money(report.total.profit)}</td>
                   <td>{money(report.total.inProgressValue)}</td>
                 </tr>
               </tfoot>
@@ -167,12 +178,21 @@ export default function ReportsTab({ orders, settings }) {
           </table>
         </div>
       </section>
+      {report.total.costMissing > 0 && (
+        <p className="inline-error" role="status">
+          {report.total.costMissing} delivered{" "}
+          {report.total.costMissing === 1 ? "item has" : "items have"} no cost
+          price, so profit here is too high. Add a cost price to those products
+          (Products → Edit).
+        </p>
+      )}
       <p className="chart-note">
         {month
           ? "Days with orders, by order date in Pakistan time."
           : "Tap a month to see its days."}{" "}
         Sales are delivered orders only (cash received); in progress orders
-        count once delivered.
+        count once delivered. Profit = sales without delivery charges, minus the
+        cost price of the goods (the cost saved when each order was placed).
       </p>
     </div>
   );

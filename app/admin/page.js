@@ -9,7 +9,7 @@ import { sendTestAlert, watchNewOrders } from "@/lib/push";
 import DiscountsTab from "@/components/admin/DiscountsTab";
 import StatCard from "@/components/admin/StatCard";
 import ReportsTab from "@/components/admin/ReportsTab";
-import { inPeriod, periodPrefix, summarize } from "@/lib/reports";
+import { inPeriod, makeCostOf, periodPrefix, summarize } from "@/lib/reports";
 import ProductsTab from "@/components/admin/ProductsTab";
 import ProductForm from "@/components/admin/ProductForm";
 import OrdersTab from "@/components/admin/OrdersTab";
@@ -62,6 +62,9 @@ export default function AdminPage() {
     [revision, setRevision] = useState(0);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS),
     [products, setProducts] = useState([]),
+    // Cost prices (admin only): { productId: cost }, and costs saved with orders.
+    [costs, setCosts] = useState({}),
+    [orderCosts, setOrderCosts] = useState([]),
     [orders, setOrders] = useState([]),
     [reviews, setReviews] = useState([]),
     [tab, setTab] = useState("overview"),
@@ -107,13 +110,46 @@ export default function AdminPage() {
         if (data.length < 500) return all;
       }
     }
+    // Costs for profit reports; the shop still works if they cannot be read.
+    async function costRows() {
+      try {
+        const orderCostRows = async () => {
+          const all = [];
+          for (let offset = 0; ; offset += 1000) {
+            const { data, error } = await supabase
+              .from("order_item_costs")
+              .select("order_id,product_id,unit_cost")
+              .order("order_id")
+              .order("product_id")
+              .range(offset, offset + 999);
+            if (error) throw error;
+            all.push(...data);
+            if (data.length < 1000) return all;
+          }
+        };
+        const [pc, oc] = await Promise.all([
+          supabase.from("product_costs").select("product_id,cost"),
+          orderCostRows(),
+        ]);
+        if (pc.error) throw pc.error;
+        return {
+          costs: Object.fromEntries(
+            pc.data.map((r) => [r.product_id, Number(r.cost)]),
+          ),
+          orderCosts: oc,
+        };
+      } catch {
+        return { costs: {}, orderCosts: [] };
+      }
+    }
     (async () => {
       try {
-        const [s, p, o, r] = await Promise.all([
+        const [s, p, o, r, c] = await Promise.all([
           supabase.from("store_settings").select("*").eq("id", 1).maybeSingle(),
           allRows("products"),
           allRows("orders"),
           allRows("reviews"),
+          costRows(),
         ]);
         if (s.error) throw s.error;
         if (!alive) return;
@@ -121,6 +157,8 @@ export default function AdminPage() {
         setProducts(p.map(productFromRow));
         setOrders(o.map(orderFromRow));
         setReviews(r.map(reviewFromRow));
+        setCosts(c.costs);
+        setOrderCosts(c.orderCosts);
       } catch {
         if (alive)
           setLoadError(
@@ -205,6 +243,28 @@ export default function AdminPage() {
         : await supabase.from("products").insert(row).select().single();
       if (result.error) throw result.error;
       const saved = productFromRow(result.data);
+      // The cost price is kept in its own admin-only table.
+      if (p.cost !== undefined) {
+        const cost = p.cost === null ? null : Number(p.cost);
+        const res =
+          cost === null
+            ? await supabase
+                .from("product_costs")
+                .delete()
+                .eq("product_id", saved.id)
+            : await supabase.from("product_costs").upsert({
+                product_id: saved.id,
+                cost,
+                updated_at: new Date().toISOString(),
+              });
+        if (res.error) throw res.error;
+        setCosts((all) => {
+          const next = { ...all };
+          if (cost === null) delete next[saved.id];
+          else next[saved.id] = cost;
+          return next;
+        });
+      }
       setProducts((list) =>
         p.id ? list.map((x) => (x.id === p.id ? saved : x)) : [saved, ...list],
       );
@@ -331,7 +391,12 @@ export default function AdminPage() {
     );
   const pending = orders.filter((o) => o.status === "Pending").length;
   const prefix = periodPrefix(period);
-  const periodTotals = summarize(orders.filter((o) => inPeriod(o, prefix)));
+  const costOf = makeCostOf(orderCosts, costs);
+  const periodTotals = summarize(
+    orders.filter((o) => inPeriod(o, prefix)),
+    "",
+    costOf,
+  );
   const periodName = PERIODS.find((p) => p.key === period).label.toLowerCase();
   const lowStock = products
     .filter((p) => Number(p.stock) <= 5)
@@ -548,7 +613,11 @@ export default function AdminPage() {
                         periodTotals.sales,
                         settings.currencySymbol,
                       )}
-                      caption={`${periodName} · order value, not profit`}
+                      caption={
+                        periodTotals.cost > 0
+                          ? `${periodName} · profit ${formatMoney(periodTotals.profit, settings.currencySymbol)}`
+                          : `${periodName} · order value, not profit`
+                      }
                       accent
                     />
                     <StatCard
@@ -712,7 +781,11 @@ export default function AdminPage() {
                 />
               )}
               {tab === "reports" && (
-                <ReportsTab orders={orders} settings={settings} />
+                <ReportsTab
+                  orders={orders}
+                  settings={settings}
+                  costOf={costOf}
+                />
               )}
               {tab === "customers" && (
                 <CustomersTab customers={[...customersMap.values()]} />
@@ -741,7 +814,10 @@ export default function AdminPage() {
       </div>
       {editingProduct !== null && (
         <ProductForm
-          product={editingProduct}
+          product={{
+            ...editingProduct,
+            cost: editingProduct.id ? (costs[editingProduct.id] ?? "") : "",
+          }}
           categories={settings.categories || []}
           onCancel={() => setEditingProduct(null)}
           onSave={async (p, { addAnother } = {}) => {

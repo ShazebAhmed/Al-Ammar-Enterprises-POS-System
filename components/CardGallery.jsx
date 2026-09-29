@@ -1,4 +1,5 @@
 "use client";
+import { photo, PHOTO_SIZES } from "@/lib/photo";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import Icon from "./Icon";
@@ -13,7 +14,12 @@ export default function CardGallery({ images, name, href }) {
   if (photos.length < 2)
     return (
       <Link className="card-slide" href={href}>
-        <img src={photos[0]} alt={name} loading="lazy" decoding="async" />
+        <img
+          {...photo(photos[0], PHOTO_SIZES.card)}
+          alt={name}
+          loading="lazy"
+          decoding="async"
+        />
         <span className="image-arrow">
           <Icon name="arrow_forward" size={18} />
         </span>
@@ -46,7 +52,7 @@ export default function CardGallery({ images, name, href }) {
             aria-label={`${name}, photo ${i + 1} of ${photos.length}`}
           >
             <img
-              src={src}
+              {...photo(src, PHOTO_SIZES.card)}
               alt={i === 0 ? name : ""}
               loading="lazy"
               decoding="async"

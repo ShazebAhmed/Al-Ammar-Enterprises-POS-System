@@ -5,6 +5,7 @@ import useCartProducts from "@/components/useCartProducts";
 import Icon from "@/components/Icon";
 import { formatMoney } from "@/lib/format";
 import { cartTotals, lineStock } from "@/lib/cart";
+import { photo, PHOTO_SIZES } from "@/lib/photo";
 import { whatsappOrderLink } from "@/lib/whatsapp";
 export default function CartPage() {
   const { setCartQty, removeFromCart, syncError, retrySync } = useStore();
@@ -66,7 +67,10 @@ export default function CartPage() {
               >
                 <div className="cart-thumb">
                   {l.product?.images?.[0] ? (
-                    <img src={l.product.images[0]} alt={l.product.name} />
+                    <img
+                      {...photo(l.product.images[0], PHOTO_SIZES.thumb)}
+                      alt={l.product.name}
+                    />
                   ) : (
                     <Icon name="inventory_2" size={22} />
                   )}

@@ -4,6 +4,7 @@ import { formatMoney } from "@/lib/format";
 import Icon from "@/components/Icon";
 import ProductCard from "@/components/ProductCard";
 import { storeData, jsonLd } from "@/lib/seo";
+import { photo, PHOTO_SIZES } from "@/lib/photo";
 export const revalidate = 60;
 // Filtered and sorted lists all point search engines at the main shop page.
 export const metadata = { alternates: { canonical: "/" } };
@@ -88,7 +89,7 @@ export default async function HomePage({ searchParams }) {
               <>
                 <img
                   className="hero-image"
-                  src={featured.images[0]}
+                  {...photo(featured.images[0], PHOTO_SIZES.hero)}
                   alt={featured.name}
                   fetchPriority="high"
                 />

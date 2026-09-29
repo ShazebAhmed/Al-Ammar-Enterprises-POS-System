@@ -16,7 +16,7 @@ function afterSignIn() {
 }
 
 export default function AuthPage() {
-  const { supabase } = useStore();
+  const { supabase, authReady } = useStore();
   const router = useRouter();
   const [mode, setMode] = useState("login"),
     [form, setForm] = useState({
@@ -144,7 +144,7 @@ export default function AuthPage() {
             ? "We’ll email a link to reset your password."
             : "A little closer to your next favourite."}
         </p>
-        {!supabase && (
+        {authReady && !supabase && (
           <div className="inline-error" role="alert">
             Sign-in is temporarily unavailable. Please try again shortly.
           </div>

@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase";
+import { loadBrowserClient } from "@/lib/supabase-browser";
 import {
   changeQuantity,
   mergeCarts,
@@ -39,7 +39,10 @@ function readAppRole() {
   }
 }
 export default function Providers({ children }) {
-  const [supabase] = useState(createClient);
+  // null until the Supabase library has loaded (or if it is not configured);
+  // authReady stays false until then, so pages show their loading state.
+  const [supabase, setSupabase] = useState(null);
+  const [clientLoaded, setClientLoaded] = useState(false);
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [authReady, setAuthReady] = useState(false);
@@ -64,8 +67,29 @@ export default function Providers({ children }) {
   useEffect(() => () => clearTimeout(toastTimer.current), []);
   useEffect(() => setAppRole(readAppRole()), []);
   useEffect(() => {
+    let alive = true;
+    const load = () =>
+      loadBrowserClient()
+        .catch(() => null)
+        .then((client) => {
+          if (!alive) return;
+          setSupabase(client);
+          setClientLoaded(true);
+        });
+    // After the page has shown, or within a second at most.
+    const idle = typeof window.requestIdleCallback === "function";
+    const id = idle
+      ? window.requestIdleCallback(load, { timeout: 1000 })
+      : setTimeout(load, 1);
+    return () => {
+      alive = false;
+      if (idle) window.cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
+  }, []);
+  useEffect(() => {
     if (!supabase) {
-      setAuthReady(true);
+      if (clientLoaded) setAuthReady(true);
       return;
     }
     let alive = true;
@@ -100,7 +124,7 @@ export default function Providers({ children }) {
       alive = false;
       data.subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, clientLoaded]);
   function setLocal(lines, owner = ownerRef.current, dirty = true) {
     const clean = normalizeCart(lines);
     cartRef.current = clean;

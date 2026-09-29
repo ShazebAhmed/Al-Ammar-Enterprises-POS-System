@@ -48,9 +48,10 @@ npm run format:check
 npm run lint
 npm test
 npm run build
+npm run smoke
 ```
 
-All six must pass. CI runs the same checks.
+All seven must pass. CI runs the same checks.
 
 ## Talking to each other
 

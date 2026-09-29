@@ -21,3 +21,5 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      # Starts the built site and opens every public page.
+      - run: npm run smoke

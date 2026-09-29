@@ -83,7 +83,7 @@ export default async function HomePage({ searchParams }) {
               Simple ordering. Cash on delivery.
             </div>
           </div>
-          <div className="hero-visual">
+          <div className={`hero-visual${featured ? " has-photo" : ""}`}>
             <div className="hero-orbit" />
             <span className="hero-edition">THE EVERYDAY EDIT / 01</span>
             {featured ? (

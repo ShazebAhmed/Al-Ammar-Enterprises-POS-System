@@ -59,7 +59,8 @@ export default function AdminPage() {
     [editingProduct, setEditingProduct] = useState(null),
     [mobileNavOpen, setMobileNavOpen] = useState(false),
     [focusOrder, setFocusOrder] = useState(""),
-    [testAlert, setTestAlert] = useState("");
+    [testAlert, setTestAlert] = useState(""),
+    [alertsOn, setAlertsOn] = useState(false);
   // A new-order alert opens /admin?order=AA-10003: show that order.
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("order");
@@ -450,23 +451,35 @@ export default function AdminPage() {
                       <Icon name="add" size={16} /> Add product
                     </button>
                   </div>
-                  <section className="stx-card px-5 py-4 admin-alerts">
-                    <div>
-                      <strong>New order alerts</strong>
-                      <p className="muted small" style={{ margin: 0 }}>
-                        Get a notification on this phone for every new order.
-                        Turn it on once on each phone you use.
-                      </p>
-                    </div>
+                  {/* Once alerts are on, this shrinks to one quiet line. */}
+                  <section
+                    className={
+                      alertsOn
+                        ? "admin-alerts compact"
+                        : "stx-card px-5 py-4 admin-alerts"
+                    }
+                  >
+                    {!alertsOn && (
+                      <div>
+                        <strong>New order alerts</strong>
+                        <p className="muted small" style={{ margin: 0 }}>
+                          Get a notification on this phone for every new order.
+                          Turn it on once on each phone you use.
+                        </p>
+                      </div>
+                    )}
                     <div className="admin-alerts-actions">
                       <NotifyButton
                         label="Turn on alerts"
-                        done="Alerts are on for this phone."
+                        done="New order alerts are on for this phone."
                         enable={() => watchNewOrders(supabase)}
+                        onState={(s) => setAlertsOn(s === "on")}
                       />
                       <button
                         type="button"
-                        className="stx-btn stx-btn-outline"
+                        className={
+                          alertsOn ? "text-button" : "stx-btn stx-btn-outline"
+                        }
                         disabled={testAlert === "sending"}
                         onClick={async () => {
                           setTestAlert("sending");

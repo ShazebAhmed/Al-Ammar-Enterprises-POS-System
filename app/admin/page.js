@@ -8,6 +8,8 @@ import NotifyButton from "@/components/NotifyButton";
 import { sendTestAlert, watchNewOrders } from "@/lib/push";
 import DiscountsTab from "@/components/admin/DiscountsTab";
 import StatCard from "@/components/admin/StatCard";
+import ReportsTab from "@/components/admin/ReportsTab";
+import { inPeriod, periodPrefix, summarize } from "@/lib/reports";
 import ProductsTab from "@/components/admin/ProductsTab";
 import ProductForm from "@/components/admin/ProductForm";
 import OrdersTab from "@/components/admin/OrdersTab";
@@ -30,10 +32,17 @@ const ADMIN_TABS = [
   { key: "overview", label: "Overview", icon: "dashboard" },
   { key: "products", label: "Products", icon: "inventory_2" },
   { key: "orders", label: "Orders", icon: "list_alt" },
+  { key: "reports", label: "Reports", icon: "bar_chart" },
   { key: "customers", label: "Customers", icon: "group" },
   { key: "reviews", label: "Reviews", icon: "chat" },
   { key: "discounts", label: "Discounts", icon: "sell" },
   { key: "settings", label: "Settings", icon: "settings" },
+];
+const PERIODS = [
+  { key: "today", label: "Today" },
+  { key: "month", label: "This month" },
+  { key: "year", label: "This year" },
+  { key: "all", label: "All time" },
 ];
 const DAY_MS = 24 * 60 * 60 * 1000;
 export default function AdminPage() {
@@ -60,7 +69,9 @@ export default function AdminPage() {
     [mobileNavOpen, setMobileNavOpen] = useState(false),
     [focusOrder, setFocusOrder] = useState(""),
     [testAlert, setTestAlert] = useState(""),
-    [alertsOn, setAlertsOn] = useState(false);
+    [alertsOn, setAlertsOn] = useState(false),
+    // Which period the overview's figures cover.
+    [period, setPeriod] = useState("month");
   // A new-order alert opens /admin?order=AA-10003: show that order.
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("order");
@@ -319,8 +330,9 @@ export default function AdminPage() {
       </main>
     );
   const pending = orders.filter((o) => o.status === "Pending").length;
-  const delivered = orders.filter((o) => o.status === "Delivered");
-  const revenue = delivered.reduce((s, o) => s + Number(o.total), 0);
+  const prefix = periodPrefix(period);
+  const periodTotals = summarize(orders.filter((o) => inPeriod(o, prefix)));
+  const periodName = PERIODS.find((p) => p.key === period).label.toLowerCase();
   const lowStock = products
     .filter((p) => Number(p.stock) <= 5)
     .sort((a, b) => a.stock - b.stock);
@@ -509,19 +521,41 @@ export default function AdminPage() {
                       )}
                     </div>
                   </section>
+                  <div
+                    className="period-picker"
+                    role="group"
+                    aria-label="Figures for"
+                  >
+                    {PERIODS.map((p) => (
+                      <button
+                        key={p.key}
+                        type="button"
+                        aria-pressed={period === p.key}
+                        onClick={() => setPeriod(p.key)}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                    <button type="button" onClick={() => setTab("reports")}>
+                      Full report →
+                    </button>
+                  </div>
                   <div className="admin-stats">
                     <StatCard
                       icon="account_balance_wallet"
                       label="Delivered sales"
-                      value={formatMoney(revenue, settings.currencySymbol)}
-                      caption="Order value · not profit"
+                      value={formatMoney(
+                        periodTotals.sales,
+                        settings.currencySymbol,
+                      )}
+                      caption={`${periodName} · order value, not profit`}
                       accent
                     />
                     <StatCard
                       icon="list_alt"
-                      label="Total orders"
-                      value={orders.length}
-                      caption="All customer orders"
+                      label="Orders"
+                      value={periodTotals.orders}
+                      caption={`${periodName} · ${periodTotals.cancelled} cancelled`}
                     />
                     <StatCard
                       icon="fact_check"
@@ -676,6 +710,9 @@ export default function AdminPage() {
                     cancelStaleOrders(days).catch(() => {})
                   }
                 />
+              )}
+              {tab === "reports" && (
+                <ReportsTab orders={orders} settings={settings} />
               )}
               {tab === "customers" && (
                 <CustomersTab customers={[...customersMap.values()]} />

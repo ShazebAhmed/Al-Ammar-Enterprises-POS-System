@@ -6,9 +6,20 @@ import { pushErrorMessage, pushSupported } from "@/lib/push";
 // A button that turns on phone/browser notifications. `enable` does the work
 // (watchNewOrders, watchOrder or followMyOrders); `done` is shown once it succeeded.
 // When notifications are already allowed (the apps ask when first opened) it turns
-// them on by itself, so there is nothing to tap.
-export default function NotifyButton({ label, done, enable, className }) {
+// them on by itself, so there is nothing to tap. `onState` hears every change
+// ("idle", "working", "on", "iphone", "unsupported").
+export default function NotifyButton({
+  label,
+  done,
+  enable,
+  className,
+  onState,
+}) {
   const [state, setState] = useState("idle");
+  useEffect(() => {
+    onState?.(state);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
   const [error, setError] = useState("");
   const started = useRef(false);
   useEffect(() => {

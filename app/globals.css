@@ -3248,3 +3248,18 @@ input[type="radio"] {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
+
+/* Alerts already on: a single quiet line instead of a card. */
+.admin-alerts.compact {
+  justify-content: flex-start;
+  margin: -4px 0 16px;
+  font-size: 14px;
+}
+.admin-alerts.compact .notify-done {
+  font-size: 14px;
+}
+.admin-alerts.compact .text-button {
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

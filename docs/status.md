@@ -46,6 +46,10 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   Performance 4, intended (public read + admin write).
 - A React "error #418" in the console is only seen in automated browsers (their
   injected code); Lighthouse's clean Chrome shows no console errors.
+- Supabase Auth (29 September): minimum password length 8 (matches the sign-up
+  form); "Confirm email" is off, so sign-ups work without email delivery (turning
+  it on needs a custom SMTP sender for reliable mail). Redirect URLs: the shop, the
+  admin address and the old address.
 - Admin panel code: `app/admin/page.js` (data and layout) plus one file per tab in
   `components/admin/`.
 

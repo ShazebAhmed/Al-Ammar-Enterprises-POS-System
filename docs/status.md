@@ -13,6 +13,11 @@ writes in Urdu or Roman Urdu; reply in Urdu.
   the Supabase SQL Editor; the owner has approved running them without asking each
   time (report which one ran). Destructive-looking statements show a confirmation
   dialog that must be accepted.
+- Backups: the "Database backup" workflow runs every night (02:00 Pakistan time) and
+  keeps an encrypted copy for 30 days (see `docs/backups.md`). Its two secrets were
+  set on 29 September and the first run worked (`alammar-db-2026-09-29.dump.gpg`,
+  about 64 KB). The owner keeps the passphrase; the database password was reset
+  that day and is only in the `SUPABASE_DB_URL` secret.
 - Features: order tracking (`/track`, with discount line and chosen option), sale
   price and discount codes (admin Discounts tab), order notifications, product
   options with their own stock, "Buy now" (checks out one item without touching the

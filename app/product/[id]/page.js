@@ -144,7 +144,7 @@ export default async function ProductPage({ params }) {
           <ReviewsSection productId={product.id} initialReviews={reviews} />
         </div>
 
-        <aside>
+        <aside className="pdp-side">
           <ProductPurchasePanel product={product} settings={settings} />
           <ShareButton title={product.name} />
         </aside>

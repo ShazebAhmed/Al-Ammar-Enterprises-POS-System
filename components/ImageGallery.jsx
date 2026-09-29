@@ -45,8 +45,18 @@ export default function ImageGallery({ images, name }) {
             aria-label={`${name}: ${photos.length} photos`}
           >
             {photos.map((src, i) => (
-              <div className="card-slide" key={src}>
+              <div className="card-slide photo-full" key={src}>
                 <img
+                  className="photo-backdrop"
+                  {...photo(src, PHOTO_SIZES.backdrop)}
+                  alt=""
+                  aria-hidden="true"
+                  loading={i === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                  draggable={false}
+                />
+                <img
+                  className="photo-main"
                   {...photo(src, PHOTO_SIZES.gallery)}
                   alt={photos.length > 1 ? `${name}, photo ${i + 1}` : name}
                   loading={i === 0 ? "eager" : "lazy"}

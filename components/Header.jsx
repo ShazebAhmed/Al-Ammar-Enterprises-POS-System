@@ -6,6 +6,11 @@ import Icon from "./Icon";
 export default function Header({ settings }) {
   const { cartCount, currentUser, isAdmin, inStoreApp } = useStore();
   const path = usePathname();
+  // Signing in from a page comes back to it (the shop's home is the default).
+  const signIn =
+    path === "/" || path.startsWith("/auth")
+      ? "/auth"
+      : `/auth?next=${encodeURIComponent(path)}`;
   return (
     <>
       <div className="announcement">
@@ -54,7 +59,7 @@ export default function Header({ settings }) {
             </Link>
             <Link
               className="account-link"
-              href={currentUser ? "/account" : "/auth"}
+              href={currentUser ? "/account" : signIn}
               aria-label={currentUser ? "My account" : "Sign in"}
             >
               <Icon name="person" size={21} />

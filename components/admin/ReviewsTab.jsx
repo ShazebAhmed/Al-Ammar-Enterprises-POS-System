@@ -36,11 +36,21 @@ export default function ReviewsTab({ reviews, products, onDelete, onApprove }) {
               <div
                 key={r.id}
                 className="stx-card px-4 py-3"
-                style={{ display: "flex", gap: 12, alignItems: "flex-start" }}
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 12,
+                  alignItems: "flex-start",
+                }}
               >
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: "1 1 240px", minWidth: 0 }}>
                   <div
-                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
                   >
                     <span style={{ fontWeight: 600, fontSize: ".88rem" }}>
                       {r.name}
@@ -67,34 +77,38 @@ export default function ReviewsTab({ reviews, products, onDelete, onApprove }) {
                   >
                     on {product ? product.name : "a deleted product"}
                   </div>
-                  <p style={{ fontSize: ".84rem", marginTop: 6 }}>
+                  <p
+                    style={{
+                      fontSize: ".84rem",
+                      marginTop: 6,
+                      overflowWrap: "anywhere",
+                    }}
+                  >
                     {r.comment}
                   </p>
                 </div>
-                {!r.approved && (
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  {!r.approved && (
+                    <button
+                      type="button"
+                      className="stx-btn stx-btn-primary px-3 py-1"
+                      style={{ fontSize: ".8rem" }}
+                      onClick={() => onApprove(r.id)}
+                    >
+                      Approve
+                    </button>
+                  )}
                   <button
-                    type="button"
-                    className="stx-btn stx-btn-primary px-3 py-1"
-                    style={{ fontSize: ".8rem" }}
-                    onClick={() => onApprove(r.id)}
+                    aria-label="Delete review"
+                    onClick={() => {
+                      if (window.confirm("Delete this review?")) onDelete(r.id);
+                    }}
+                    className="icon-button"
+                    style={{ color: "var(--danger)" }}
                   >
-                    Approve
+                    <Icon name="delete" size={17} />
                   </button>
-                )}
-                <button
-                  aria-label="Delete review"
-                  onClick={() => {
-                    if (window.confirm("Delete this review?")) onDelete(r.id);
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "var(--danger)",
-                    cursor: "pointer",
-                  }}
-                >
-                  <Icon name="delete" size={16} />
-                </button>
+                </div>
               </div>
             );
           })}

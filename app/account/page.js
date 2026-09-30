@@ -39,7 +39,7 @@ export default function AccountPage() {
   }, [billOrder]);
 
   useEffect(() => {
-    if (authReady && !currentUser) router.push("/auth");
+    if (authReady && !currentUser) router.replace("/auth?next=/account");
   }, [authReady, currentUser, router]);
 
   useEffect(() => {
@@ -121,7 +121,7 @@ export default function AccountPage() {
     return (
       <main className="page-wrap">
         <p>Could not load your profile. Please sign in again.</p>
-        <Link href="/auth">Sign in</Link>
+        <Link href="/auth?next=/account">Sign in</Link>
       </main>
     );
   if (!currentUser || !profile || !settings) {

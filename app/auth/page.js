@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/components/Providers";
+import { ADMIN_HOST } from "@/lib/hosts";
 // Where to go after signing in: ?next=/admin (same-site paths only), else the
 // shop. On the admin address the middleware sends "/" on to /admin.
 // The target is also kept for this tab, so tapping "Sign in" in the header
@@ -15,9 +16,6 @@ function afterSignIn() {
   } catch {}
   return next.startsWith("/") && !next.startsWith("//") ? next : "/";
 }
-// The admin panel's own address (see middleware.js). Only administrators sign
-// in there, so it offers no "Create account".
-const ADMIN_HOST = "alammar-admin.vercel.app";
 // The open form is kept in the address (/auth?mode=signup), so refreshing
 // stays on it and a "create an account" link can open it directly.
 const MODES = ["login", "signup", "forgot"];
@@ -47,6 +45,7 @@ export default function AuthPage() {
     try {
       if (next) sessionStorage.setItem("authNext", next);
     } catch {}
+    // Only administrators sign in on the admin address: no "Create account".
     const admin = window.location.host === ADMIN_HOST;
     const fromUrl = modeFromUrl();
     setAdminSite(admin);

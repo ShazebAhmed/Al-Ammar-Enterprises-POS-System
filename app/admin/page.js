@@ -17,6 +17,7 @@ import OrdersTab from "@/components/admin/OrdersTab";
 import CustomersTab from "@/components/admin/CustomersTab";
 import ReviewsTab from "@/components/admin/ReviewsTab";
 import SettingsTab from "@/components/admin/SettingsTab";
+import { ADMIN_HOST, STORE_HOST } from "@/lib/hosts";
 import {
   formatMoney,
   formatOrderTime,
@@ -85,12 +86,17 @@ export default function AdminPage() {
     [testAlert, setTestAlert] = useState(""),
     [alertsOn, setAlertsOn] = useState(false),
     // Which period the overview's figures cover.
-    [period, setPeriod] = useState("month");
+    [period, setPeriod] = useState("month"),
+    // On the admin address "/" is the admin panel itself, so the storefront
+    // links go to the shop's own address.
+    [storeHref, setStoreHref] = useState("/");
   // A new-order alert opens /admin?order=AA-10003: show that order.
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("order");
     if (id) setFocusOrder(id.slice(0, 64));
     setTab(tabFromUrl());
+    if (window.location.host === ADMIN_HOST)
+      setStoreHref(`https://${STORE_HOST}/`);
     const onPopState = () => setTab(tabFromUrl());
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -464,7 +470,7 @@ export default function AdminPage() {
         aria-label="Close navigation"
       />
       <aside className={`admin-sidebar ${mobileNavOpen ? "open" : ""}`}>
-        <Link className="brand" href="/">
+        <Link className="brand" href={storeHref}>
           <span className="brand-mark">{settings.logoInitial || "A"}</span>
           <span>
             <strong>{settings.storeName || "Al-Ammar"}</strong>
@@ -492,7 +498,7 @@ export default function AdminPage() {
           ))}
         </nav>
         <div className="admin-sidebar-bottom">
-          <Link href="/">
+          <Link href={storeHref}>
             <Icon name="arrow_forward" size={16} /> Visit your storefront
           </Link>
           <button type="button" onClick={signOut}>

@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
+import { ADMIN_HOST, STORE_HOST } from "@/lib/hosts";
 
 // The admin panel has its own address, so its notifications, sign-in and service worker
 // are separate from the shop's: on a phone with both apps, new-order alerts show in the
 // Admin app and order updates in the Store app. Only the two live addresses redirect;
 // Vercel previews and localhost serve everything as before.
-const STORE_HOST = "alammarstore.vercel.app";
-const ADMIN_HOST = "alammar-admin.vercel.app";
 const ADMIN_PAGES = ["/admin", "/auth", "/reset-password"];
 
 const under = (path, page) => path === page || path.startsWith(`${page}/`);

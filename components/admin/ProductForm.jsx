@@ -3,6 +3,26 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/Icon";
 import { compressImage, uid } from "@/lib/format";
 
+// Colour photos count towards this too, since each is one of the product's photos.
+const MAX_PHOTOS = 10;
+
+// Each option row gets a stable key so an upload started for one option still
+// lands on it if rows above are removed while it uploads.
+function newOption(v = {}) {
+  return {
+    key: uid("opt_"),
+    name: v.name || "",
+    stock: v.stock === undefined ? "" : String(v.stock),
+    image: v.image || "",
+  };
+}
+
+function optionExample(label) {
+  if (/colou?r/i.test(label)) return "e.g. Black";
+  if (/size/i.test(label)) return "e.g. Medium";
+  return "e.g. Medium or Black";
+}
+
 export default function ProductForm({
   product,
   categories,
@@ -21,16 +41,15 @@ export default function ProductForm({
     cost: product.cost ?? "",
     stock: product.stock ?? "",
     optionLabel: product.optionLabel || "",
-    variants: (product.variants || []).map((v) => ({
-      name: v.name,
-      stock: String(v.stock),
-      image: v.image || "",
-    })),
+    variants: (product.variants || []).map(newOption),
     description: product.description || "",
     images: product.images || [],
     videoUrl: product.videoUrl || "",
   });
   const [keepDetails, setKeepDetails] = useState(true);
+  // The option whose photo picker is open, and the option to focus once added.
+  const [pickerFor, setPickerFor] = useState(null);
+  const [focusOption, setFocusOption] = useState(null);
   const [uploads, setUploads] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [uploadNotice, setUploadNotice] = useState("");
@@ -38,6 +57,8 @@ export default function ProductForm({
   const [saveError, setSaveError] = useState("");
   const [savedNotice, setSavedNotice] = useState("");
   const fileRef = useRef(null),
+    optionFileRef = useRef(null),
+    pickerOpen = useRef(false),
     nameRef = useRef(null),
     dialogRef = useRef(null);
   const working = useRef(false),
@@ -56,6 +77,7 @@ export default function ProductForm({
   }
   const cancelRef = useRef(cancel);
   cancelRef.current = cancel;
+  pickerOpen.current = pickerFor !== null;
   function releasePreview(url) {
     if (url) {
       URL.revokeObjectURL(url);
@@ -76,7 +98,9 @@ export default function ProductForm({
     function keydown(event) {
       if (event.key === "Escape") {
         event.preventDefault();
-        cancelRef.current();
+        // Escape closes an open photo picker before the whole editor.
+        if (pickerOpen.current) setPickerFor(null);
+        else cancelRef.current();
       }
       if (event.key !== "Tab") return;
       const items = focusable(),
@@ -125,10 +149,16 @@ export default function ProductForm({
           const url = await onUploadImage(blob);
           unsaved.current.add(url);
           if (!alive.current) break;
-          // Keep each successful upload even when a later image fails.
+          // Keep each successful upload even when a later image fails. A photo
+          // uploaded from an option's picker becomes that option's photo.
           setForm((current) => ({
             ...current,
             images: [...current.images, url],
+            variants: entry.optionKey
+              ? current.variants.map((v) =>
+                  v.key === entry.optionKey ? { ...v, image: url } : v,
+                )
+              : current.variants,
           }));
           setUploads((list) => list.filter((item) => item.id !== entry.id));
           releasePreview(entry.preview);
@@ -158,11 +188,21 @@ export default function ProductForm({
       if (alive.current) setUploading(false);
     }
   }
-  async function handleFiles(event) {
+  function handleFiles(event) {
     const selected = Array.from(event.target.files || []);
     event.target.value = "";
+    return queueFiles(selected, null);
+  }
+  function handleOptionFile(event) {
+    const selected = Array.from(event.target.files || []).slice(0, 1);
+    event.target.value = "";
+    const optionKey = pickerFor;
+    setPickerFor(null);
+    return queueFiles(selected, optionKey);
+  }
+  async function queueFiles(selected, optionKey) {
     if (working.current || !selected.length) return;
-    const slots = Math.max(0, 5 - form.images.length - uploads.length);
+    const slots = Math.max(0, MAX_PHOTOS - form.images.length - uploads.length);
     const files = selected.slice(0, slots);
     setUploadNotice(
       selected.length > slots
@@ -176,7 +216,14 @@ export default function ProductForm({
           ? URL.createObjectURL(file)
           : "";
       if (preview) previews.current.add(preview);
-      return { id: uid("upload_"), file, preview, status: "queued", error: "" };
+      return {
+        id: uid("upload_"),
+        file,
+        preview,
+        optionKey,
+        status: "queued",
+        error: "",
+      };
     });
     setUploads((list) => [...list, ...entries]);
     await uploadBatch(entries);
@@ -196,9 +243,42 @@ export default function ProductForm({
     setForm((current) => ({
       ...current,
       images: current.images.filter((_, i) => i !== index),
+      variants: current.variants.map((v) =>
+        v.image === url ? { ...v, image: "" } : v,
+      ),
     }));
     setUploadNotice("");
   }
+  function updateOption(key, patch) {
+    setForm((current) => ({
+      ...current,
+      variants: current.variants.map((v) =>
+        v.key === key ? { ...v, ...patch } : v,
+      ),
+    }));
+  }
+  function addOption(label) {
+    const option = newOption();
+    setForm((current) => ({
+      ...current,
+      optionLabel: label ?? current.optionLabel,
+      variants: [...current.variants, option],
+    }));
+    setFocusOption(option.key);
+  }
+  function removeOption(key) {
+    if (pickerFor === key) setPickerFor(null);
+    setForm((current) => ({
+      ...current,
+      variants: current.variants.filter((v) => v.key !== key),
+    }));
+  }
+  useEffect(() => {
+    if (!focusOption) return;
+    document.getElementById(`option-name-${focusOption}`)?.focus();
+    setFocusOption(null);
+  }, [focusOption]);
+  const photosFull = form.images.length + uploads.length >= MAX_PHOTOS;
   const canSave =
     form.name.trim() &&
     form.category &&
@@ -271,18 +351,16 @@ export default function ProductForm({
           cost: keepDetails ? (submitted.cost ?? "") : "",
           stock: keepDetails ? submitted.stock : "",
           optionLabel: keepDetails ? submitted.optionLabel : "",
+          // Photos are cleared, so no option keeps one.
           variants: keepDetails
-            ? submitted.variants.map((v) => ({
-                name: v.name,
-                stock: String(v.stock),
-                image: v.image || "",
-              }))
+            ? submitted.variants.map((v) => newOption({ ...v, image: "" }))
             : [],
           description: keepDetails ? submitted.description : "",
           images: [],
           videoUrl: "",
         });
         setUploadNotice("");
+        setPickerFor(null);
         setSavedNotice(
           `Saved “${submitted.name}”. Ready for the next product.`,
         );
@@ -465,118 +543,6 @@ export default function ProductForm({
               />
             </label>
           </div>
-          <fieldset className="options-editor">
-            <legend className="stx-label">
-              Options (size, colour…) <span className="muted">optional</span>
-            </legend>
-            {form.variants.length > 0 && (
-              <label className="stx-label" htmlFor="product-option-label">
-                Options are called
-                <input
-                  id="product-option-label"
-                  className="stx-input"
-                  style={{ marginTop: 4 }}
-                  placeholder="Size"
-                  maxLength={40}
-                  value={form.optionLabel}
-                  onChange={(e) =>
-                    setForm({ ...form, optionLabel: e.target.value })
-                  }
-                />
-              </label>
-            )}
-            {form.variants.map((v, i) => (
-              <div className="option-row" key={i}>
-                <input
-                  className="stx-input"
-                  aria-label={`Option ${i + 1} name`}
-                  placeholder="e.g. Medium or Black"
-                  maxLength={40}
-                  value={v.name}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      variants: form.variants.map((x, j) =>
-                        j === i ? { ...x, name: e.target.value } : x,
-                      ),
-                    })
-                  }
-                />
-                <input
-                  className="stx-input"
-                  type="number"
-                  min="0"
-                  step="1"
-                  aria-label={`Option ${i + 1} stock`}
-                  placeholder="Stock"
-                  value={v.stock}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      variants: form.variants.map((x, j) =>
-                        j === i ? { ...x, stock: e.target.value } : x,
-                      ),
-                    })
-                  }
-                />
-                <select
-                  className="stx-input"
-                  aria-label={`Option ${i + 1} photo`}
-                  title="The photo shown when a customer chooses this option"
-                  value={form.images.includes(v.image) ? v.image : ""}
-                  disabled={!form.images.length}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      variants: form.variants.map((x, j) =>
-                        j === i ? { ...x, image: e.target.value } : x,
-                      ),
-                    })
-                  }
-                >
-                  <option value="">No photo</option>
-                  {form.images.map((url, n) => (
-                    <option key={url} value={url}>
-                      Photo {n + 1}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="icon-button"
-                  aria-label={`Remove option ${v.name || i + 1}`}
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      variants: form.variants.filter((_, j) => j !== i),
-                    })
-                  }
-                >
-                  <Icon name="close" size={16} />
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              className="stx-btn stx-btn-outline"
-              disabled={form.variants.length >= 50}
-              onClick={() =>
-                setForm({
-                  ...form,
-                  variants: [
-                    ...form.variants,
-                    { name: "", stock: "", image: "" },
-                  ],
-                })
-              }
-            >
-              <Icon name="add" size={16} /> Add option
-            </button>
-            <p className="muted small" style={{ margin: 0 }}>
-              Each option has its own stock. Customers choose one before adding
-              to the basket.
-            </p>
-          </fieldset>
           <label className="stx-label" htmlFor="product-category">
             Category
             <select
@@ -624,7 +590,7 @@ export default function ProductForm({
           </label>
           <section aria-label="Product photos">
             <div className="stx-label">
-              Photos ({form.images.length + uploads.length}/5)
+              Photos ({form.images.length + uploads.length}/{MAX_PHOTOS})
             </div>
             <p
               style={{
@@ -634,7 +600,8 @@ export default function ProductForm({
               }}
             >
               Select several photos together. Up to 10 MB each. The first
-              uploaded photo is the cover.
+              uploaded photo is the cover. Colour photos can be added here or
+              from each colour below.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
               {form.images.map((url, index) => (
@@ -648,6 +615,12 @@ export default function ProductForm({
                       borderRadius: 8,
                       objectFit: "cover",
                     }}
+                  />
+                  <PhotoTag
+                    cover={index === 0}
+                    options={form.variants
+                      .filter((v) => v.image === url && v.name.trim())
+                      .map((v) => v.name.trim())}
                   />
                   <button
                     type="button"
@@ -732,7 +705,7 @@ export default function ProductForm({
               type="button"
               className="stx-btn stx-btn-outline"
               style={{ marginTop: 10 }}
-              disabled={uploading || form.images.length + uploads.length >= 5}
+              disabled={uploading || photosFull}
               onClick={() => fileRef.current?.click()}
             >
               <Icon name="upload" size={17} />{" "}
@@ -755,6 +728,226 @@ export default function ProductForm({
               </p>
             )}
           </section>
+          <fieldset className="options-editor">
+            <legend className="stx-label">
+              Colours or sizes <span className="muted">optional</span>
+            </legend>
+            {form.variants.length === 0 ? (
+              <>
+                <p className="muted small" style={{ margin: 0 }}>
+                  Does this product come in different colours or sizes? Each one
+                  gets its own stock, and a colour can have its own photo.
+                </p>
+                <div className="option-start">
+                  <button
+                    type="button"
+                    className="stx-btn stx-btn-outline"
+                    onClick={() => addOption("Colour")}
+                  >
+                    <Icon name="add" size={16} /> Add colours
+                  </button>
+                  <button
+                    type="button"
+                    className="stx-btn stx-btn-outline"
+                    onClick={() => addOption("Size")}
+                  >
+                    <Icon name="add" size={16} /> Add sizes
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="option-label-row">
+                  <label className="stx-label" htmlFor="product-option-label">
+                    Customers choose a
+                  </label>
+                  <input
+                    id="product-option-label"
+                    className="stx-input"
+                    placeholder="Size"
+                    maxLength={40}
+                    value={form.optionLabel}
+                    onChange={(e) =>
+                      setForm({ ...form, optionLabel: e.target.value })
+                    }
+                  />
+                  {["Colour", "Size"].map((label) => (
+                    <button
+                      key={label}
+                      type="button"
+                      className={`option-chip${form.optionLabel === label ? " is-on" : ""}`}
+                      aria-pressed={form.optionLabel === label}
+                      onClick={() => setForm({ ...form, optionLabel: label })}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {form.variants.map((v, i) => {
+                  const label = v.name.trim() || `option ${i + 1}`;
+                  const open = pickerFor === v.key;
+                  const pending = uploads.find(
+                    (entry) => entry.optionKey === v.key,
+                  );
+                  const photo = form.images.includes(v.image) ? v.image : "";
+                  return (
+                    <div className="option-item" key={v.key}>
+                      <div className="option-row">
+                        <button
+                          type="button"
+                          className={`option-photo${open ? " is-open" : ""}`}
+                          aria-expanded={open}
+                          aria-label={
+                            photo
+                              ? `Change the photo for ${label}`
+                              : `Add a photo for ${label}`
+                          }
+                          onClick={() => setPickerFor(open ? null : v.key)}
+                        >
+                          {pending ? (
+                            <span className="small">
+                              {pending.status === "failed" ? "Failed" : "…"}
+                            </span>
+                          ) : photo ? (
+                            <img src={photo} alt="" />
+                          ) : (
+                            <>
+                              <Icon name="add" size={16} />
+                              <span>Photo</span>
+                            </>
+                          )}
+                        </button>
+                        <input
+                          id={`option-name-${v.key}`}
+                          className="stx-input"
+                          aria-label={`Option ${i + 1} name`}
+                          placeholder={optionExample(form.optionLabel)}
+                          maxLength={40}
+                          value={v.name}
+                          onChange={(e) =>
+                            updateOption(v.key, { name: e.target.value })
+                          }
+                        />
+                        <input
+                          className="stx-input"
+                          type="number"
+                          min="0"
+                          step="1"
+                          aria-label={`Stock for ${label}`}
+                          placeholder="Stock"
+                          value={v.stock}
+                          onChange={(e) =>
+                            updateOption(v.key, { stock: e.target.value })
+                          }
+                        />
+                        <button
+                          type="button"
+                          className="icon-button"
+                          aria-label={`Remove ${label}`}
+                          onClick={() => removeOption(v.key)}
+                        >
+                          <Icon name="close" size={16} />
+                        </button>
+                      </div>
+                      {open && (
+                        <div
+                          className="option-photo-picker"
+                          role="group"
+                          aria-label={`Photo for ${label}`}
+                        >
+                          <p className="muted small" style={{ margin: 0 }}>
+                            {form.images.length
+                              ? `Tap the photo customers should see when they choose ${label}, or upload a new one.`
+                              : `Upload the photo customers should see when they choose ${label}.`}
+                          </p>
+                          <div className="option-photo-grid">
+                            {form.images.map((url, n) => (
+                              <button
+                                type="button"
+                                key={url}
+                                className={`option-photo-choice${v.image === url ? " is-selected" : ""}`}
+                                aria-pressed={v.image === url}
+                                aria-label={`Use photo ${n + 1} for ${label}`}
+                                onClick={() => {
+                                  updateOption(v.key, { image: url });
+                                  setPickerFor(null);
+                                }}
+                              >
+                                <img src={url} alt="" />
+                                {v.image === url && (
+                                  <span className="option-photo-check">
+                                    <Icon name="check" size={14} />
+                                  </span>
+                                )}
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              className="option-photo-choice option-photo-upload"
+                              disabled={uploading || photosFull}
+                              onClick={() => optionFileRef.current?.click()}
+                            >
+                              <Icon name="upload" size={18} />
+                              <span>Upload new</span>
+                            </button>
+                          </div>
+                          {photosFull && (
+                            <p className="muted small" style={{ margin: 0 }}>
+                              This product already has {MAX_PHOTOS} photos.
+                              Remove one above to upload another.
+                            </p>
+                          )}
+                          <div className="option-picker-actions">
+                            {photo && (
+                              <button
+                                type="button"
+                                className="text-button"
+                                onClick={() => {
+                                  updateOption(v.key, { image: "" });
+                                  setPickerFor(null);
+                                }}
+                              >
+                                No photo for {label}
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="text-button"
+                              onClick={() => setPickerFor(null)}
+                            >
+                              Done
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                <button
+                  type="button"
+                  className="stx-btn stx-btn-outline"
+                  disabled={form.variants.length >= 50}
+                  onClick={() => addOption()}
+                >
+                  <Icon name="add" size={16} /> Add another{" "}
+                  {(form.optionLabel.trim() || "option").toLowerCase()}
+                </button>
+                <p className="muted small" style={{ margin: 0 }}>
+                  Stock quantity above is the total of these. Customers choose
+                  one before adding to the basket.
+                </p>
+              </>
+            )}
+            <input
+              ref={optionFileRef}
+              aria-label="Choose a photo for this option"
+              type="file"
+              accept="image/*"
+              disabled={uploading}
+              onChange={handleOptionFile}
+              style={{ display: "none" }}
+            />
+          </fieldset>
           <label className="stx-label" htmlFor="product-video">
             Video link (optional)
             <input
@@ -838,6 +1031,16 @@ export default function ProductForm({
           )}
         </div>
       </form>
+    </div>
+  );
+}
+
+// Under each photo: whether it is the cover and which options show it.
+function PhotoTag({ cover, options }) {
+  if (!cover && !options.length) return null;
+  return (
+    <div className="photo-tag">
+      {[cover && "Cover", ...options].filter(Boolean).join(" · ")}
     </div>
   );
 }

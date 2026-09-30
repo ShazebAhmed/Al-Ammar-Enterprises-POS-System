@@ -589,16 +589,16 @@ export default function AdminPage() {
           >
             <Icon name="menu" />
           </button>
-          <span>
-            Workspace{" "}
+          <span className="admin-crumbs">
+            <span className="crumb-root">Workspace / </span>
             <span className="muted">
-              / {ADMIN_TABS.find((t) => t.key === tab)?.label}
+              {ADMIN_TABS.find((t) => t.key === tab)?.label}
               {editingProduct !== null &&
                 ` / ${editingProduct.id ? "Edit product" : "Add product"}`}
             </span>
           </span>
           <div className="flex items-center gap-3">
-            <span className="muted small">
+            <span className="muted small admin-name">
               {profile?.name || "Store administrator"}
             </span>
             <span className="admin-avatar">

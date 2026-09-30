@@ -2175,6 +2175,29 @@ input[type="radio"] {
   .admin-topbar > .muted {
     display: none;
   }
+  /* Phones: the menu button, the current page and the avatar fit in one row;
+     the store-wide "Workspace /" and the admin's name are left out. */
+  .admin-topbar {
+    gap: 10px;
+  }
+  .admin-crumbs {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .admin-crumbs .crumb-root,
+  .admin-name {
+    display: none;
+  }
+  /* The phone menu scrolls, so "Log out" at its end is always reachable, also
+     when the browser's bars take part of the screen. */
+  .admin-sidebar {
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+  }
   .skeleton-grid {
     grid-template-columns: repeat(2, 1fr);
   }

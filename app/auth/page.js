@@ -14,6 +14,13 @@ function afterSignIn() {
   } catch {}
   return next.startsWith("/") && !next.startsWith("//") ? next : "/account";
 }
+// The open form is kept in the address (/auth?mode=signup), so refreshing
+// stays on it and a "create an account" link can open it directly.
+const MODES = ["login", "signup", "forgot"];
+function modeFromUrl() {
+  const mode = new URLSearchParams(window.location.search).get("mode");
+  return MODES.includes(mode) ? mode : "login";
+}
 
 export default function AuthPage() {
   const { supabase, authReady } = useStore();
@@ -35,11 +42,23 @@ export default function AuthPage() {
     try {
       if (next) sessionStorage.setItem("authNext", next);
     } catch {}
+    setMode(modeFromUrl());
   }, []);
   function changeMode(next) {
     setMode(next);
     setError("");
     setInfo("");
+    // Replace rather than push: switching forms is not a page to go Back to.
+    // Other parameters such as ?next= are kept.
+    const params = new URLSearchParams(window.location.search);
+    if (next === "login") params.delete("mode");
+    else params.set("mode", next);
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname + (query ? `?${query}` : ""),
+    );
   }
   async function submit(e) {
     e.preventDefault();

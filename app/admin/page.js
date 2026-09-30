@@ -65,6 +65,7 @@ export default function AdminPage() {
     profileReady,
     notify,
     inStoreApp,
+    logOut,
   } = useStore();
   const router = useRouter();
   const [loading, setLoading] = useState(true),
@@ -94,6 +95,12 @@ export default function AdminPage() {
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
+  // Signing out sends the admin to the sign-in page via the effect below
+  // (no current user). logOut shows its own error if it fails.
+  async function signOut() {
+    setMobileNavOpen(false);
+    await logOut().catch(() => {});
+  }
   function openTab(key) {
     setTab(key);
     const url = key === "overview" ? "/admin" : `/admin?tab=${key}`;
@@ -401,9 +408,17 @@ export default function AdminPage() {
             ? "The store connection is unavailable."
             : "Sign in with an authorised administrator account to continue."}
         </p>
-        <Link className="stx-btn stx-btn-primary" href="/auth?next=/admin">
-          Go to sign in
-        </Link>
+        {currentUser ? (
+          // Signed in, but not as an administrator: offer a way out so another
+          // account can sign in.
+          <button className="stx-btn stx-btn-primary" onClick={signOut}>
+            <Icon name="logout" size={16} /> Log out and switch account
+          </button>
+        ) : (
+          <Link className="stx-btn stx-btn-primary" href="/auth?next=/admin">
+            Go to sign in
+          </Link>
+        )}
       </main>
     );
   const pending = orders.filter((o) => o.status === "Pending").length;
@@ -480,6 +495,9 @@ export default function AdminPage() {
           <Link href="/">
             <Icon name="arrow_forward" size={16} /> Visit your storefront
           </Link>
+          <button type="button" onClick={signOut}>
+            <Icon name="logout" size={16} /> Log out
+          </button>
         </div>
       </aside>
       <div className="admin-main">

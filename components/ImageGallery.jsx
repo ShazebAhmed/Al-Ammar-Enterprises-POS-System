@@ -3,7 +3,9 @@ import { photo, PHOTO_SIZES } from "@/lib/photo";
 import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 
-// Choosing an option with its own photo (for example a colour) shows that photo.
+// Choosing a colour shows only its photos: the event's detail is
+// { images, label } (an empty list shows every photo again). A plain photo
+// address, from older pages, shows that photo.
 export const SHOW_PHOTO_EVENT = "al-ammar:show-photo";
 
 // Product page photos: swipe the large photo on phones, arrows on hover with a
@@ -11,26 +13,42 @@ export const SHOW_PHOTO_EVENT = "al-ammar:show-photo";
 // the product cards (.card-slides in globals.css).
 export default function ImageGallery({ images, name }) {
   const [activeImg, setActiveImg] = useState(0);
+  // The chosen colour's photos, while only those are shown.
+  const [only, setOnly] = useState(null);
   const track = useRef(null);
-  const photos = images || [];
+  const all = images || [];
+  const photos = only ? only.images : all;
   useEffect(() => {
     const onShow = (e) => {
-      const i = photos.indexOf(e.detail);
-      if (i >= 0) show(i);
+      const detail = e.detail;
+      if (typeof detail === "string") {
+        const i = all.indexOf(detail);
+        if (i < 0) return;
+        setOnly(null);
+        requestAnimationFrame(() => show(i, "auto"));
+        return;
+      }
+      const list = (detail?.images || []).filter((u) => all.includes(u));
+      setOnly(list.length ? { images: list, label: detail.label || "" } : null);
     };
     window.addEventListener(SHOW_PHOTO_EVENT, onShow);
     return () => window.removeEventListener(SHOW_PHOTO_EVENT, onShow);
   });
+  // A new set of photos starts at its first one.
+  useEffect(() => {
+    track.current?.scrollTo({ left: 0 });
+    setActiveImg(0);
+  }, [only]);
 
   function onScroll() {
     const el = track.current;
     if (el?.clientWidth)
       setActiveImg(Math.round(el.scrollLeft / el.clientWidth));
   }
-  function show(i) {
+  function show(i, behavior = "smooth") {
     const el = track.current;
     if (!el) return;
-    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+    el.scrollTo({ left: i * el.clientWidth, behavior });
     setActiveImg(i);
   }
 
@@ -97,6 +115,16 @@ export default function ImageGallery({ images, name }) {
           </span>
         )}
       </div>
+      {only && (
+        <p className="gallery-filter" role="status">
+          <span>
+            {only.label ? `${only.label} photos` : "This colour's photos"}
+          </span>
+          <button type="button" onClick={() => setOnly(null)}>
+            Show all {all.length} photos
+          </button>
+        </p>
+      )}
       {photos.length > 1 && (
         <div className="gallery-thumbnails">
           {photos.map((img, i) => (

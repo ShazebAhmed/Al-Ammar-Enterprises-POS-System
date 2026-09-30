@@ -3,6 +3,20 @@ import { useState } from "react";
 import Icon from "@/components/Icon";
 import { formatMoney } from "@/lib/format";
 import { photo, PHOTO_SIZES } from "@/lib/photo";
+import { optionPicker } from "@/lib/productOptions";
+
+// "3 colours · 4 sizes" under a product's name.
+function optionSummary(product) {
+  if (!product.variants?.length) return "";
+  const { colors, sizes, sizeLabel } = optionPicker(product);
+  const count = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  return [
+    colors.length && count(colors.length, "colour"),
+    sizes.length && count(sizes.length, sizeLabel.toLowerCase()),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
 
 export default function ProductsTab({
   products,
@@ -97,7 +111,9 @@ export default function ProductsTab({
                   {p.name}
                 </div>
                 <div style={{ fontSize: ".76rem", color: "var(--ink-soft)" }}>
-                  {p.category || "Uncategorised"}
+                  {[p.category || "Uncategorised", optionSummary(p)]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </div>
               </div>
               <div

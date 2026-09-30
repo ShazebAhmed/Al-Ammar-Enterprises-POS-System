@@ -116,6 +116,41 @@ writes in Urdu or Roman Urdu; reply in Urdu.
 4. For the emulator: virtualization on (WHPX works with Hyper-V on), then
    `android.exe sdk install system-images/android-36/google_apis_playstore/x86_64` and
    an AVD (`Pixel_8_API_36` on the second PC).
+5. For `npm run dev`: create `.env.local` from `.env.example`. The three values are
+   public (the live site's Supabase URL, its publishable anon key and
+   `https://alammarstore.vercel.app`); `.env*` is git-ignored.
+
+## Last session (30 September)
+
+Merged and live, in order:
+
+- #93–#95: tab and sign-in form kept in the URL (`/admin?tab=…`, `/auth?mode=signup`).
+- #96–#97: admin Log out (sidebar and "not an administrator" screen); no "Create
+  account" on the admin address; sign-in without `?next` opens the shop; "Visit your
+  storefront" opens the shop from the admin address (`lib/hosts.js`).
+- #98: full-page product editor (`components/admin/ProductEditor.jsx`,
+  `PhotoUploader.jsx`, `lib/productOptions.js`): main photos, colours each with their
+  own photos, sizes, colour × size stock table. Shop: colour and size pickers; the
+  gallery shows the chosen colour's photos. No database change; see the comment at the
+  top of `lib/productOptions.js` for the option format.
+- #99: checkout discount-code box was squeezed on phones.
+- #100–#101: full-site check at 320/375/768/desktop. Fixed: header overflow on small
+  phones, sign-in links now return to their page, admin Orders/Reviews/Settings/
+  Discounts phone layouts, admin top bar and scrolling phone menu.
+
+Open items:
+
+- The two EvoGrip wallets still use the old option format. The first time either is
+  saved in the new editor, its colour photo (currently the cover) moves under that
+  colour and the cover becomes the first remaining main photo; pick "Set cover" first.
+- Not verified: a real photo upload and save in the new editor, signing in and landing
+  back on the page, the live admin at phone size.
+- A discount code TEST10 (10% off, 1 use, until 30 September) was made for testing and
+  turned Off; it can be deleted.
+- 33 merged branches (`claude/*`, `codex/*`, `chatgpt/*`, `setup/*`) can be deleted;
+  every one is fully contained in `main`.
+- React error #418 appeared in the console only in automated test browsers; the server
+  HTML and hydrated DOM matched, so it was left alone. Recheck in a normal browser.
 
 ## Not done yet (needs the owner)
 

@@ -1039,3 +1039,56 @@ test("cost prices are admin-only and saved with each order", async () => {
     600,
   );
 });
+test("colour and size options keep their photos and stock through orders", async () => {
+  const P7 = "a1a1a1a1-0000-4000-8000-000000000007";
+  const photo = (n) => `https://x.supabase.co/storage/v1/${n}.jpg`;
+  const option = (color, size, stock) => ({
+    name: `${color} / ${size}`,
+    color,
+    size,
+    stock,
+    images: [photo(color)],
+    image: photo(color),
+  });
+  await role("authenticated", ADMIN);
+  await db.query(
+    `insert into products(id,name,price,stock,option_label,images,variants)
+     values($1,'Belt',1200,0,'Colour / Size',$2,$3)`,
+    [
+      P7,
+      [photo("main"), photo("Black"), photo("Brown")],
+      JSON.stringify([
+        option("Black", "32", 2),
+        option("Black", "34", 1),
+        option("Brown", "32", 4),
+      ]),
+    ],
+  );
+  const read = async () =>
+    (await db.query("select stock, variants from products where id=$1", [P7]))
+      .rows[0];
+  assert.equal((await read()).stock, 7);
+  await role("authenticated", BUYER);
+  const buyer = { ...customer, phone: "03266666666" };
+  const placed = await order(
+    "0c0c0c0c-0000-4000-8000-000000000001",
+    [{ productId: P7, variant: "Black / 34", qty: 1 }],
+    buyer,
+  );
+  assert.deepEqual(
+    placed.items.map((i) => [i.variant, i.qty]),
+    [["Black / 34", 1]],
+  );
+  let now = await read();
+  assert.equal(now.stock, 6);
+  // Only the stock changes; the colour, size and photos stay on the option.
+  assert.deepEqual(now.variants[1], option("Black", "34", 0));
+  assert.deepEqual(now.variants[0], option("Black", "32", 2));
+  await role("authenticated", ADMIN);
+  await db.query("update orders set status='Cancelled' where id=$1", [
+    placed.id,
+  ]);
+  now = await read();
+  assert.equal(now.stock, 7);
+  assert.deepEqual(now.variants[1], option("Black", "34", 1));
+});

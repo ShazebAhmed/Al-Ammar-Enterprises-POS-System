@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/components/Providers";
@@ -12,7 +12,7 @@ import ReportsTab from "@/components/admin/ReportsTab";
 import { customersFromOrders } from "@/lib/customers";
 import { inPeriod, makeCostOf, periodPrefix, summarize } from "@/lib/reports";
 import ProductsTab from "@/components/admin/ProductsTab";
-import ProductForm from "@/components/admin/ProductForm";
+import ProductEditor from "@/components/admin/ProductEditor";
 import OrdersTab from "@/components/admin/OrdersTab";
 import CustomersTab from "@/components/admin/CustomersTab";
 import ReviewsTab from "@/components/admin/ReviewsTab";
@@ -56,6 +56,18 @@ function tabFromUrl() {
   const key = params.get("tab");
   return ADMIN_TABS.some((t) => t.key === key) ? key : "overview";
 }
+const LEAVE_EDITOR = "Leave without saving your changes?";
+function editParam() {
+  return new URLSearchParams(window.location.search).get("edit") || "";
+}
+function editorUrl(product) {
+  return `/admin?tab=products&edit=${product.id ? encodeURIComponent(product.id) : "new"}`;
+}
+// The product an ?edit= value names: {} for a new one, null if it is gone.
+function productForEdit(edit, products) {
+  if (edit === "new") return {};
+  return products.find((p) => String(p.id) === edit) || null;
+}
 export default function AdminPage() {
   const {
     supabase,
@@ -97,10 +109,67 @@ export default function AdminPage() {
     setTab(tabFromUrl());
     if (window.location.host === ADMIN_HOST)
       setStoreHref(`https://${STORE_HOST}/`);
-    const onPopState = () => setTab(tabFromUrl());
+    // Back and Forward: switch tabs, and close or reopen the product editor.
+    const onPopState = () => {
+      const edit = editParam();
+      if (!edit && editing.current) {
+        if (editorDirty.current && !window.confirm(LEAVE_EDITOR)) {
+          window.history.pushState(null, "", editorUrl(editing.current));
+          return;
+        }
+        closeEditorState();
+      } else if (edit && !editing.current) {
+        const found = productForEdit(edit, productsRef.current);
+        if (found) showEditor(found);
+      }
+      setTab(tabFromUrl());
+    };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
+  // The product editor is a page of its own: /admin?tab=products&edit=<id>,
+  // or edit=new. Refreshing keeps it open (a new product's unsaved details are
+  // lost; the browser warns first).
+  const editing = useRef(null),
+    editorDirty = useRef(false),
+    productsRef = useRef(products),
+    handledUrlEdit = useRef(false);
+  productsRef.current = products;
+  function showEditor(product) {
+    editing.current = product;
+    editorDirty.current = false;
+    setEditingProduct(product);
+    setTab("products");
+    setMobileNavOpen(false);
+    window.scrollTo(0, 0);
+  }
+  function closeEditorState() {
+    editing.current = null;
+    editorDirty.current = false;
+    setEditingProduct(null);
+  }
+  function openEditor(product) {
+    showEditor(product);
+    window.history.pushState(null, "", editorUrl(product));
+  }
+  // Closing (or saving) shows the products list in the editor's place, so
+  // Back then goes to wherever the editor was opened from.
+  function closeEditor() {
+    closeEditorState();
+    setTab("products");
+    window.history.replaceState(null, "", "/admin?tab=products");
+    window.scrollTo(0, 0);
+  }
+  // Opening /admin?tab=products&edit=… directly waits for the products to load.
+  useEffect(() => {
+    if (loading || handledUrlEdit.current) return;
+    handledUrlEdit.current = true;
+    const edit = editParam();
+    if (!edit) return;
+    const found = productForEdit(edit, products);
+    if (found) showEditor(found);
+    else window.history.replaceState(null, "", "/admin?tab=products");
+  }, [loading, products]);
   // Signing out sends the admin to the sign-in page via the effect below
   // (no current user). logOut shows its own error if it fails.
   async function signOut() {
@@ -108,6 +177,10 @@ export default function AdminPage() {
     await logOut().catch(() => {});
   }
   function openTab(key) {
+    if (editing.current) {
+      if (editorDirty.current && !window.confirm(LEAVE_EDITOR)) return;
+      closeEditorState();
+    }
     setTab(key);
     const url = key === "overview" ? "/admin" : `/admin?tab=${key}`;
     if (window.location.pathname + window.location.search !== url)
@@ -520,6 +593,8 @@ export default function AdminPage() {
             Workspace{" "}
             <span className="muted">
               / {ADMIN_TABS.find((t) => t.key === tab)?.label}
+              {editingProduct !== null &&
+                ` / ${editingProduct.id ? "Edit product" : "Add product"}`}
             </span>
           </span>
           <div className="flex items-center gap-3">
@@ -537,6 +612,21 @@ export default function AdminPage() {
               {loadError}{" "}
               <button onClick={() => setRevision((r) => r + 1)}>Retry</button>
             </div>
+          ) : editingProduct !== null ? (
+            <ProductEditor
+              key={editingProduct.id || "new"}
+              product={{
+                ...editingProduct,
+                cost: editingProduct.id ? (costs[editingProduct.id] ?? "") : "",
+              }}
+              categories={settings.categories || []}
+              currencySymbol={settings.currencySymbol}
+              onClose={closeEditor}
+              onSave={(p) => upsertProduct(p)}
+              onUploadImage={uploadProductImage}
+              onDiscardImages={deleteProductImages}
+              onDirtyChange={(dirty) => (editorDirty.current = dirty)}
+            />
           ) : (
             <>
               {tab === "overview" && (
@@ -553,7 +643,7 @@ export default function AdminPage() {
                     </div>
                     <button
                       className="stx-btn stx-btn-primary"
-                      onClick={() => setEditingProduct({})}
+                      onClick={() => openEditor({})}
                     >
                       <Icon name="add" size={16} /> Add product
                     </button>
@@ -791,8 +881,8 @@ export default function AdminPage() {
                 <ProductsTab
                   products={products}
                   settings={settings}
-                  onAdd={() => setEditingProduct({})}
-                  onEdit={setEditingProduct}
+                  onAdd={() => openEditor({})}
+                  onEdit={openEditor}
                   onDelete={(id) => deleteProduct(id).catch(() => {})}
                 />
               )}
@@ -842,22 +932,6 @@ export default function AdminPage() {
           )}
         </main>
       </div>
-      {editingProduct !== null && (
-        <ProductForm
-          product={{
-            ...editingProduct,
-            cost: editingProduct.id ? (costs[editingProduct.id] ?? "") : "",
-          }}
-          categories={settings.categories || []}
-          onCancel={() => setEditingProduct(null)}
-          onSave={async (p, { addAnother } = {}) => {
-            await upsertProduct(p);
-            if (!addAnother) setEditingProduct(null);
-          }}
-          onUploadImage={uploadProductImage}
-          onDiscardImages={deleteProductImages}
-        />
-      )}
     </div>
   );
 }

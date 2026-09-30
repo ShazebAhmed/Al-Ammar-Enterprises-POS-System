@@ -119,8 +119,8 @@ writes in Urdu or Roman Urdu; reply in Urdu.
 
 ## Not done yet (needs the owner)
 
-- More products (admin → Add product; "Old price" for a sale, "Add option" for sizes or
-  colours).
+- More products (admin → Products → Add product: a full page with main photos, colours
+  that each have their own photos, sizes, and a stock table; "Old price" for a sale).
 - A first discount code (admin → Discounts).
 - Google Play: developer account, closed test with 12 testers for 14 days, then Play's
   app-signing SHA-256 in `assetlinks.json`.

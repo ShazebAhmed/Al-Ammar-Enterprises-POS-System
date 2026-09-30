@@ -67,7 +67,7 @@ export default function OrdersTab({
             marginBottom: 14,
           }}
         >
-          <span style={{ flex: 1, fontSize: ".86rem" }}>
+          <span style={{ flex: "1 1 220px", fontSize: ".86rem" }}>
             {stale} pending {stale === 1 ? "order has" : "orders have"} waited
             {` ${STALE_ORDER_DAYS}`} days or more. Their stock is still
             reserved.
@@ -242,13 +242,17 @@ export default function OrdersTab({
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
+                          gap: 12,
                           fontSize: ".82rem",
                         }}
                       >
                         <span>
                           {itemName(it.name, it.variant)} × {it.qty}
                         </span>
-                        <span className="stx-mono">
+                        <span
+                          className="stx-mono"
+                          style={{ whiteSpace: "nowrap" }}
+                        >
                           {formatMoney(
                             it.price * it.qty,
                             settings.currencySymbol,
@@ -266,7 +270,10 @@ export default function OrdersTab({
                         }}
                       >
                         <span>Discount ({o.couponCode || "code"})</span>
-                        <span className="stx-mono">
+                        <span
+                          className="stx-mono"
+                          style={{ whiteSpace: "nowrap" }}
+                        >
                           − {formatMoney(o.discount, settings.currencySymbol)}
                         </span>
                       </div>

@@ -277,7 +277,11 @@ export default function CheckoutPage() {
               {!currentUser && (
                 <p className="muted small">
                   Shopping as a guest.{" "}
-                  <Link href="/auth" style={{ textDecoration: "underline" }}>
+                  <Link
+                    // Back to this checkout, "Buy now" item included.
+                    href={`/auth?next=${encodeURIComponent(buyNow ? "/checkout?buy=1" : "/checkout")}`}
+                    style={{ textDecoration: "underline" }}
+                  >
                     Sign in
                   </Link>{" "}
                   to keep your order history.

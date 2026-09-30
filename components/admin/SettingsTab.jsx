@@ -61,8 +61,15 @@ export default function SettingsTab({ settings, onSave }) {
       >
         <div className="stx-label">Store identity</div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ flex: "1 1 200px" }}>
-            <label className="stx-label">Store name</label>
+          <label
+            style={{
+              flex: "1 1 200px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
+          >
+            <span className="stx-label">Store name</span>
             <input
               className="stx-input"
               style={{ marginTop: 4 }}
@@ -70,9 +77,16 @@ export default function SettingsTab({ settings, onSave }) {
               onChange={(e) => set("storeName", e.target.value)}
               placeholder="e.g. Al-Karam General Store"
             />
-          </div>
-          <div style={{ flex: "1 1 200px" }}>
-            <label className="stx-label">Tagline</label>
+          </label>
+          <label
+            style={{
+              flex: "1 1 200px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
+          >
+            <span className="stx-label">Tagline</span>
             <input
               className="stx-input"
               style={{ marginTop: 4 }}
@@ -80,11 +94,18 @@ export default function SettingsTab({ settings, onSave }) {
               onChange={(e) => set("tagline", e.target.value)}
               placeholder="A short line under your name"
             />
-          </div>
+          </label>
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ flex: "1 1 140px" }}>
-            <label className="stx-label">Logo letter</label>
+          <label
+            style={{
+              flex: "1 1 140px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
+          >
+            <span className="stx-label">Logo letter</span>
             <input
               className="stx-input"
               style={{ marginTop: 4 }}
@@ -93,18 +114,32 @@ export default function SettingsTab({ settings, onSave }) {
               onChange={(e) => set("logoInitial", e.target.value)}
               placeholder="Auto from store name"
             />
-          </div>
-          <div style={{ flex: "1 1 140px" }}>
-            <label className="stx-label">Currency symbol</label>
+          </label>
+          <label
+            style={{
+              flex: "1 1 140px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
+          >
+            <span className="stx-label">Currency symbol</span>
             <input
               className="stx-input"
               style={{ marginTop: 4 }}
               value={form.currencySymbol}
               onChange={(e) => set("currencySymbol", e.target.value)}
             />
-          </div>
-          <div style={{ flex: "1 1 140px" }}>
-            <label className="stx-label">Shipping fee</label>
+          </label>
+          <label
+            style={{
+              flex: "1 1 140px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
+          >
+            <span className="stx-label">Shipping fee</span>
             <input
               type="number"
               min="0"
@@ -113,9 +148,16 @@ export default function SettingsTab({ settings, onSave }) {
               value={form.shippingFee}
               onChange={(e) => set("shippingFee", e.target.value)}
             />
-          </div>
-          <div style={{ flex: "1 1 140px" }}>
-            <label className="stx-label">Free delivery over (0 = off)</label>
+          </label>
+          <label
+            style={{
+              flex: "1 1 140px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
+          >
+            <span className="stx-label">Free delivery over (0 = off)</span>
             <input
               type="number"
               min="0"
@@ -124,15 +166,22 @@ export default function SettingsTab({ settings, onSave }) {
               value={form.freeDeliveryOver ?? 0}
               onChange={(e) => set("freeDeliveryOver", e.target.value)}
             />
-          </div>
+          </label>
         </div>
 
         <div className="stx-label" style={{ marginTop: 6 }}>
           Contact
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ flex: "1 1 200px" }}>
-            <label className="stx-label">Phone number</label>
+          <label
+            style={{
+              flex: "1 1 200px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
+          >
+            <span className="stx-label">Phone number</span>
             <input
               className="stx-input"
               style={{ marginTop: 4 }}
@@ -140,9 +189,16 @@ export default function SettingsTab({ settings, onSave }) {
               onChange={(e) => set("contactPhone", e.target.value)}
               placeholder="03xx-xxxxxxx"
             />
-          </div>
-          <div style={{ flex: "1 1 200px" }}>
-            <label className="stx-label">WhatsApp number</label>
+          </label>
+          <label
+            style={{
+              flex: "1 1 200px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
+          >
+            <span className="stx-label">WhatsApp number</span>
             <input
               className="stx-input"
               style={{ marginTop: 4 }}
@@ -150,10 +206,10 @@ export default function SettingsTab({ settings, onSave }) {
               onChange={(e) => set("whatsapp", e.target.value)}
               placeholder="03xx-xxxxxxx"
             />
-          </div>
+          </label>
         </div>
-        <div>
-          <label className="stx-label">About your store</label>
+        <label style={{ display: "block" }}>
+          <span className="stx-label">About your store</span>
           <textarea
             className="stx-input"
             rows={3}
@@ -161,7 +217,7 @@ export default function SettingsTab({ settings, onSave }) {
             value={form.aboutText}
             onChange={(e) => set("aboutText", e.target.value)}
           />
-        </div>
+        </label>
 
         <div>
           <div className="stx-label" style={{ marginBottom: 8 }}>
@@ -184,16 +240,22 @@ export default function SettingsTab({ settings, onSave }) {
                 {c}
                 <button
                   type="button"
+                  aria-label={`Remove the ${c} category`}
                   onClick={() => removeCategory(c)}
                   style={{
                     background: "none",
                     border: "none",
                     cursor: "pointer",
                     color: "var(--brick)",
-                    display: "flex",
+                    display: "grid",
+                    placeItems: "center",
+                    minWidth: 28,
+                    minHeight: 28,
+                    margin: "-6px -8px -6px -4px",
+                    padding: 0,
                   }}
                 >
-                  <Icon name="close" size={13} />
+                  <Icon name="close" size={14} />
                 </button>
               </span>
             ))}
@@ -201,6 +263,7 @@ export default function SettingsTab({ settings, onSave }) {
           <div style={{ display: "flex", gap: 6 }}>
             <input
               className="stx-input"
+              aria-label="New category name"
               placeholder="New category name"
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}

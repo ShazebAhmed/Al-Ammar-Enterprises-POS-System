@@ -153,7 +153,7 @@ export default function DiscountsTab({ supabase, settings, notify }) {
               required: true,
             })}
           </label>
-          <label className="stx-label" style={{ flex: "1 1 160px" }}>
+          <label className="stx-label" style={{ flex: "1 1 190px" }}>
             Type
             <select
               className="stx-input"

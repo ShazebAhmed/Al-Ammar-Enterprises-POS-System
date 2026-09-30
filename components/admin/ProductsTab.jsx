@@ -174,12 +174,8 @@ export default function ProductsTab({
                 <button
                   aria-label={`Delete ${p.name}`}
                   onClick={() => setConfirmDelete(p.id)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "var(--danger)",
-                    cursor: "pointer",
-                  }}
+                  className="icon-button"
+                  style={{ color: "var(--danger)" }}
                 >
                   <Icon name="delete" size={17} />
                 </button>

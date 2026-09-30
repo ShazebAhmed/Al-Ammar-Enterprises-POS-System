@@ -46,6 +46,15 @@ const PERIODS = [
   { key: "all", label: "All time" },
 ];
 const DAY_MS = 24 * 60 * 60 * 1000;
+// The open tab lives in the address (/admin?tab=products), so refreshing keeps
+// it and Back returns to the previous tab. A new-order alert's ?order= link
+// opens Orders.
+function tabFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("order")) return "orders";
+  const key = params.get("tab");
+  return ADMIN_TABS.some((t) => t.key === key) ? key : "overview";
+}
 export default function AdminPage() {
   const {
     supabase,
@@ -79,11 +88,18 @@ export default function AdminPage() {
   // A new-order alert opens /admin?order=AA-10003: show that order.
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("order");
-    if (id) {
-      setFocusOrder(id.slice(0, 64));
-      setTab("orders");
-    }
+    if (id) setFocusOrder(id.slice(0, 64));
+    setTab(tabFromUrl());
+    const onPopState = () => setTab(tabFromUrl());
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
   }, []);
+  function openTab(key) {
+    setTab(key);
+    const url = key === "overview" ? "/admin" : `/admin?tab=${key}`;
+    if (window.location.pathname + window.location.search !== url)
+      window.history.pushState(null, "", url);
+  }
   useEffect(() => {
     if (authReady && !currentUser && supabase)
       router.replace("/auth?next=/admin");
@@ -448,7 +464,7 @@ export default function AdminPage() {
               className={tab === t.key ? "active" : ""}
               aria-current={tab === t.key ? "page" : undefined}
               onClick={() => {
-                setTab(t.key);
+                openTab(t.key);
                 setMobileNavOpen(false);
               }}
             >
@@ -591,7 +607,7 @@ export default function AdminPage() {
                         {p.label}
                       </button>
                     ))}
-                    <button type="button" onClick={() => setTab("reports")}>
+                    <button type="button" onClick={() => openTab("reports")}>
                       Full report →
                     </button>
                   </div>
@@ -671,7 +687,7 @@ export default function AdminPage() {
                     <section className="stx-card">
                       <div className="panel-title">
                         <h2>Stock watch</h2>
-                        <button onClick={() => setTab("products")}>
+                        <button onClick={() => openTab("products")}>
                           View all →
                         </button>
                       </div>
@@ -700,7 +716,7 @@ export default function AdminPage() {
                   <section className="stx-card">
                     <div className="panel-title">
                       <h2>Recent orders</h2>
-                      <button onClick={() => setTab("orders")}>
+                      <button onClick={() => openTab("orders")}>
                         View all orders →
                       </button>
                     </div>

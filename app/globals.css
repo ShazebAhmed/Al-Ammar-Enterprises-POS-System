@@ -2949,6 +2949,13 @@ input[type="radio"] {
   min-width: 0;
   text-transform: uppercase;
 }
+/* Not the full-width buttons of .order-summary: the code box gets the room. */
+.order-summary .coupon-box .stx-btn {
+  flex: none;
+  width: auto;
+  margin-top: 0;
+  padding-inline: 18px;
+}
 .summary-row.discount {
   color: var(--brick);
 }
